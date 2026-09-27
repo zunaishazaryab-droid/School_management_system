@@ -1,0 +1,180 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Subjects & Curriculum | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Subjects & Academic Curriculum</h1>
+        <p class="page-subtitle">Manage curriculum subjects, marks criteria, and teacher assignments.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('assignSubjectModal').style.display='block'">
+            🔗 Assign to Class
+        </button>
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('addSubjectModal').style.display='block'">
+            ➕ Add New Subject
+        </button>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left: Subjects List -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>📚 All Subjects</span>
+            </div>
+            <span class="role-badge">{{ subjects.count }} Subjects Total</span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
+                        <th style="padding: 12px 18px;">Subject Name</th>
+                        <th style="padding: 12px 18px;">Code</th>
+                        <th style="padding: 12px 18px;">Total Marks</th>
+                        <th style="padding: 12px 18px;">Pass Marks</th>
+                        <th style="padding: 12px 18px;">Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in subjects %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 18px; font-weight: 600; color: var(--text-main);">
+                            {{ sub.name }}
+                        </td>
+                        <td style="padding: 12px 18px; color: var(--text-muted);">
+                            <span class="role-badge" style="background: #f1f5f9; color: var(--text-main); border: none;">{{ sub.code }}</span>
+                        </td>
+                        <td style="padding: 12px 18px;">{{ sub.total_marks }}</td>
+                        <td style="padding: 12px 18px; color: var(--success); font-weight: 600;">{{ sub.passing_marks }}</td>
+                        <td style="padding: 12px 18px;">
+                            {% if sub.is_elective %}
+                            <span class="role-badge" style="background: var(--warning-light); color: var(--warning);">Elective</span>
+                            {% else %}
+                            <span class="role-badge" style="background: var(--primary-light); color: var(--primary);">Compulsory</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                            No subjects added yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right: Class Subject Allocations -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>👩‍🏫 Class Subject Assignments</span>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if assignments %}
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    {% for asg in assignments %}
+                    <div style="padding: 12px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--card-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                            <strong style="font-size: 13.5px; color: var(--text-main);">{{ asg.subject.name }}</strong>
+                            <span class="role-badge" style="font-size: 11px;">{{ asg.class_room.name }}{% if asg.section %} - Sec {{ asg.section.name }}{% endif %}</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted);">
+                            Teacher: <strong>{{ asg.teacher.get_full_name|default:"Unassigned" }}</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0;">
+                    No class subject assignments created yet.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Subject -->
+<div id="addSubjectModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3 style="font-size: 18px; font-weight: 700;">Add New Subject</h3>
+            <button type="button" onclick="document.getElementById('addSubjectModal').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_subject">
+            <div class="form-group">
+                <label class="form-label">Subject Name</label>
+                {{ subject_form.name }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Subject Code</label>
+                {{ subject_form.code }}
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label class="form-label">Total Marks</label>
+                    {{ subject_form.total_marks }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Passing Marks</label>
+                    {{ subject_form.passing_marks }}
+                </div>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                {{ subject_form.is_elective }}
+                <label class="form-label" style="margin-bottom: 0;">Is Elective Subject</label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description / Remarks</label>
+                {{ subject_form.description }}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('addSubjectModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Subject</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Assign Subject -->
+<div id="assignSubjectModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3 style="font-size: 18px; font-weight: 700;">Assign Subject to Class</h3>
+            <button type="button" onclick="document.getElementById('assignSubjectModal').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="assign_subject">
+            <div class="form-group">
+                <label class="form-label">Class</label>
+                {{ assign_form.class_room }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Section (Optional)</label>
+                {{ assign_form.section }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Subject</label>
+                {{ assign_form.subject }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Assigned Teacher</label>
+                {{ assign_form.teacher }}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('assignSubjectModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Assign Subject</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

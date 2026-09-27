@@ -91,11 +91,11 @@
     </div>
     <div class="card-body">
         <div class="quick-actions-grid">
-            <div class="quick-action-card">
+            <a href="{% url 'students:student_add' %}" class="quick-action-card">
                 <span class="quick-action-icon">➕</span>
                 <span>Add Student</span>
-                <span style="font-size: 10.5px; color: var(--text-light);">Sprint 1</span>
-            </div>
+                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
+            </a>
             <div class="quick-action-card">
                 <span class="quick-action-icon">📝</span>
                 <span>Mark Attendance</span>

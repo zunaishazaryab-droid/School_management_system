@@ -10,13 +10,17 @@ def dashboard_view(request):
     user = request.user
     role = getattr(user, 'role', 'TEACHER')
     
-    # KPI placeholders and summaries for Sprint 0 (ready for live models in subsequent sprints)
+    from apps.students.models import Student
+
+    live_student_count = Student.objects.filter(status='ACTIVE').count()
+
+    # KPI stats
     stats = {
-        'total_students': 160,
+        'total_students': live_student_count,
         'total_teachers': 14,
         'today_attendance_rate': 94.5,
-        'present_students': 151,
-        'absent_students': 9,
+        'present_students': live_student_count,
+        'absent_students': 0,
         'monthly_fee_collection': 485000,
         'pending_dues': 65000,
         'monthly_expenses': 142000,

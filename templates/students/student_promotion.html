@@ -1,0 +1,143 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Batch Student Promotion | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Batch Student Promotion Workflow</h1>
+        <p class="page-subtitle">Promote students to the next academic level, reallocate sections, and preserve historical promotion logs.</p>
+    </div>
+    <div>
+        <a href="{% url 'students:student_list' %}" class="btn btn-outline">
+            ◀ Back to Directory
+        </a>
+    </div>
+</div>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="dashboard-grid">
+        <!-- Left: Target Placement Parameters -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><span>🚀 Promotion Destination & Session</span></div>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Promote From Class *</label>
+                    {{ form.from_class }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Promote To Target Class *</label>
+                    {{ form.to_class }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Target Section *</label>
+                    {{ form.to_section }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Target Academic Year *</label>
+                    {{ form.target_academic_year }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Promotion Remarks</label>
+                    {{ form.remarks }}
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 20px; padding: 12px;" onclick="return confirm('Are you sure you want to execute batch promotion for the selected students?');">
+                    🎓 Execute Batch Promotion
+                </button>
+            </div>
+        </div>
+
+        <!-- Right: Student Selection Checklist -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-title"><span>📋 Select Eligible Students</span></div>
+                <label style="font-size: 12.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="selectAllStudents" checked> Select All
+                </label>
+            </div>
+            <div class="card-body" id="studentsListContainer" style="max-height: 500px; overflow-y: auto; padding: 0;">
+                <p style="padding: 24px; text-align: center; color: var(--text-muted);">
+                    Select a "Promote From Class" on the left to load active students.
+                </p>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const fromClassSelect = document.getElementById('promo_from_class');
+    const container = document.getElementById('studentsListContainer');
+    const selectAllBox = document.getElementById('selectAllStudents');
+
+    function loadStudentsForClass(classId) {
+        if (!classId) return;
+        container.innerHTML = '<p style="padding: 20px; text-align: center; color: var(--text-muted);">Loading students...</p>';
+
+        fetch(`/students/?class_id=${classId}`)
+            .then(res => res.text())
+            .then(html => {
+                // Parse the response table to extract student checkboxes
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const rows = doc.querySelectorAll('tbody tr');
+
+                if (rows.length === 0 || rows[0].innerText.includes('No students')) {
+                    container.innerHTML = '<p style="padding: 24px; text-align: center; color: var(--text-muted);">No active students found in this class.</p>';
+                    return;
+                }
+
+                let listHtml = '<div style="display: flex; flex-direction: column; gap: 2px;">';
+                rows.forEach(row => {
+                    const nameLink = row.querySelector('td a');
+                    const rollInfo = row.querySelector('td div[style*="font-size: 12px"]');
+                    const admId = row.querySelectorAll('td')[1]?.innerText.trim();
+
+                    if (nameLink) {
+                        const studentId = nameLink.getAttribute('href').split('/').filter(Boolean).pop();
+                        listHtml += `
+                            <label style="display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer;">
+                                <input type="checkbox" name="selected_students" value="${studentId}" class="student-promo-cb" checked>
+                                <div style="flex: 1;">
+                                    <strong style="font-size: 13.5px; color: var(--text-main);">${nameLink.innerText}</strong>
+                                    <div style="font-size: 11.5px; color: var(--text-muted);">${admId} • ${rollInfo ? rollInfo.innerText : ''}</div>
+                                </div>
+                            </label>
+                        `;
+                    }
+                });
+                listHtml += '</div>';
+                container.innerHTML = listHtml;
+            })
+            .catch(err => {
+                container.innerHTML = '<p style="padding: 20px; text-align: center; color: var(--danger);">Failed to load students.</p>';
+            });
+    }
+
+    if (fromClassSelect) {
+        fromClassSelect.addEventListener('change', () => {
+            loadStudentsForClass(fromClassSelect.value);
+        });
+        if (fromClassSelect.value) {
+            loadStudentsForClass(fromClassSelect.value);
+        }
+    }
+
+    if (selectAllBox) {
+        selectAllBox.addEventListener('change', () => {
+            const checkboxes = document.querySelectorAll('.student-promo-cb');
+            checkboxes.forEach(cb => cb.checked = selectAllBox.checked);
+        });
+    }
+});
+</script>
+{% endblock %}

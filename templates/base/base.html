@@ -37,21 +37,25 @@
 
                 <div class="sidebar-section-title">Academic & Records</div>
 
-                <a href="#" class="nav-item" title="Students Management (Sprint 1)">
+                <a href="{% url 'students:student_list' %}" class="nav-item {% if 'students' in request.path %}active{% endif %}">
                     <span class="nav-icon">👨‍🎓</span>
                     <span>Students</span>
-                    <span class="nav-badge">Sprint 1</span>
                 </a>
 
                 {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+                <a href="{% url 'academics:class_list' %}" class="nav-item {% if 'academics/classes' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🏫</span>
+                    <span>Classes & Sections</span>
+                </a>
+
+                <a href="{% url 'academics:subject_list' %}" class="nav-item {% if 'academics/subjects' in request.path %}active{% endif %}">
+                    <span class="nav-icon">📚</span>
+                    <span>Subjects & Curriculum</span>
+                </a>
+
                 <a href="#" class="nav-item" title="Teachers & Staff (Sprint 2)">
                     <span class="nav-icon">👩‍🏫</span>
                     <span>Teachers & Staff</span>
-                </a>
-
-                <a href="#" class="nav-item" title="Classes & Sections (Sprint 1)">
-                    <span class="nav-icon">🏫</span>
-                    <span>Classes & Sections</span>
                 </a>
                 {% endif %}
 

@@ -1,0 +1,254 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% if is_edit %}Edit Student — {{ student.get_full_name }}{% else %}New Student Admission{% endif %} | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% if is_edit %}Edit Student Profile{% else %}New Student Admission Form{% endif %}</h1>
+        <p class="page-subtitle">Enter student biodata, academic placement, guardian information, and document details.</p>
+    </div>
+    <div>
+        <a href="{% url 'students:student_list' %}" class="btn btn-outline">
+            ◀ Back to Students Directory
+        </a>
+    </div>
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- 1. Academic Placement Section -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>🏫 1. Academic Placement & Enrollment</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Admission / Student ID *</label>
+                    {{ form.admission_number }}
+                    {% if form.admission_number.errors %}
+                    <small style="color: var(--danger);">{{ form.admission_number.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Roll Number</label>
+                    {{ form.roll_number }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Class Level *</label>
+                    {{ form.current_class }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Section *</label>
+                    {{ form.current_section }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Academic Session *</label>
+                    {{ form.academic_year }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Admission Date *</label>
+                    {{ form.admission_date }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Enrollment Status</label>
+                    {{ form.status }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Personal Biodata Section -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>👤 2. Student Personal Information</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">First Name *</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                    <small style="color: var(--danger);">{{ form.first_name.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Last Name / Surname</label>
+                    {{ form.last_name }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Gender *</label>
+                    {{ form.gender }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Date of Birth</label>
+                    {{ form.date_of_birth }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Blood Group</label>
+                    {{ form.blood_group }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Religion</label>
+                    {{ form.religion }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nationality</label>
+                    {{ form.nationality }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Student Passport Photo</label>
+                    {{ form.photo }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Guardian & Contact Information -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>👨‍👩‍👧 3. Guardian & Contact Details</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Father / Guardian Name *</label>
+                    {{ form.guardian_name }}
+                    {% if form.guardian_name.errors %}
+                    <small style="color: var(--danger);">{{ form.guardian_name.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Relationship</label>
+                    {{ form.guardian_relationship }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Guardian CNIC / B-Form</label>
+                    {{ form.guardian_cnic }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Primary WhatsApp / Phone *</label>
+                    {{ form.guardian_phone }}
+                    {% if form.guardian_phone.errors %}
+                    <small style="color: var(--danger);">{{ form.guardian_phone.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Emergency Contact Phone</label>
+                    {{ form.emergency_contact }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Guardian Email</label>
+                    {{ form.guardian_email }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Guardian Occupation</label>
+                    {{ form.guardian_occupation }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    {{ form.city }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Residential Address *</label>
+                {{ form.residential_address }}
+                {% if form.residential_address.errors %}
+                <small style="color: var(--danger);">{{ form.residential_address.errors.0 }}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Health, Previous History & Future Hardware ID -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>🏥 4. Health, Previous School & Hardware ID</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Previous School Attended</label>
+                    {{ form.previous_school }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Biometric ID (Reserved for Future)</label>
+                    {{ form.biometric_id }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Medical & Emergency Instructions</label>
+                {{ form.medical_notes }}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--card-border);">
+                <a href="{% url 'students:student_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                    💾 {% if is_edit %}Update Student Profile{% else %}Save Student Admission{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Dynamic Section loader when Class changes
+    const classSelect = document.getElementById('id_current_class');
+    const sectionSelect = document.getElementById('id_current_section');
+
+    if (classSelect && sectionSelect) {
+        classSelect.addEventListener('change', () => {
+            const classId = classSelect.value;
+            if (!classId) return;
+
+            fetch(`/academics/api/sections/${classId}/`)
+                .then(res => res.json())
+                .then(data => {
+                    sectionSelect.innerHTML = '<option value="">---------</option>';
+                    data.sections.forEach(sec => {
+                        const opt = document.createElement('option');
+                        opt.value = sec.id;
+                        opt.textContent = `Section ${sec.name} (Cap: ${sec.capacity})`;
+                        sectionSelect.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error('Error fetching sections:', err));
+        });
+    }
+});
+</script>
+{% endblock %}

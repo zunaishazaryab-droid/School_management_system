@@ -1,0 +1,170 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Students Directory | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Students Directory</h1>
+        <p class="page-subtitle">Manage student enrollments, profiles, academic records, and status.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'students:student_promotion' %}" class="btn btn-outline">
+            🚀 Batch Promotion
+        </a>
+        <a href="{% url 'students:student_add' %}" class="btn btn-primary">
+            ➕ Add New Student
+        </a>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body" style="padding: 16px 20px;">
+        <form method="GET" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between;">
+            <!-- Search Box -->
+            <div style="flex: 1; min-width: 240px; position: relative;">
+                <input type="text" name="search" class="form-control" placeholder="Search by name, ID, phone, father..." value="{{ search_query }}">
+            </div>
+
+            <!-- Class Filter -->
+            <div style="min-width: 160px;">
+                <select name="class_id" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Classes</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Section Filter -->
+            <div style="min-width: 150px;">
+                <select name="section_id" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Sections</option>
+                    {% for s in sections %}
+                    <option value="{{ s.id }}" {% if selected_section == s.id %}selected{% endif %}>{{ s.class_room.name }} - Sec {{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div style="min-width: 130px;">
+                <select name="status" class="form-control" onchange="this.form.submit()">
+                    <option value="ACTIVE" {% if selected_status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                    <option value="INACTIVE" {% if selected_status == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+                    <option value="GRADUATED" {% if selected_status == 'GRADUATED' %}selected{% endif %}>Graduated</option>
+                    <option value="TRANSFERRED" {% if selected_status == 'TRANSFERRED' %}selected{% endif %}>Transferred</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-outline btn-sm">Filter</button>
+            <a href="{% url 'students:student_list' %}" class="btn btn-outline btn-sm" style="color: var(--text-muted);">Reset</a>
+        </form>
+    </div>
+</div>
+
+<!-- Students Data Table -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <span>👨‍🎓 Student Records ({{ students_count }})</span>
+        </div>
+    </div>
+    <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
+                    <th style="padding: 12px 18px;">Student Info</th>
+                    <th style="padding: 12px 18px;">Admission ID</th>
+                    <th style="padding: 12px 18px;">Class & Section</th>
+                    <th style="padding: 12px 18px;">Guardian & WhatsApp</th>
+                    <th style="padding: 12px 18px;">Status</th>
+                    <th style="padding: 12px 18px; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for st in page_obj %}
+                <tr style="border-bottom: 1px solid #f1f5f9; transition: var(--transition);">
+                    <td style="padding: 12px 18px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            {% if st.photo %}
+                                <img src="{{ st.photo.url }}" alt="{{ st.get_full_name }}" class="user-avatar-sm">
+                            {% else %}
+                                <div class="user-avatar-sm">{{ st.first_name|first|upper }}</div>
+                            {% endif %}
+                            <div>
+                                <a href="{% url 'students:student_detail' st.id %}" style="font-weight: 600; color: var(--text-main);">
+                                    {{ st.get_full_name }}
+                                </a>
+                                <div style="font-size: 12px; color: var(--text-muted);">Roll No: {{ st.roll_number|default:"N/A" }} • {{ st.gender }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px 18px; font-weight: 600; color: var(--primary);">
+                        {{ st.admission_number }}
+                    </td>
+                    <td style="padding: 12px 18px;">
+                        <span class="role-badge" style="background: #f1f5f9; color: var(--text-main); border: none;">
+                            {{ st.current_class.name }} (Sec {{ st.current_section.name }})
+                        </span>
+                    </td>
+                    <td style="padding: 12px 18px;">
+                        <div style="font-weight: 500;">{{ st.guardian_name }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">📱 {{ st.guardian_phone }}</div>
+                    </td>
+                    <td style="padding: 12px 18px;">
+                        {% if st.status == 'ACTIVE' %}
+                        <span class="role-badge" style="background: var(--success-light); color: var(--success); border-color: var(--success-border);">Active</span>
+                        {% elif st.status == 'INACTIVE' %}
+                        <span class="role-badge" style="background: var(--danger-light); color: var(--danger); border-color: var(--danger-border);">Inactive</span>
+                        {% else %}
+                        <span class="role-badge" style="background: #f1f5f9; color: var(--text-muted);">{{ st.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 18px; text-align: right;">
+                        <div style="display: inline-flex; gap: 6px;">
+                            <a href="{% url 'students:student_detail' st.id %}" class="btn btn-outline btn-sm" title="View Full Profile">
+                                👁️ View
+                            </a>
+                            <a href="{% url 'students:student_edit' st.id %}" class="btn btn-outline btn-sm" title="Edit Student">
+                                ✏️ Edit
+                            </a>
+                            <a href="{% url 'students:student_card' st.id %}" class="btn btn-outline btn-sm" title="Print ID Card">
+                                🪪 Card
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No students found matching your criteria.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-top: 1px solid var(--card-border);">
+        <span style="font-size: 12.5px; color: var(--text-muted);">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        <div style="display: flex; gap: 6px;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&class_id={{ selected_class|default:'' }}&section_id={{ selected_section|default:'' }}&status={{ selected_status }}" class="btn btn-outline btn-sm">
+                ◀ Previous
+            </a>
+            {% endif %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&class_id={{ selected_class|default:'' }}&section_id={{ selected_section|default:'' }}&status={{ selected_status }}" class="btn btn-outline btn-sm">
+                Next ▶
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
