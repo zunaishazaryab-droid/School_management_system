@@ -1,0 +1,128 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Attendance Summary Report - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'reports:reports_hub' %}" class="btn btn-sm btn-outline">← Back to Hub</a>
+            <h1 class="page-title" style="margin: 0;">📊 Attendance Summary & Defaulter Report</h1>
+        </div>
+        <p class="page-subtitle" style="margin-top: 4px;">Monthly student attendance rates, aggregate present/absent counts, and low-attendance alerts (&lt;75%)</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" class="btn btn-outline">
+            🖨️ Print Attendance Summary
+        </button>
+    </div>
+</div>
+
+<!-- Class & Month Filter Bar -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body" style="padding: 14px 18px;">
+        <form method="GET" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <label style="font-size: 13px; font-weight: 600;">Select Class *</label>
+            <select name="class_room" class="form-control" style="max-width: 200px;" required>
+                <option value="">-- Choose Class --</option>
+                {% for cl in classes %}
+                <option value="{{ cl.id }}" {% if selected_class_id == cl.id|stringformat:"i" %}selected{% endif %}>{{ cl.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label style="font-size: 13px; font-weight: 600;">Month:</label>
+            <select name="month" class="form-control" style="max-width: 140px;">
+                <option value="1" {% if month == '01' or month == '1' %}selected{% endif %}>January</option>
+                <option value="2" {% if month == '02' or month == '2' %}selected{% endif %}>February</option>
+                <option value="3" {% if month == '03' or month == '3' %}selected{% endif %}>March</option>
+                <option value="4" {% if month == '04' or month == '4' %}selected{% endif %}>April</option>
+                <option value="5" {% if month == '05' or month == '5' %}selected{% endif %}>May</option>
+                <option value="6" {% if month == '06' or month == '6' %}selected{% endif %}>June</option>
+                <option value="7" {% if month == '07' or month == '7' %}selected{% endif %}>July</option>
+                <option value="8" {% if month == '08' or month == '8' %}selected{% endif %}>August</option>
+                <option value="9" {% if month == '09' or month == '9' %}selected{% endif %}>September</option>
+                <option value="10" {% if month == '10' %}selected{% endif %}>October</option>
+                <option value="11" {% if month == '11' %}selected{% endif %}>November</option>
+                <option value="12" {% if month == '12' %}selected{% endif %}>December</option>
+            </select>
+
+            <label style="font-size: 13px; font-weight: 600;">Year:</label>
+            <input type="number" name="year" value="{{ year }}" class="form-control" style="width: 100px;">
+
+            <button type="submit" class="btn btn-primary" style="height: 38px;">Generate Report</button>
+        </form>
+    </div>
+</div>
+
+<!-- Attendance Stats Table -->
+{% if selected_class %}
+<div class="card">
+    <div class="card-header">
+        <div class="card-title"><span>📋 {{ selected_class.name }} Monthly Attendance Ledger (Month: {{ month }}/{{ year }})</span></div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
+                        <th style="padding: 12px 16px; text-align: left;">Roll #</th>
+                        <th style="padding: 12px 16px; text-align: left;">Student Name</th>
+                        <th style="padding: 12px 16px; text-align: left;">Section</th>
+                        <th style="padding: 12px 16px; text-align: center;">Total Working Days</th>
+                        <th style="padding: 12px 16px; text-align: center;">Presents</th>
+                        <th style="padding: 12px 16px; text-align: center;">Lates</th>
+                        <th style="padding: 12px 16px; text-align: center;">Absents</th>
+                        <th style="padding: 12px 16px; text-align: right;">Attendance Rate</th>
+                        <th style="padding: 12px 16px; text-align: center;">Status Alert</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in student_attendance_stats %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 16px; font-weight: 600;">{{ row.student.roll_number|default:"--" }}</td>
+                        <td style="padding: 12px 16px;">
+                            <div style="font-weight: 700;">
+                                <a href="{% url 'students:student_detail' row.student.pk %}" style="color: inherit;">
+                                    {{ row.student.get_full_name }}
+                                </a>
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-muted);">ID: {{ row.student.admission_number }}</div>
+                        </td>
+                        <td style="padding: 12px 16px;">Sec {{ row.student.current_section.name }}</td>
+                        <td style="padding: 12px 16px; text-align: center; color: var(--text-muted);">{{ row.total_days }}</td>
+                        <td style="padding: 12px 16px; text-align: center; font-weight: 700; color: var(--success);">{{ row.presents }}</td>
+                        <td style="padding: 12px 16px; text-align: center; font-weight: 600; color: var(--warning);">{{ row.lates }}</td>
+                        <td style="padding: 12px 16px; text-align: center; font-weight: 700; color: var(--danger);">{{ row.absents }}</td>
+                        <td style="padding: 12px 16px; text-align: right; font-weight: 800; {% if row.is_low %}color: var(--danger);{% else %}color: var(--success);{% endif %}">
+                            {{ row.percentage }}%
+                        </td>
+                        <td style="padding: 12px 16px; text-align: center;">
+                            {% if row.is_low %}
+                            <span class="role-badge" style="background: var(--danger-light); color: var(--danger); font-size: 11px;">⚠️ LOW (&lt;75%)</span>
+                            {% else %}
+                            <span class="role-badge" style="background: var(--success-light); color: var(--success); font-size: 11px;">NORMAL</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="padding: 32px; text-align: center; color: var(--text-muted);">
+                            No students enrolled in this class.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 48px 24px;">
+    <div style="font-size: 36px; margin-bottom: 12px;">📊</div>
+    <h3 style="font-size: 17px; margin-bottom: 6px;">Select a Class to Generate Monthly Attendance Summary</h3>
+    <p style="font-size: 13.5px; color: var(--text-muted); max-width: 480px; margin: 0 auto;">
+        Choose a class and target month from the filter bar above.
+    </p>
+</div>
+{% endif %}
+{% endblock %}

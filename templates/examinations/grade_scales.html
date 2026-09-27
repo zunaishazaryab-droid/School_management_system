@@ -1,0 +1,95 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Grading Scales & GPA Setup - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'examinations:exam_list' %}" class="btn btn-sm btn-outline">← Back to Exams</a>
+            <h1 class="page-title" style="margin: 0;">📊 Grading Scales & GPA Setup</h1>
+        </div>
+        <p class="page-subtitle" style="margin-top: 4px;">Configure percentage thresholds, letter grades (A+, A, B, C, D, E, F) and GPA grade points</p>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Grading Scales Table -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><span>📜 Active Grade Thresholds</span></div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
+                            <th style="padding: 12px 16px; text-align: left;">Grade</th>
+                            <th style="padding: 12px 16px; text-align: center;">Min %</th>
+                            <th style="padding: 12px 16px; text-align: center;">Max %</th>
+                            <th style="padding: 12px 16px; text-align: center;">GPA Point</th>
+                            <th style="padding: 12px 16px; text-align: left;">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for g in scales %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px 16px; font-weight: 800; font-size: 15px; color: var(--primary);">
+                                {{ g.name }}
+                            </td>
+                            <td style="padding: 12px 16px; text-align: center; font-weight: 600;">{{ g.min_percentage }}%</td>
+                            <td style="padding: 12px 16px; text-align: center; font-weight: 600;">{{ g.max_percentage }}%</td>
+                            <td style="padding: 12px 16px; text-align: center; font-weight: 700;">{{ g.grade_point }}</td>
+                            <td style="padding: 12px 16px; color: var(--text-muted);">{{ g.remarks }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">Standard Pakistani / International 7-tier scale active.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Scale Form -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><span>+ Add Grade Threshold</span></div>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Grade Name (e.g. A+) *</label>
+                    {{ form.name }}
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Min Percentage (%) *</label>
+                        {{ form.min_percentage }}
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Max Percentage (%) *</label>
+                        {{ form.max_percentage }}
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Grade Point (GPA) *</label>
+                    {{ form.grade_point }}
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Assessment Remarks *</label>
+                    {{ form.remarks }}
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Save Grade Scale
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Reports & Analytics Center - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title">📈 Reports & Analytics Center</h1>
+        <p class="page-subtitle">Centralized intelligence hub for student demographics, attendance, fee collections, exam gazettes & faculty</p>
+    </div>
+</div>
+
+<!-- Category Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+    
+    <!-- 1. Students & Enrollment -->
+    <div class="card">
+        <div class="card-header" style="background: #eff6ff;">
+            <div class="card-title" style="color: var(--primary);">
+                <span>👥 Student & Enrollment Reports</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                Complete directory of active and enrolled students, gender demographics, class distributions, and CSV export.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="{% url 'reports:student_report' %}" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex;">
+                    <span>📄 Student Directory & Details</span>
+                    <span>→</span>
+                </a>
+                <a href="{% url 'reports:student_report' %}?export=csv" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex; color: var(--success); border-color: var(--success-border);">
+                    <span>📥 Export Student Database (CSV)</span>
+                    <span>💾</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Attendance & Defaulters -->
+    <div class="card">
+        <div class="card-header" style="background: #ecfdf5;">
+            <div class="card-title" style="color: var(--success);">
+                <span>📅 Attendance & Punctuality Reports</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                Monthly class attendance registers, percentage calculations, and low attendance alert warnings (&lt;75%).
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="{% url 'reports:attendance_report' %}" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex;">
+                    <span>📊 Class Monthly Attendance Summary</span>
+                    <span>→</span>
+                </a>
+                <a href="{% url 'attendance:student_attendance' %}" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex;">
+                    <span>✍️ Daily Attendance Register</span>
+                    <span>→</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Fees & Financial Outflow -->
+    <div class="card">
+        <div class="card-header" style="background: #fffbeb;">
+            <div class="card-title" style="color: #b45309;">
+                <span>💰 Financial & Fee Collection Reports</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                Revenue recoveries, class-wise dues breakdown, defaulter lists, and institution cashflow surplus.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="{% url 'reports:fee_report' %}" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex;">
+                    <span>💵 Class Fee Recovery & Dues Report</span>
+                    <span>→</span>
+                </a>
+                <a href="{% url 'fees:defaulters_list' %}" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex; color: var(--danger); border-color: var(--danger-border);">
+                    <span>🚨 Overdue Fee Defaulters</span>
+                    <span>→</span>
+                </a>
+                <a href="{% url 'expenses:financial_summary' %}" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex;">
+                    <span>📈 Income vs Expense Statement</span>
+                    <span>→</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Examination & Academics -->
+    <div class="card">
+        <div class="card-header" style="background: #e0e7ff;">
+            <div class="card-title" style="color: #4338ca;">
+                <span>🏆 Examinations & Result Gazettes</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                Complete class result sheets, subject marks, percentage rankings, top positions, and printable report cards.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="{% url 'reports:exam_report' %}" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex;">
+                    <span>📜 Class Tabulated Result Gazette</span>
+                    <span>→</span>
+                </a>
+                <a href="{% url 'examinations:exam_list' %}" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex;">
+                    <span>📝 Examinations Dashboard</span>
+                    <span>→</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Faculty & Timetable -->
+    <div class="card">
+        <div class="card-header" style="background: #fdf2f8;">
+            <div class="card-title" style="color: #be185d;">
+                <span>👨‍🏫 Faculty & Timetable Workload</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                Teacher period counts, subject curriculum load, and weekly schedule allocations.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="{% url 'reports:teacher_report' %}" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex;">
+                    <span>⏰ Faculty Workload & Allocation</span>
+                    <span>→</span>
+                </a>
+                <a href="{% url 'academics:timetable' %}" class="btn btn-outline" style="text-align: left; justify-content: space-between; display: flex;">
+                    <span>📅 Weekly Timetable Matrix</span>
+                    <span>→</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

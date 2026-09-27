@@ -59,6 +59,11 @@
                 </a>
                 {% endif %}
 
+                <a href="{% url 'academics:timetable' %}" class="nav-item {% if 'timetable' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🕒</span>
+                    <span>Class Timetable</span>
+                </a>
+
                 <a href="{% url 'attendance:student_attendance' %}" class="nav-item {% if 'attendance' in request.path %}active{% endif %}">
                     <span class="nav-icon">📅</span>
                     <span>Daily Attendance</span>
@@ -90,12 +95,12 @@
 
                 <div class="sidebar-section-title">Examination & Reports</div>
 
-                <a href="#" class="nav-item" title="Exams & Results (Sprint 3)">
+                <a href="{% url 'examinations:exam_list' %}" class="nav-item {% if request.resolver_match.app_name == 'examinations' %}active{% endif %}">
                     <span class="nav-icon">📝</span>
                     <span>Exams & Results</span>
                 </a>
 
-                <a href="#" class="nav-item" title="Reports Center (Sprint 4)">
+                <a href="{% url 'reports:reports_hub' %}" class="nav-item {% if request.resolver_match.app_name == 'reports' %}active{% endif %}">
                     <span class="nav-icon">📈</span>
                     <span>Reports Center</span>
                 </a>

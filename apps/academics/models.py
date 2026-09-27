@@ -104,3 +104,54 @@ class ClassSubject(models.Model):
     def __str__(self):
         sec_str = f" - Sec {self.section.name}" if self.section else ""
         return f"{self.class_room.name}{sec_str} : {self.subject.name}"
+
+
+class Period(models.Model):
+    name = models.CharField(max_length=50, help_text="e.g. Period 1, Period 2, Recess / Break, Period 5")
+    period_number = models.PositiveIntegerField(default=1)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    is_break = models.BooleanField(default=False, help_text="Mark if this period is recess / lunch break")
+
+    class Meta:
+        ordering = ['period_number', 'start_time']
+        verbose_name = 'Timetable Period'
+        verbose_name_plural = 'Timetable Periods'
+
+    def __str__(self):
+        return f"{self.name} ({self.start_time.strftime('%I:%M %p')} - {self.end_time.strftime('%I:%M %p')})"
+
+
+class TimetableEntry(models.Model):
+    class DayOfWeek(models.TextChoices):
+        MONDAY = 'MONDAY', 'Monday'
+        TUESDAY = 'TUESDAY', 'Tuesday'
+        WEDNESDAY = 'WEDNESDAY', 'Wednesday'
+        THURSDAY = 'THURSDAY', 'Thursday'
+        FRIDAY = 'FRIDAY', 'Friday'
+        SATURDAY = 'SATURDAY', 'Saturday'
+
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='timetable_entries')
+    class_room = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, related_name='timetable_entries')
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='timetable_entries')
+    day_of_week = models.CharField(max_length=20, choices=DayOfWeek.choices, default=DayOfWeek.MONDAY)
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, related_name='timetable_entries')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='timetable_entries')
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='timetable_slots'
+    )
+    room_number = models.CharField(max_length=50, blank=True, default='', help_text="e.g. Room 104 / Science Lab")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['day_of_week', 'period__period_number']
+        unique_together = ('academic_year', 'class_room', 'section', 'day_of_week', 'period')
+        verbose_name = 'Timetable Slot'
+        verbose_name_plural = 'Timetable Slots'
+
+    def __str__(self):
+        return f"{self.get_day_of_week_display()} {self.period.name}: {self.class_room.name} ({self.section.name}) - {self.subject.name}"

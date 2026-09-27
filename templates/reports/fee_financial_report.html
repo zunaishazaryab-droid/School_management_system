@@ -1,0 +1,120 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Financial & Fee Collection Report - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'reports:reports_hub' %}" class="btn btn-sm btn-outline">← Back to Hub</a>
+            <h1 class="page-title" style="margin: 0;">💰 Financial Collections & Revenue Report</h1>
+        </div>
+        <p class="page-subtitle" style="margin-top: 4px;">Class-wise fee billing, recoveries, outstanding dues and operating balance</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" class="btn btn-outline">
+            🖨️ Print Financial Statement
+        </button>
+    </div>
+</div>
+
+<!-- Financial KPI Overview -->
+<div class="kpi-grid" style="margin-bottom: 24px;">
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--primary-light); color: var(--primary);">📊</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total Invoiced</span>
+            <span class="kpi-value">Rs. {{ total_invoiced|floatformat:0 }}</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--success-light); color: var(--success);">💰</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total Collected</span>
+            <span class="kpi-value" style="color: var(--success);">Rs. {{ total_collected|floatformat:0 }}</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--danger-light); color: var(--danger);">⚠️</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total Pending Dues</span>
+            <span class="kpi-value" style="color: var(--danger);">Rs. {{ total_pending|floatformat:0 }}</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: {% if net_operating_profit >= 0 %}var(--success-light){% else %}var(--danger-light){% endif %}; color: {% if net_operating_profit >= 0 %}var(--success){% else %}var(--danger){% endif %};">
+            📈
+        </div>
+        <div class="kpi-info">
+            <span class="kpi-label">Net Operating Surplus</span>
+            <span class="kpi-value" style="{% if net_operating_profit >= 0 %}color: var(--success);{% else %}color: var(--danger);{% endif %}">
+                Rs. {{ net_operating_profit|floatformat:0 }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Class-wise Recovery Statement -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title"><span>🏫 Class-wise Fee Recovery & Dues Analysis</span></div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
+                        <th style="padding: 12px 16px; text-align: left;">Class</th>
+                        <th style="padding: 12px 16px; text-align: right;">Total Billed (Rs.)</th>
+                        <th style="padding: 12px 16px; text-align: right;">Total Collected (Rs.)</th>
+                        <th style="padding: 12px 16px; text-align: right;">Pending Dues (Rs.)</th>
+                        <th style="padding: 12px 16px; text-align: right;">Recovery Rate</th>
+                        <th style="padding: 12px 16px; text-align: center;">Recovery Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in class_financial_stats %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 16px; font-weight: 700;">{{ row.class_room.name }}</td>
+                        <td style="padding: 12px 16px; text-align: right; font-weight: 600;">Rs. {{ row.invoiced|floatformat:0 }}</td>
+                        <td style="padding: 12px 16px; text-align: right; font-weight: 700; color: var(--success);">Rs. {{ row.collected|floatformat:0 }}</td>
+                        <td style="padding: 12px 16px; text-align: right; font-weight: 700; {% if row.pending > 0 %}color: var(--danger);{% endif %}">
+                            Rs. {{ row.pending|floatformat:0 }}
+                        </td>
+                        <td style="padding: 12px 16px; text-align: right; font-weight: 800; color: var(--primary);">
+                            {{ row.recovery_rate }}%
+                        </td>
+                        <td style="padding: 12px 16px; text-align: center;">
+                            {% if row.recovery_rate >= 80 %}
+                            <span class="role-badge" style="background: var(--success-light); color: var(--success); font-size: 11px;">EXCELLENT</span>
+                            {% elif row.recovery_rate >= 50 %}
+                            <span class="role-badge" style="background: var(--warning-light); color: var(--warning); font-size: 11px;">MODERATE</span>
+                            {% else %}
+                            <span class="role-badge" style="background: var(--danger-light); color: var(--danger); font-size: 11px;">LOW RECOVERY</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" style="padding: 32px; text-align: center; color: var(--text-muted);">No fee billing data recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr style="background: #f8fafc; border-top: 2px solid var(--card-border); font-weight: 800;">
+                        <td style="padding: 12px 16px;">Institutional Grand Total:</td>
+                        <td style="padding: 12px 16px; text-align: right;">Rs. {{ total_invoiced|floatformat:0 }}</td>
+                        <td style="padding: 12px 16px; text-align: right; color: var(--success);">Rs. {{ total_collected|floatformat:0 }}</td>
+                        <td style="padding: 12px 16px; text-align: right; color: var(--danger);">Rs. {{ total_pending|floatformat:0 }}</td>
+                        <td style="padding: 12px 16px; text-align: right; color: var(--primary);">
+                            {% if total_invoiced > 0 %}{% widthratio total_collected total_invoiced 100 %}%{% else %}0%{% endif %}
+                        </td>
+                        <td style="padding: 12px 16px; text-align: center;">--</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

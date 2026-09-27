@@ -1,0 +1,101 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Marks Entry - {{ schedule.class_room.name }} : {{ schedule.subject.name }} - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'examinations:exam_detail' schedule.exam.pk %}" class="btn btn-sm btn-outline">← Back to Date Sheet</a>
+            <h1 class="page-title" style="margin: 0;">✍️ Marks Entry: {{ schedule.class_room.name }} : {{ schedule.subject.name }}</h1>
+        </div>
+        <p class="page-subtitle" style="margin-top: 4px;">{{ schedule.exam.title }} • Max Marks: {{ schedule.total_marks }} • Passing Marks: {{ schedule.passing_marks }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-title"><span>📋 Student Marks Register ({{ student_rows|length }} Students)</span></div>
+        <div style="font-size: 13px; color: var(--text-muted);">
+            Max Marks: <strong>{{ schedule.total_marks }}</strong>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="table-container">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
+                            <th style="padding: 12px 16px; text-align: left; width: 60px;">#</th>
+                            <th style="padding: 12px 16px; text-align: left;">Roll #</th>
+                            <th style="padding: 12px 16px; text-align: left;">Student Name</th>
+                            <th style="padding: 12px 16px; text-align: left;">Section</th>
+                            <th style="padding: 12px 16px; text-align: left; width: 140px;">Marks Obtained</th>
+                            <th style="padding: 12px 16px; text-align: center; width: 100px;">Absent?</th>
+                            <th style="padding: 12px 16px; text-align: left;">Teacher Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in student_rows %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 10px 16px; color: var(--text-muted);">{{ forloop.counter }}</td>
+                            <td style="padding: 10px 16px; font-weight: 600;">{{ row.student.roll_number|default:"--" }}</td>
+                            <td style="padding: 10px 16px;">
+                                <div style="font-weight: 700;">{{ row.student.get_full_name }}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">ID: {{ row.student.admission_number }}</div>
+                            </td>
+                            <td style="padding: 10px 16px;">Section {{ row.student.current_section.name }}</td>
+                            <td style="padding: 10px 16px;">
+                                <input type="number" step="0.01" max="{{ schedule.total_marks }}" min="0" 
+                                       name="marks_{{ row.student.id }}" value="{{ row.obtained }}" 
+                                       class="form-control marks-input" id="marks_{{ row.student.id }}" 
+                                       placeholder="0 - {{ schedule.total_marks }}" style="font-weight: 700; width: 120px;">
+                            </td>
+                            <td style="padding: 10px 16px; text-align: center;">
+                                <input type="checkbox" name="absent_{{ row.student.id }}" value="1" 
+                                       id="abs_{{ row.student.id }}" class="form-checkbox" 
+                                       {% if row.is_absent %}checked{% endif %}
+                                       onchange="toggleAbsent('{{ row.student.id }}')">
+                            </td>
+                            <td style="padding: 10px 16px;">
+                                <input type="text" name="remarks_{{ row.student.id }}" value="{{ row.remarks }}" 
+                                       class="form-control" placeholder="e.g. Good performance / weak in concepts" style="font-size: 12.5px;">
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" style="padding: 32px; text-align: center; color: var(--text-muted);">
+                                No students enrolled in this class.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--card-border);">
+                <a href="{% url 'examinations:exam_detail' schedule.exam.pk %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 28px; font-size: 14px;">
+                    💾 Save Subject Marks
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleAbsent(studentId) {
+    const absCheckbox = document.getElementById('abs_' + studentId);
+    const marksInput = document.getElementById('marks_' + studentId);
+    if (absCheckbox.checked) {
+        marksInput.value = '0';
+        marksInput.disabled = true;
+        marksInput.style.opacity = '0.5';
+    } else {
+        marksInput.disabled = false;
+        marksInput.style.opacity = '1';
+    }
+}
+</script>
+{% endblock %}

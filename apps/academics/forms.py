@@ -1,5 +1,5 @@
 from django import forms
-from .models import AcademicYear, ClassRoom, Section, Subject, ClassSubject
+from .models import AcademicYear, ClassRoom, Section, Subject, ClassSubject, Period, TimetableEntry
 
 
 class AcademicYearForm(forms.ModelForm):
@@ -61,4 +61,33 @@ class ClassSubjectForm(forms.ModelForm):
             'section': forms.Select(attrs={'class': 'form-control'}),
             'subject': forms.Select(attrs={'class': 'form-control'}),
             'teacher': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+
+class PeriodForm(forms.ModelForm):
+    class Meta:
+        model = Period
+        fields = ['name', 'period_number', 'start_time', 'end_time', 'is_break']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Period 1'}),
+            'period_number': forms.NumberInput(attrs={'class': 'form-control'}),
+            'start_time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'end_time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'is_break': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
+        }
+
+
+class TimetableEntryForm(forms.ModelForm):
+    class Meta:
+        model = TimetableEntry
+        fields = ['academic_year', 'class_room', 'section', 'day_of_week', 'period', 'subject', 'teacher', 'room_number']
+        widgets = {
+            'academic_year': forms.Select(attrs={'class': 'form-control'}),
+            'class_room': forms.Select(attrs={'class': 'form-control'}),
+            'section': forms.Select(attrs={'class': 'form-control'}),
+            'day_of_week': forms.Select(attrs={'class': 'form-control'}),
+            'period': forms.Select(attrs={'class': 'form-control'}),
+            'subject': forms.Select(attrs={'class': 'form-control'}),
+            'teacher': forms.Select(attrs={'class': 'form-control'}),
+            'room_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Room 101'}),
         }

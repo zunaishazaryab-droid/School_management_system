@@ -1,0 +1,109 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Examination Result Gazette Report - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'reports:reports_hub' %}" class="btn btn-sm btn-outline">← Back to Hub</a>
+            <h1 class="page-title" style="margin: 0;">🏆 Examination Result Gazette Report</h1>
+        </div>
+        <p class="page-subtitle" style="margin-top: 4px;">Comprehensive class-wise result sheet, marks breakdown, percentage and class standing rank</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" class="btn btn-outline">
+            🖨️ Print Result Sheet
+        </button>
+    </div>
+</div>
+
+<!-- Exam & Class Selection Filter -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body" style="padding: 14px 18px;">
+        <form method="GET" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <label style="font-size: 13px; font-weight: 600;">Select Exam *</label>
+            <select name="exam" class="form-control" style="max-width: 240px;" required>
+                <option value="">-- Choose Exam --</option>
+                {% for ex in exams %}
+                <option value="{{ ex.id }}" {% if exam_id == ex.id|stringformat:"i" %}selected{% endif %}>{{ ex.title }}</option>
+                {% endfor %}
+            </select>
+
+            <label style="font-size: 13px; font-weight: 600;">Class *</label>
+            <select name="class_room" class="form-control" style="max-width: 180px;" required>
+                <option value="">-- Choose Class --</option>
+                {% for cl in classes %}
+                <option value="{{ cl.id }}" {% if class_id == cl.id|stringformat:"i" %}selected{% endif %}>{{ cl.name }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="btn btn-primary" style="height: 38px;">Generate Gazette</button>
+        </form>
+    </div>
+</div>
+
+{% if selected_exam and selected_class %}
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-title"><span>📜 Official Result Gazette: {{ selected_class.name }} ({{ selected_exam.title }})</span></div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                    <tr style="background: #1e293b; color: #ffffff;">
+                        <th style="padding: 10px 14px; text-align: center; width: 60px;">Rank</th>
+                        <th style="padding: 10px 14px; text-align: left;">Roll #</th>
+                        <th style="padding: 10px 14px; text-align: left;">Student Name</th>
+                        <th style="padding: 10px 14px; text-align: left;">Section</th>
+                        <th style="padding: 10px 14px; text-align: right;">Total Marks</th>
+                        <th style="padding: 10px 14px; text-align: right;">Obtained</th>
+                        <th style="padding: 10px 14px; text-align: right;">Percentage</th>
+                        <th style="padding: 10px 14px; text-align: center;">Grade</th>
+                        <th style="padding: 10px 14px; text-align: center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in results %}
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px 14px; text-align: center; font-weight: 800;">
+                            {% if res.position_in_class == 1 %}🥇 1st
+                            {% elif res.position_in_class == 2 %}🥈 2nd
+                            {% elif res.position_in_class == 3 %}🥉 3rd
+                            {% else %}{{ res.position_in_class|default:"--" }}
+                            {% endif %}
+                        </td>
+                        <td style="padding: 10px 14px; font-weight: 600;">{{ res.student.roll_number|default:"--" }}</td>
+                        <td style="padding: 10px 14px; font-weight: 700;">{{ res.student.get_full_name }}</td>
+                        <td style="padding: 10px 14px;">Sec {{ res.section.name }}</td>
+                        <td style="padding: 10px 14px; text-align: right; color: var(--text-muted);">{{ res.total_marks|floatformat:0 }}</td>
+                        <td style="padding: 10px 14px; text-align: right; font-weight: 700;">{{ res.obtained_marks|floatformat:1 }}</td>
+                        <td style="padding: 10px 14px; text-align: right; font-weight: 800; color: var(--primary);">{{ res.percentage }}%</td>
+                        <td style="padding: 10px 14px; text-align: center; font-weight: 800;">{{ res.grade }}</td>
+                        <td style="padding: 10px 14px; text-align: center;">
+                            {% if res.is_passed %}
+                            <span class="role-badge" style="background: var(--success-light); color: var(--success); font-size: 11px;">PASSED</span>
+                            {% else %}
+                            <span class="role-badge" style="background: var(--danger-light); color: var(--danger); font-size: 11px;">FAILED</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="9" style="padding: 32px; text-align: center; color: var(--text-muted);">No result records found for this class and exam.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 48px 24px;">
+    <div style="font-size: 36px; margin-bottom: 12px;">🏆</div>
+    <h3 style="font-size: 17px; margin-bottom: 6px;">Select an Exam and Class to View Tabulated Result Gazette</h3>
+    <p style="font-size: 13.5px; color: var(--text-muted); max-width: 480px; margin: 0 auto;">
+        Choose target examination and class from the filter bar above.
+    </p>
+</div>
+{% endif %}
+{% endblock %}
