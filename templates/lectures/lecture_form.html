@@ -1,0 +1,116 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Record Daily Lecture | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Record Daily Lecture</h1>
+        <p class="page-subtitle">Log topic details, classwork done, homework assigned, and copies checked.</p>
+    </div>
+    <div>
+        <a href="{% url 'lectures:lecture_list' %}" class="btn btn-outline">◀ Back to Lectures</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Lecture Date *</label>
+                    {{ form.date }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Class *</label>
+                    {{ form.class_room }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Section *</label>
+                    {{ form.section }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Subject *</label>
+                    {{ form.subject }}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Chapter / Unit Title *</label>
+                    {{ form.chapter_name }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Topic Covered *</label>
+                    {{ form.topic }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Learning Objectives</label>
+                {{ form.learning_objectives }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Classwork / Whiteboard Exercises *</label>
+                {{ form.classwork_description }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Homework Assigned</label>
+                {{ form.homework_assigned }}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Present Students</label>
+                    {{ form.present_students_count }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Absent Students</label>
+                    {{ form.absent_students_count }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notebooks Checked</label>
+                    {{ form.copies_checked_count }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Discipline / Pacing Remarks</label>
+                {{ form.remarks }}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--card-border);">
+                <a href="{% url 'lectures:lecture_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                    💾 Save Lecture Log
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cls = document.getElementById('id_lecture_class');
+    const sec = document.getElementById('id_lecture_section');
+    if (cls && sec) {
+        cls.addEventListener('change', () => {
+            fetch(`/academics/api/sections/${cls.value}/`)
+                .then(r => r.json())
+                .then(d => {
+                    sec.innerHTML = '<option value="">---------</option>';
+                    d.sections.forEach(s => {
+                        const o = document.createElement('option');
+                        o.value = s.id;
+                        o.textContent = `Section ${s.name}`;
+                        sec.appendChild(o);
+                    });
+                });
+        });
+    }
+});
+</script>
+{% endblock %}

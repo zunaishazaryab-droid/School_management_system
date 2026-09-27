@@ -1,0 +1,110 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Faculty Payroll & Salaries | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Faculty Payroll & Salaries</h1>
+        <p class="page-subtitle">Generate monthly salary disbursements, manage allowances and staff deductions.</p>
+    </div>
+    <div>
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('addSalaryModal').style.display='block'">
+            ➕ Generate Salary Voucher
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
+                    <th style="padding: 12px 18px;">Faculty Member</th>
+                    <th style="padding: 12px 18px;">Salary Month</th>
+                    <th style="padding: 12px 18px;">Basic Salary</th>
+                    <th style="padding: 12px 18px;">Allowances</th>
+                    <th style="padding: 12px 18px;">Deductions</th>
+                    <th style="padding: 12px 18px;">Net Payable</th>
+                    <th style="padding: 12px 18px;">Payment Mode</th>
+                    <th style="padding: 12px 18px;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sal in salaries %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 12px 18px; font-weight: 600;">
+                        <a href="{% url 'teachers:teacher_detail' sal.teacher.id %}">{{ sal.teacher.get_full_name }}</a>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">{{ sal.teacher.employee_id }}</div>
+                    </td>
+                    <td style="padding: 12px 18px;">{{ sal.salary_month }}</td>
+                    <td style="padding: 12px 18px;">{{ school_settings.currency_symbol }} {{ sal.basic_salary }}</td>
+                    <td style="padding: 12px 18px; color: var(--success);">+{{ sal.allowances }}</td>
+                    <td style="padding: 12px 18px; color: var(--danger);">-{{ sal.deductions }}</td>
+                    <td style="padding: 12px 18px; font-weight: 700; color: var(--primary);">{{ school_settings.currency_symbol }} {{ sal.net_salary }}</td>
+                    <td style="padding: 12px 18px;">{{ sal.get_payment_method_display }}</td>
+                    <td style="padding: 12px 18px;">
+                        <span class="role-badge" style="background: var(--success-light); color: var(--success);">{{ sal.status }}</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No payroll records found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Add Salary -->
+<div id="addSalaryModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="max-width: 520px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3 style="font-size: 18px; font-weight: 700;">Issue Salary Disbursement</h3>
+            <button type="button" onclick="document.getElementById('addSalaryModal').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Select Faculty Member *</label>
+                {{ form.teacher }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Salary Month *</label>
+                {{ form.salary_month }}
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label class="form-label">Basic Salary</label>
+                    {{ form.basic_salary }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Allowances</label>
+                    {{ form.allowances }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Deductions</label>
+                    {{ form.deductions }}
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label class="form-label">Payment Date</label>
+                    {{ form.payment_date }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payment Mode</label>
+                    {{ form.payment_method }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                {{ form.status }}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('addSalaryModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Payroll Slip</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

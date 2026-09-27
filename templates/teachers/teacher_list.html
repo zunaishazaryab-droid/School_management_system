@@ -1,0 +1,112 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Faculty & Staff Directory | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Faculty & Staff Directory</h1>
+        <p class="page-subtitle">Manage teaching faculty, designations, subject allocations, salaries, and performance.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'teachers:salary_list' %}" class="btn btn-outline">
+            💰 Payroll & Salaries
+        </a>
+        <a href="{% url 'teachers:teacher_add' %}" class="btn btn-primary">
+            ➕ Add Faculty Member
+        </a>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body" style="padding: 16px 20px;">
+        <form method="GET" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between;">
+            <div style="flex: 1; min-width: 240px;">
+                <input type="text" name="search" class="form-control" placeholder="Search teacher name, employee ID, phone..." value="{{ search_query }}">
+            </div>
+            <div style="min-width: 150px;">
+                <select name="status" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="ACTIVE" {% if selected_status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                    <option value="ON_LEAVE" {% if selected_status == 'ON_LEAVE' %}selected{% endif %}>On Leave</option>
+                    <option value="RESIGNED" {% if selected_status == 'RESIGNED' %}selected{% endif %}>Resigned</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-outline btn-sm">Filter</button>
+            <a href="{% url 'teachers:teacher_list' %}" class="btn btn-outline btn-sm" style="color: var(--text-muted);">Reset</a>
+        </form>
+    </div>
+</div>
+
+<!-- Teachers Table -->
+<div class="card">
+    <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
+                    <th style="padding: 12px 18px;">Faculty Member</th>
+                    <th style="padding: 12px 18px;">Emp ID</th>
+                    <th style="padding: 12px 18px;">Designation & Dept</th>
+                    <th style="padding: 12px 18px;">WhatsApp / Phone</th>
+                    <th style="padding: 12px 18px;">Basic Salary</th>
+                    <th style="padding: 12px 18px;">Status</th>
+                    <th style="padding: 12px 18px; text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in teachers %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 12px 18px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            {% if t.photo %}
+                                <img src="{{ t.photo.url }}" alt="{{ t.get_full_name }}" class="user-avatar-sm">
+                            {% else %}
+                                <div class="user-avatar-sm">{{ t.user.first_name|first|upper }}</div>
+                            {% endif %}
+                            <div>
+                                <a href="{% url 'teachers:teacher_detail' t.id %}" style="font-weight: 600; color: var(--text-main);">
+                                    {{ t.get_full_name }}
+                                </a>
+                                <div style="font-size: 11.5px; color: var(--text-muted);">{{ t.qualification }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px 18px; font-weight: 600; color: var(--primary);">
+                        {{ t.employee_id }}
+                    </td>
+                    <td style="padding: 12px 18px;">
+                        <strong>{{ t.get_designation_display }}</strong>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">{{ t.department }}</div>
+                    </td>
+                    <td style="padding: 12px 18px;">
+                        📱 {{ t.phone_number }}
+                    </td>
+                    <td style="padding: 12px 18px; font-weight: 600;">
+                        {{ school_settings.currency_symbol }} {{ t.basic_salary }}
+                    </td>
+                    <td style="padding: 12px 18px;">
+                        {% if t.status == 'ACTIVE' %}
+                        <span class="role-badge" style="background: var(--success-light); color: var(--success);">Active</span>
+                        {% else %}
+                        <span class="role-badge" style="background: var(--warning-light); color: var(--warning);">{{ t.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 18px; text-align: right;">
+                        <a href="{% url 'teachers:teacher_detail' t.id %}" class="btn btn-outline btn-sm">
+                            View Profile ➔
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                        No faculty members found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

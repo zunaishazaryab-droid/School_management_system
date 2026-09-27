@@ -1,0 +1,74 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Assign New Homework | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Assign New Homework</h1>
+        <p class="page-subtitle">Publish classroom homework and diary tasks with due date.</p>
+    </div>
+    <div>
+        <a href="{% url 'lectures:homework_list' %}" class="btn btn-outline">◀ Back to Diary</a>
+    </div>
+</div>
+
+<div class="card" style="max-width: 700px; margin: 0 auto;">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
+                <div class="form-group">
+                    <label class="form-label">Class *</label>
+                    {{ form.class_room }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Section *</label>
+                    {{ form.section }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Subject *</label>
+                    {{ form.subject }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Homework Title / Exercise *</label>
+                {{ form.title }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Detailed Tasks / Instructions *</label>
+                {{ form.description }}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
+                <div class="form-group">
+                    <label class="form-label">Assigned Date *</label>
+                    {{ form.assigned_date }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Due Date *</label>
+                    {{ form.due_date }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    {{ form.status }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Optional Worksheet / Attachment</label>
+                {{ form.attachment }}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--card-border);">
+                <a href="{% url 'lectures:homework_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                    📢 Publish Homework
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

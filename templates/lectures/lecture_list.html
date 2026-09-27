@@ -1,0 +1,96 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Daily Lecture Records | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Daily Lecture Log & Academic Teaching Records</h1>
+        <p class="page-subtitle">Track classroom topics delivered, learning objectives, classwork exercises, and notebooks checked.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'lectures:homework_list' %}" class="btn btn-outline">
+            📖 Homework Diary
+        </a>
+        <a href="{% url 'lectures:lecture_add' %}" class="btn btn-primary">
+            ➕ Record Daily Lecture
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body" style="padding: 16px 20px;">
+        <form method="GET" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 160px;">
+                <label class="form-label">Class</label>
+                <select name="class_id" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Classes</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if request.GET.class_id == c.id|stringformat:"i" %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 160px;">
+                <label class="form-label">Subject</label>
+                <select name="subject_id" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Subjects</option>
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}" {% if request.GET.subject_id == s.id|stringformat:"i" %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 160px;">
+                <label class="form-label">Date</label>
+                <input type="date" name="date" class="form-control" value="{{ request.GET.date }}" onchange="this.form.submit()">
+            </div>
+            <a href="{% url 'lectures:lecture_list' %}" class="btn btn-outline btn-sm">Reset</a>
+        </form>
+    </div>
+</div>
+
+<!-- Lecture Records Grid/Table -->
+<div class="card">
+    <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
+                    <th style="padding: 12px 18px;">Date & Teacher</th>
+                    <th style="padding: 12px 18px;">Class & Subject</th>
+                    <th style="padding: 12px 18px;">Chapter & Topic Covered</th>
+                    <th style="padding: 12px 18px;">Attendance</th>
+                    <th style="padding: 12px 18px;">Copies Checked</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lec in lectures %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 12px 18px;">
+                        <strong>{{ lec.date }}</strong>
+                        <div style="font-size: 12px; color: var(--text-muted);">By: {{ lec.teacher.get_full_name|default:lec.teacher.username }}</div>
+                    </td>
+                    <td style="padding: 12px 18px;">
+                        <span class="role-badge" style="background: var(--primary-light);">{{ lec.class_room.name }} (Sec {{ lec.section.name }})</span>
+                        <div style="font-weight: 600; color: var(--text-main); margin-top: 4px;">{{ lec.subject.name }}</div>
+                    </td>
+                    <td style="padding: 12px 18px;">
+                        <strong>{{ lec.topic }}</strong>
+                        <div style="font-size: 12px; color: var(--text-muted);">{{ lec.chapter_name }}</div>
+                        <p style="font-size: 12px; color: var(--text-light); margin-top: 2px;">{{ lec.classwork_description|truncatechars:70 }}</p>
+                    </td>
+                    <td style="padding: 12px 18px;">
+                        <span style="color: var(--success); font-weight: 600;">{{ lec.present_students_count }} Present</span>
+                        <div style="color: var(--danger); font-size: 11.5px;">{{ lec.absent_students_count }} Absent</div>
+                    </td>
+                    <td style="padding: 12px 18px; font-weight: 700; color: var(--primary);">
+                        {{ lec.copies_checked_count }} Checked
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">No daily lecture records found. Click "Record Daily Lecture" to log teaching work.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

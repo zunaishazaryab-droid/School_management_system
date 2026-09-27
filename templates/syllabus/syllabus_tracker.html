@@ -1,0 +1,212 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Syllabus Tracking & Curriculum | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Syllabus & Curriculum Progress Tracker</h1>
+        <p class="page-subtitle">Track chapter coverage, topic statuses, and term syllabus completion percentages.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('addChapterModal').style.display='block'">
+            ➕ Add Chapter
+        </button>
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('addTopicModal').style.display='block'">
+            📑 Add Topic
+        </button>
+    </div>
+</div>
+
+<!-- Class & Subject Picker -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-body" style="padding: 16px 20px;">
+        <form method="GET" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 200px;">
+                <label class="form-label">Select Class</label>
+                <select name="class_id" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Choose Class --</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class.id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 200px;">
+                <label class="form-label">Select Subject</label>
+                <select name="subject_id" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Choose Subject --</option>
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}" {% if selected_subject.id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-primary">Track Progress</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if selected_class and selected_subject %}
+<!-- Chapters & Topics Accordion/Grid -->
+<div style="display: flex; flex-direction: column; gap: 18px;">
+    {% for ch in chapters %}
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-header" style="background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main);">
+                    Ch {{ ch.chapter_number }}: {{ ch.title }}
+                </h3>
+                <span style="font-size: 12px; color: var(--text-muted);">{{ ch.completed_topics_count }} of {{ ch.total_topics_count }} topics completed</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 140px; height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+                    <div style="width: {{ ch.progress_pct }}%; height: 100%; background: {% if ch.progress_pct >= 100 %}var(--success){% elif ch.progress_pct > 0 %}var(--primary){% else %}#cbd5e1{% endif %};"></div>
+                </div>
+                <span style="font-weight: 700; font-size: 13px; color: var(--text-main);">{{ ch.progress_pct }}%</span>
+            </div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--card-border); background: #ffffff; color: var(--text-muted);">
+                        <th style="padding: 10px 18px; width: 90px;">Topic No</th>
+                        <th style="padding: 10px 18px;">Topic Title</th>
+                        <th style="padding: 10px 18px; width: 100px;">Periods</th>
+                        <th style="padding: 10px 18px; width: 140px;">Current Status</th>
+                        <th style="padding: 10px 18px; text-align: right;">Update Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for top in ch.topics.all %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 10px 18px; font-weight: 600; color: var(--primary);">{{ top.topic_number }}</td>
+                        <td style="padding: 10px 18px; font-weight: 500; color: var(--text-main);">{{ top.title }}</td>
+                        <td style="padding: 10px 18px; color: var(--text-muted);">{{ top.estimated_periods }} Periods</td>
+                        <td style="padding: 10px 18px;">
+                            {% if top.status == 'COMPLETED' %}
+                            <span class="role-badge" style="background: var(--success-light); color: var(--success);">Completed</span>
+                            {% elif top.status == 'IN_PROGRESS' %}
+                            <span class="role-badge" style="background: var(--warning-light); color: var(--warning);">In Progress</span>
+                            {% else %}
+                            <span class="role-badge" style="background: #f1f5f9; color: var(--text-muted);">Not Started</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 10px 18px; text-align: right;">
+                            <form method="POST" style="display: inline-flex; gap: 4px;">
+                                {% csrf_token %}
+                                <input type="hidden" name="update_topic_status" value="1">
+                                <input type="hidden" name="topic_id" value="{{ top.id }}">
+                                {% if top.status != 'COMPLETED' %}
+                                <button type="submit" name="new_status" value="COMPLETED" class="btn btn-outline btn-sm" style="color: var(--success); font-size: 11px; padding: 2px 8px;">
+                                    ✓ Complete
+                                </button>
+                                {% endif %}
+                                {% if top.status != 'IN_PROGRESS' %}
+                                <button type="submit" name="new_status" value="IN_PROGRESS" class="btn btn-outline btn-sm" style="color: var(--warning); font-size: 11px; padding: 2px 8px;">
+                                    ⏳ In-Progress
+                                </button>
+                                {% endif %}
+                                {% if top.status != 'NOT_STARTED' %}
+                                <button type="submit" name="new_status" value="NOT_STARTED" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 2px 8px;">
+                                    Reset
+                                </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">No topics added to this chapter yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card" style="text-align: center; padding: 40px;">
+        <p style="color: var(--text-muted);">No syllabus chapters created for this subject yet. Click "Add Chapter" above to add the course outline.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal: Add Chapter -->
+<div id="addChapterModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3 style="font-size: 18px; font-weight: 700;">Add Syllabus Chapter</h3>
+            <button type="button" onclick="document.getElementById('addChapterModal').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+        </div>
+        <form method="POST" action="{% url 'syllabus:chapter_add' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Class</label>
+                {{ chapter_form.class_room }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Subject</label>
+                {{ chapter_form.subject }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Chapter Number</label>
+                {{ chapter_form.chapter_number }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Chapter Title</label>
+                {{ chapter_form.title }}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('addChapterModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Chapter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Add Topic -->
+<div id="addTopicModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3 style="font-size: 18px; font-weight: 700;">Add Topic to Chapter</h3>
+            <button type="button" onclick="document.getElementById('addTopicModal').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+        </div>
+        <form method="POST" action="{% url 'syllabus:topic_add' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Select Chapter</label>
+                {{ topic_form.chapter }}
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label class="form-label">Topic Number</label>
+                    {{ topic_form.topic_number }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estimated Periods</label>
+                    {{ topic_form.estimated_periods }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Topic Title</label>
+                {{ topic_form.title }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                {{ topic_form.status }}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('addTopicModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Topic</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 50px 20px;">
+    <div style="font-size: 40px; margin-bottom: 12px;">📖</div>
+    <h3 style="font-size: 17px; margin-bottom: 6px;">Select Class and Subject</h3>
+    <p style="font-size: 13.5px; color: var(--text-muted);">Please pick a class and subject above to view and update the syllabus coverage.</p>
+</div>
+{% endif %}
+{% endblock %}

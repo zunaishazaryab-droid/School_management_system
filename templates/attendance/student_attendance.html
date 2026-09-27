@@ -1,0 +1,198 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Daily Student Attendance Register | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Daily Student Attendance Register</h1>
+        <p class="page-subtitle">Mark daily student presence, absences, and late arrivals for each classroom section.</p>
+    </div>
+    <div>
+        <a href="{% url 'attendance:attendance_report' %}" class="btn btn-outline">
+            📊 View Attendance Reports
+        </a>
+    </div>
+</div>
+
+<!-- Class & Date Selector Card -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-body" style="padding: 18px 22px;">
+        <form method="GET" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 180px;">
+                <label class="form-label">Attendance Date</label>
+                <input type="date" name="date" class="form-control" value="{{ selected_date }}" onchange="this.form.submit()">
+            </div>
+
+            <div style="flex: 1; min-width: 180px;">
+                <label class="form-label">Select Class</label>
+                <select name="class_id" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Choose Class --</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class.id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 180px;">
+                <label class="form-label">Select Section</label>
+                <select name="section_id" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Choose Section --</option>
+                    {% for s in sections %}
+                    <option value="{{ s.id }}" {% if selected_section.id == s.id %}selected{% endif %}>Section {{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">
+                    📂 Load Register
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if selected_class and selected_section %}
+<!-- Attendance Table Form -->
+<form method="POST">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div class="card-title">
+                <span>📋 {{ selected_class.name }} (Section {{ selected_section.name }}) — Date: {{ selected_date }}</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="markAllStatus('PRESENT')">
+                    ✅ Mark All Present
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="markAllStatus('ABSENT')" style="color: var(--danger);">
+                    ❌ Mark All Absent
+                </button>
+            </div>
+        </div>
+        <div class="card-body" style="padding: 0; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
+                        <th style="padding: 12px 18px; width: 80px;">Roll No</th>
+                        <th style="padding: 12px 18px;">Student Name</th>
+                        <th style="padding: 12px 18px; width: 340px;">Attendance Status</th>
+                        <th style="padding: 12px 18px;">Remarks / Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in students_data %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 18px; font-weight: 700; color: var(--primary);">
+                            {{ item.student.roll_number|default:"--" }}
+                        </td>
+                        <td style="padding: 12px 18px;">
+                            <div style="font-weight: 600; color: var(--text-main);">
+                                {{ item.student.get_full_name }}
+                            </div>
+                            <div style="font-size: 11.5px; color: var(--text-muted);">ID: {{ item.student.admission_number }}</div>
+                        </td>
+                        <td style="padding: 12px 18px;">
+                            <div style="display: flex; gap: 6px;">
+                                <label class="status-btn-label">
+                                    <input type="radio" name="status_{{ item.student.id }}" value="PRESENT" {% if item.status == 'PRESENT' %}checked{% endif %}>
+                                    <span class="status-btn btn-present">P</span>
+                                </label>
+                                <label class="status-btn-label">
+                                    <input type="radio" name="status_{{ item.student.id }}" value="LATE" {% if item.status == 'LATE' %}checked{% endif %}>
+                                    <span class="status-btn btn-late">L</span>
+                                </label>
+                                <label class="status-btn-label">
+                                    <input type="radio" name="status_{{ item.student.id }}" value="ABSENT" {% if item.status == 'ABSENT' %}checked{% endif %}>
+                                    <span class="status-btn btn-absent">A</span>
+                                </label>
+                                <label class="status-btn-label">
+                                    <input type="radio" name="status_{{ item.student.id }}" value="EXCUSED" {% if item.status == 'EXCUSED' %}checked{% endif %}>
+                                    <span class="status-btn btn-excused">E</span>
+                                </label>
+                            </div>
+                        </td>
+                        <td style="padding: 12px 18px;">
+                            <input type="text" name="remarks_{{ item.student.id }}" class="form-control" style="padding: 6px 10px; font-size: 12.5px;" placeholder="Optional remarks..." value="{{ item.remarks }}">
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            No active students found enrolled in this section.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if students_data %}
+        <div style="padding: 18px 22px; background: #f8fafc; border-top: 1px solid var(--card-border); display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 28px; font-size: 14px;">
+                💾 Save Daily Attendance Register
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</form>
+
+<style>
+.status-btn-label input {
+    display: none;
+}
+.status-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 13px;
+    border: 1px solid var(--card-border);
+    background: #ffffff;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.status-btn-label input:checked + .btn-present {
+    background: var(--success);
+    color: #fff;
+    border-color: var(--success);
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+}
+.status-btn-label input:checked + .btn-late {
+    background: var(--warning);
+    color: #fff;
+    border-color: var(--warning);
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+}
+.status-btn-label input:checked + .btn-absent {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+}
+.status-btn-label input:checked + .btn-excused {
+    background: var(--info);
+    color: #fff;
+    border-color: var(--info);
+}
+</style>
+
+<script>
+function markAllStatus(val) {
+    document.querySelectorAll(`input[type="radio"][value="${val}"]`).forEach(radio => {
+        radio.checked = true;
+    });
+}
+</script>
+{% else %}
+<div class="card" style="text-align: center; padding: 50px 20px;">
+    <div style="font-size: 40px; margin-bottom: 12px;">📅</div>
+    <h3 style="font-size: 17px; margin-bottom: 6px;">Select Class and Section</h3>
+    <p style="font-size: 13.5px; color: var(--text-muted);">Please select a class and section from above to load the student attendance sheet.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% if is_edit %}Edit Faculty Profile{% else %}Add Faculty Member{% endif %} | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% if is_edit %}Edit Faculty Profile: {{ teacher.get_full_name }}{% else %}Add New Faculty Member{% endif %}</h1>
+        <p class="page-subtitle">Configure teacher account credentials, designation, qualification, and salary structure.</p>
+    </div>
+    <div>
+        <a href="{% url 'teachers:teacher_list' %}" class="btn btn-outline">◀ Back to Directory</a>
+    </div>
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Account & Designation -->
+    <div class="card">
+        <div class="card-header"><div class="card-title"><span>👤 Account & Employment Details</span></div></div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Employee ID *</label>
+                    {{ form.employee_id }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Username (For Login) *</label>
+                    {{ form.username }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">First Name *</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    {{ form.last_name }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Official Email Address *</label>
+                    {{ form.email }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Designation *</label>
+                    {{ form.designation }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Department</label>
+                    {{ form.department }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Employment Status</label>
+                    {{ form.status }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Qualifications & Salary -->
+    <div class="card">
+        <div class="card-header"><div class="card-title"><span>🎓 Qualifications, Salary & Contact</span></div></div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Highest Qualification *</label>
+                    {{ form.qualification }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Experience (Years)</label>
+                    {{ form.experience_years }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Joining Date *</label>
+                    {{ form.joining_date }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Basic Monthly Salary ({{ school_settings.currency_symbol }}) *</label>
+                    {{ form.basic_salary }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">National ID (CNIC)</label>
+                    {{ form.cnic }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">WhatsApp / Phone *</label>
+                    {{ form.phone_number }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Emergency Phone</label>
+                    {{ form.emergency_contact }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Profile Photo</label>
+                    {{ form.photo }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Residential Address</label>
+                {{ form.residential_address }}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--card-border);">
+                <a href="{% url 'teachers:teacher_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    💾 {% if is_edit %}Save Updates{% else %}Create Faculty Account{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

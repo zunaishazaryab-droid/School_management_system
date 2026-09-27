@@ -238,14 +238,42 @@
     </div>
 </div>
 
-<!-- Tab 5: Attendance Placeholder (Sprint 2) -->
+<!-- Tab 5: Attendance Log -->
 <div id="tab-attendance" class="tab-content" style="display: none;">
-    <div class="card" style="text-align: center; padding: 40px 20px;">
-        <div style="font-size: 36px; margin-bottom: 12px;">📅</div>
-        <h3 style="font-size: 17px; margin-bottom: 6px;">Daily Attendance Registers</h3>
-        <p style="font-size: 13.5px; color: var(--text-muted); max-width: 480px; margin: 0 auto;">
-            Attendance register, monthly percentages, and status history are scheduled for <strong>Sprint 2</strong>.
-        </p>
+    <div class="card">
+        <div class="card-header"><div class="card-title"><span>📅 Daily Attendance History ({{ student.attendance_records.count }} Days)</span></div></div>
+        <div class="card-body" style="padding: 0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
+                        <th style="padding: 10px 16px;">Date</th>
+                        <th style="padding: 10px 16px;">Status</th>
+                        <th style="padding: 10px 16px;">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for att in student.attendance_records.all %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 10px 16px; font-weight: 600;">{{ att.date }}</td>
+                        <td style="padding: 10px 16px;">
+                            {% if att.status == 'PRESENT' %}
+                            <span class="role-badge" style="background: var(--success-light); color: var(--success);">Present</span>
+                            {% elif att.status == 'LATE' %}
+                            <span class="role-badge" style="background: var(--warning-light); color: var(--warning);">Late</span>
+                            {% elif att.status == 'ABSENT' %}
+                            <span class="role-badge" style="background: var(--danger-light); color: var(--danger);">Absent</span>
+                            {% else %}
+                            <span class="role-badge">{{ att.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 10px 16px; color: var(--text-muted);">{{ att.remarks|default:"--" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align: center; padding: 24px; color: var(--text-muted);">No attendance records logged yet for this student.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

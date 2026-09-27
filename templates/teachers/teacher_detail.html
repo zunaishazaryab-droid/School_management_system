@@ -1,0 +1,220 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Faculty: {{ teacher.get_full_name }} | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<!-- Faculty Header -->
+<div class="card" style="margin-bottom: 24px; background: linear-gradient(to right, #ffffff, #f8fafc);">
+    <div class="card-body" style="padding: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            {% if teacher.photo %}
+                <img src="{{ teacher.photo.url }}" alt="{{ teacher.get_full_name }}" style="width: 84px; height: 84px; border-radius: var(--radius-md); object-fit: cover; border: 3px solid var(--primary-border);">
+            {% else %}
+                <div style="width: 84px; height: 84px; border-radius: var(--radius-md); background: #334155; color: #fff; font-size: 32px; font-weight: 700; display: flex; align-items: center; justify-content: center;">
+                    {{ teacher.user.first_name|first|upper }}
+                </div>
+            {% endif %}
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main);">{{ teacher.get_full_name }}</h1>
+                    <span class="role-badge" style="background: var(--primary-light);">{{ teacher.employee_id }}</span>
+                    <span class="role-badge" style="background: var(--success-light); color: var(--success);">{{ teacher.status }}</span>
+                </div>
+                <div style="font-size: 13.5px; color: var(--text-muted); margin-top: 4px;">
+                    {{ teacher.get_designation_display }} • Dept: <strong>{{ teacher.department }}</strong> • Basic Salary: <strong>{{ school_settings.currency_symbol }} {{ teacher.basic_salary }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <a href="{% url 'teachers:teacher_edit' teacher.id %}" class="btn btn-primary">
+                ✏️ Edit Faculty Profile
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs Navigation -->
+<div style="display: flex; gap: 8px; border-bottom: 2px solid var(--card-border); margin-bottom: 20px;">
+    <button class="tab-btn active" onclick="switchFacultyTab(event, 'tab-f-overview')">👤 Overview & Biodata</button>
+    <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-workload')">🏫 Teaching Workload & Classes</button>
+    <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-salary')">💰 Salary History</button>
+    <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-leaves')">🏖️ Leave Requests</button>
+    <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-performance')">⭐ Performance Reviews</button>
+</div>
+
+<!-- Tab 1: Overview -->
+<div id="tab-f-overview" class="tab-content" style="display: block;">
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-header"><div class="card-title"><span>📋 Personal & Contact Details</span></div></div>
+            <div class="card-body">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; color: var(--text-muted); width: 35%;">Full Name:</td><td style="padding: 10px 0; font-weight: 600;">{{ teacher.get_full_name }}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; color: var(--text-muted);">Email Address:</td><td style="padding: 10px 0;">{{ teacher.user.email }}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; color: var(--text-muted);">WhatsApp / Phone:</td><td style="padding: 10px 0; font-weight: 600; color: var(--primary);">{{ teacher.phone_number }}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; color: var(--text-muted);">National ID (CNIC):</td><td style="padding: 10px 0;">{{ teacher.cnic|default:"N/A" }}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; color: var(--text-muted);">Emergency Contact:</td><td style="padding: 10px 0;">{{ teacher.emergency_contact|default:"N/A" }}</td></tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; color: var(--text-muted);">Joining Date:</td><td style="padding: 10px 0;">{{ teacher.joining_date }}</td></tr>
+                    <tr><td style="padding: 10px 0; color: var(--text-muted);">Residential Address:</td><td style="padding: 10px 0;">{{ teacher.residential_address }}</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><div class="card-title"><span>🎓 Professional Background</span></div></div>
+            <div class="card-body">
+                <div style="margin-bottom: 16px;">
+                    <strong style="font-size: 13.5px;">Highest Qualification:</strong>
+                    <p style="font-size: 14px; color: var(--text-main); margin-top: 4px;">{{ teacher.qualification }}</p>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <strong style="font-size: 13.5px;">Teaching Experience:</strong>
+                    <p style="font-size: 14px; color: var(--text-main); margin-top: 4px;">{{ teacher.experience_years }} Years</p>
+                </div>
+                <div>
+                    <strong style="font-size: 13.5px;">Department:</strong>
+                    <p style="font-size: 14px; color: var(--text-main); margin-top: 4px;">{{ teacher.department }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 2: Workload & Classes -->
+<div id="tab-f-workload" class="tab-content" style="display: none;">
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-header"><div class="card-title"><span>🏫 Assigned Class Incharge / Sections</span></div></div>
+            <div class="card-body">
+                {% if assigned_sections %}
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        {% for sec in assigned_sections %}
+                        <div style="padding: 12px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--card-border);">
+                            <strong>{{ sec.class_room.name }} - Section {{ sec.name }}</strong>
+                            <div style="font-size: 12px; color: var(--text-muted);">Enrolled Capacity: {{ sec.enrolled_students_count }} / {{ sec.capacity }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: var(--text-muted); font-size: 13px;">No class teacher assignments assigned currently.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><div class="card-title"><span>📖 Subject Teaching Allocations</span></div></div>
+            <div class="card-body">
+                {% if teaching_subjects %}
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        {% for cs in teaching_subjects %}
+                        <div style="padding: 12px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--card-border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong>{{ cs.subject.name }}</strong>
+                                <span class="role-badge">{{ cs.class_room.name }}{% if cs.section %} - Sec {{ cs.section.name }}{% endif %}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: var(--text-muted); font-size: 13px;">No subjects allocated currently.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 3: Salary History -->
+<div id="tab-f-salary" class="tab-content" style="display: none;">
+    <div class="card">
+        <div class="card-header"><div class="card-title"><span>💰 Payroll Slips & History</span></div></div>
+        <div class="card-body" style="padding: 0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
+                        <th style="padding: 10px 16px;">Month</th>
+                        <th style="padding: 10px 16px;">Basic Salary</th>
+                        <th style="padding: 10px 16px;">Allowances</th>
+                        <th style="padding: 10px 16px;">Deductions</th>
+                        <th style="padding: 10px 16px;">Net Paid</th>
+                        <th style="padding: 10px 16px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sal in salary_history %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 10px 16px; font-weight: 600;">{{ sal.salary_month }}</td>
+                        <td style="padding: 10px 16px;">{{ school_settings.currency_symbol }} {{ sal.basic_salary }}</td>
+                        <td style="padding: 10px 16px; color: var(--success);">+{{ sal.allowances }}</td>
+                        <td style="padding: 10px 16px; color: var(--danger);">-{{ sal.deductions }}</td>
+                        <td style="padding: 10px 16px; font-weight: 700; color: var(--primary);">{{ school_settings.currency_symbol }} {{ sal.net_salary }}</td>
+                        <td style="padding: 10px 16px;"><span class="role-badge" style="background: var(--success-light); color: var(--success);">{{ sal.status }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">No payroll slips issued yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 4: Leave Requests -->
+<div id="tab-f-leaves" class="tab-content" style="display: none;">
+    <div class="card">
+        <div class="card-header"><div class="card-title"><span>🏖️ Staff Leave Requests</span></div></div>
+        <div class="card-body">
+            {% if leave_requests %}
+                {% for l in leave_requests %}
+                <div style="padding: 12px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--card-border); margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong>{{ l.get_leave_type_display }} ({{ l.start_date }} to {{ l.end_date }})</strong>
+                        <span class="role-badge">{{ l.status }}</span>
+                    </div>
+                    <p style="font-size: 13px; color: var(--text-muted);">Reason: {{ l.reason }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: var(--text-muted); text-align: center; padding: 24px;">No leave requests filed.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Tab 5: Performance -->
+<div id="tab-f-performance" class="tab-content" style="display: none;">
+    <div class="card">
+        <div class="card-header"><div class="card-title"><span>⭐ Monthly Performance Audits</span></div></div>
+        <div class="card-body">
+            {% if performance_reviews %}
+                {% for p in performance_reviews %}
+                <div style="padding: 14px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--card-border); margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong>Month: {{ p.evaluation_month }}</strong>
+                        <span class="role-badge" style="background: var(--primary-light); font-weight: 700;">Score: {{ p.overall_score }} / 10</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 10px 0; font-size: 12.5px;">
+                        <div>Punctuality: <strong>{{ p.punctuality_rating }}%</strong></div>
+                        <div>Syllabus Progress: <strong>{{ p.syllabus_coverage_pct }}%</strong></div>
+                        <div>Homework Regularity: <strong>{{ p.homework_regularity_pct }}%</strong></div>
+                        <div>Copies Checked: <strong>{{ p.copies_checked_pct }}%</strong></div>
+                    </div>
+                    <p style="font-size: 12.5px; color: var(--text-muted); font-style: italic;">Remarks: {{ p.coordinator_remarks }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: var(--text-muted); text-align: center; padding: 24px;">No performance evaluations recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function switchFacultyTab(evt, tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).style.display = 'block';
+    evt.currentTarget.classList.add('active');
+}
+</script>
+{% endblock %}

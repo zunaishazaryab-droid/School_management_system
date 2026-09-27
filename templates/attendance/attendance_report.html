@@ -1,0 +1,85 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Attendance Reports & Analytics | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Attendance Reports & Monthly Analytics</h1>
+        <p class="page-subtitle">View student attendance percentages, absence summaries, and regularity logs.</p>
+    </div>
+    <div>
+        <a href="{% url 'attendance:student_attendance' %}" class="btn btn-outline">
+            📅 Back to Daily Register
+        </a>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-body" style="padding: 16px 20px;">
+        <form method="GET" style="display: flex; gap: 16px; align-items: flex-end;">
+            <div style="flex: 1; max-width: 300px;">
+                <label class="form-label">Select Class</label>
+                <select name="class_id" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Choose Class --</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Generate Report</button>
+        </form>
+    </div>
+</div>
+
+{% if report_data %}
+<div class="card">
+    <div class="card-header"><div class="card-title"><span>📊 Class Attendance Regularity Report</span></div></div>
+    <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
+                    <th style="padding: 12px 18px;">Roll No</th>
+                    <th style="padding: 12px 18px;">Student Name</th>
+                    <th style="padding: 12px 18px;">Total Days</th>
+                    <th style="padding: 12px 18px;">Days Present</th>
+                    <th style="padding: 12px 18px;">Days Absent</th>
+                    <th style="padding: 12px 18px;">Attendance %</th>
+                    <th style="padding: 12px 18px;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report_data %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 12px 18px; font-weight: 700; color: var(--primary);">{{ row.student.roll_number|default:"--" }}</td>
+                    <td style="padding: 12px 18px; font-weight: 600;">{{ row.student.get_full_name }}</td>
+                    <td style="padding: 12px 18px;">{{ row.total_days }}</td>
+                    <td style="padding: 12px 18px; color: var(--success); font-weight: 600;">{{ row.present_days }}</td>
+                    <td style="padding: 12px 18px; color: var(--danger); font-weight: 600;">{{ row.absent_days }}</td>
+                    <td style="padding: 12px 18px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="flex: 1; max-width: 100px; height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+                                <div style="width: {{ row.percentage }}%; height: 100%; background: {% if row.percentage >= 80 %}var(--success){% elif row.percentage >= 60 %}var(--warning){% else %}var(--danger){% endif %};"></div>
+                            </div>
+                            <span style="font-weight: 700;">{{ row.percentage }}%</span>
+                        </div>
+                    </td>
+                    <td style="padding: 12px 18px;">
+                        {% if row.percentage >= 85 %}
+                        <span class="role-badge" style="background: var(--success-light); color: var(--success);">Excellent</span>
+                        {% elif row.percentage >= 70 %}
+                        <span class="role-badge" style="background: var(--warning-light); color: var(--warning);">Satisfactory</span>
+                        {% else %}
+                        <span class="role-badge" style="background: var(--danger-light); color: var(--danger);">Critical Shortage</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% elif selected_class_id %}
+<div class="card" style="text-align: center; padding: 40px;"><p style="color: var(--text-muted);">No attendance records found for this class.</p></div>
+{% endif %}
+{% endblock %}

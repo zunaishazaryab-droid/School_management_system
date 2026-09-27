@@ -53,20 +53,25 @@
                     <span>Subjects & Curriculum</span>
                 </a>
 
-                <a href="#" class="nav-item" title="Teachers & Staff (Sprint 2)">
+                <a href="{% url 'teachers:teacher_list' %}" class="nav-item {% if 'teachers' in request.path %}active{% endif %}">
                     <span class="nav-icon">👩‍🏫</span>
                     <span>Teachers & Staff</span>
                 </a>
                 {% endif %}
 
-                <a href="#" class="nav-item" title="Manual Attendance (Sprint 2)">
+                <a href="{% url 'attendance:student_attendance' %}" class="nav-item {% if 'attendance' in request.path %}active{% endif %}">
                     <span class="nav-icon">📅</span>
-                    <span>Attendance</span>
+                    <span>Daily Attendance</span>
                 </a>
 
-                <a href="#" class="nav-item" title="Lectures & Syllabus (Sprint 2)">
+                <a href="{% url 'lectures:lecture_list' %}" class="nav-item {% if 'lectures' in request.path %}active{% endif %}">
                     <span class="nav-icon">📖</span>
-                    <span>Lectures & Syllabus</span>
+                    <span>Lectures & Diary</span>
+                </a>
+
+                <a href="{% url 'syllabus:tracker' %}" class="nav-item {% if 'syllabus' in request.path %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Syllabus Tracker</span>
                 </a>
 
                 {% if request.user.is_admin or request.user.is_principal %}
