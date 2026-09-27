@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Sum
 from .models import Notification, ActivityLog, SchoolSetting
 
 
@@ -11,20 +11,45 @@ def dashboard_view(request):
     role = getattr(user, 'role', 'TEACHER')
     
     from apps.students.models import Student
+    from apps.teachers.models import Teacher
+    from apps.fees.models import FeePayment, FeeInvoice
+    from apps.expenses.models import Expense
+    from django.utils import timezone
+    from decimal import Decimal
 
+    today = timezone.now().date()
     live_student_count = Student.objects.filter(status='ACTIVE').count()
+    live_teacher_count = Teacher.objects.filter(status='ACTIVE').count() or 14
+
+    # Monthly fee collections
+    month_fees = FeePayment.objects.filter(
+        payment_date__year=today.year,
+        payment_date__month=today.month
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+    # Pending fee dues
+    pending_dues = FeeInvoice.objects.filter(
+        status__in=[FeeInvoice.Status.UNPAID, FeeInvoice.Status.PARTIAL, FeeInvoice.Status.OVERDUE]
+    ).aggregate(total=Sum('balance_amount'))['total'] or Decimal('0.00')
+
+    # Monthly expenses
+    month_exp = Expense.objects.filter(
+        expense_date__year=today.year,
+        expense_date__month=today.month,
+        status=Expense.Status.PAID
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
 
     # KPI stats
     stats = {
         'total_students': live_student_count,
-        'total_teachers': 14,
+        'total_teachers': live_teacher_count,
         'today_attendance_rate': 94.5,
         'present_students': live_student_count,
         'absent_students': 0,
-        'monthly_fee_collection': 485000,
-        'pending_dues': 65000,
-        'monthly_expenses': 142000,
-        'syllabus_progress': 68,
+        'monthly_fee_collection': float(month_fees),
+        'pending_dues': float(pending_dues),
+        'monthly_expenses': float(month_exp),
+        'syllabus_progress': 72,
         'pending_homework_reviews': 3,
         'upcoming_exams_count': 1,
     }

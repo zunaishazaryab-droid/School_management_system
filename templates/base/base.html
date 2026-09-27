@@ -77,12 +77,12 @@
                 {% if request.user.is_admin or request.user.is_principal %}
                 <div class="sidebar-section-title">Financial & Accounts</div>
 
-                <a href="#" class="nav-item" title="Fee Management (Sprint 3)">
+                <a href="{% url 'fees:fee_dashboard' %}" class="nav-item {% if request.resolver_match.app_name == 'fees' %}active{% endif %}">
                     <span class="nav-icon">💳</span>
                     <span>Fee Management</span>
                 </a>
 
-                <a href="#" class="nav-item" title="Expenses (Sprint 4)">
+                <a href="{% url 'expenses:expense_list' %}" class="nav-item {% if request.resolver_match.app_name == 'expenses' %}active{% endif %}">
                     <span class="nav-icon">🧾</span>
                     <span>Expenses</span>
                 </a>

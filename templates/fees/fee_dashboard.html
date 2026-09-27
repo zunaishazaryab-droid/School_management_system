@@ -1,0 +1,203 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Fee Management & Financials - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title">💳 Fee Management & Accounts</h1>
+        <p class="page-subtitle">Manage student fee challans, collections, concessions, receipts & ledgers</p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'fees:collect_payment' %}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); border: none;">
+            💵 Collect Payment
+        </a>
+        <a href="{% url 'fees:bulk_generate' %}" class="btn btn-primary">
+            ⚡ Generate Monthly Challans
+        </a>
+        <a href="{% url 'fees:fee_structures' %}" class="btn btn-outline">
+            ⚙️ Class Fee Plans
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards Grid -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--primary-light); color: var(--primary);">📊</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total Invoiced / Billed</span>
+            <span class="kpi-value">Rs. {{ total_invoiced|floatformat:0 }}</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--success-light); color: var(--success);">💰</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total Collected</span>
+            <span class="kpi-value">Rs. {{ total_collected|floatformat:0 }}</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--danger-light); color: var(--danger);">⚠️</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total Outstanding Dues</span>
+            <span class="kpi-value">Rs. {{ total_pending|floatformat:0 }}</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: #e0e7ff; color: #4338ca;">📅</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Today's Collection</span>
+            <span class="kpi-value">Rs. {{ today_collected|floatformat:0 }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Navigation Bar -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px;">
+    <a href="{% url 'fees:invoice_list' %}" class="card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px; transition: var(--transition);">
+        <span style="font-size: 24px;">📑</span>
+        <div>
+            <div style="font-weight: 700; font-size: 14px;">All Invoices</div>
+            <div style="font-size: 12px; color: var(--text-muted);">View, filter & track challans</div>
+        </div>
+    </a>
+    <a href="{% url 'fees:defaulters_list' %}" class="card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px; transition: var(--transition);">
+        <span style="font-size: 24px;">🚨</span>
+        <div>
+            <div style="font-weight: 700; font-size: 14px;">Defaulters ({{ defaulters_count }})</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Overdue dues & reminders</div>
+        </div>
+    </a>
+    <a href="{% url 'fees:student_discounts' %}" class="card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px; transition: var(--transition);">
+        <span style="font-size: 24px;">🎁</span>
+        <div>
+            <div style="font-weight: 700; font-size: 14px;">Concessions / Aid</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Scholarships & kinship discounts</div>
+        </div>
+    </a>
+    <a href="{% url 'expenses:financial_summary' %}" class="card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px; transition: var(--transition);">
+        <span style="font-size: 24px;">📈</span>
+        <div>
+            <div style="font-weight: 700; font-size: 14px;">Income vs Expenses</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Cashflow & net surplus</div>
+        </div>
+    </a>
+</div>
+
+<!-- Two Columns: Recent Receipts & Recent Challans -->
+<div class="dashboard-grid">
+    <!-- Left: Recent Payments Collected -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="card-title"><span>💵 Latest Collected Payments</span></div>
+            <a href="{% url 'fees:collect_payment' %}" class="btn btn-sm btn-outline">+ Record Payment</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
+                            <th style="padding: 12px 16px; text-align: left;">Receipt #</th>
+                            <th style="padding: 12px 16px; text-align: left;">Student</th>
+                            <th style="padding: 12px 16px; text-align: left;">Amount</th>
+                            <th style="padding: 12px 16px; text-align: left;">Method</th>
+                            <th style="padding: 12px 16px; text-align: left;">Date</th>
+                            <th style="padding: 12px 16px; text-align: center;">Slip</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pay in recent_payments %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px 16px; font-weight: 700; color: var(--primary);">{{ pay.receipt_number }}</td>
+                            <td style="padding: 12px 16px;">
+                                <div style="font-weight: 600;">{{ pay.student.get_full_name }}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">{{ pay.student.admission_number }} ({{ pay.student.current_class.name }})</div>
+                            </td>
+                            <td style="padding: 12px 16px; font-weight: 700; color: var(--success);">Rs. {{ pay.amount|floatformat:0 }}</td>
+                            <td style="padding: 12px 16px;">
+                                <span class="role-badge" style="font-size: 11px; background: #e0f2fe; color: #0369a1;">
+                                    {{ pay.get_payment_method_display }}
+                                </span>
+                            </td>
+                            <td style="padding: 12px 16px; font-size: 12px; color: var(--text-muted);">{{ pay.payment_date }}</td>
+                            <td style="padding: 12px 16px; text-align: center;">
+                                <a href="{% url 'fees:payment_receipt' pay.pk %}" class="btn btn-sm btn-outline" style="padding: 3px 8px; font-size: 12px;" title="Print Receipt">
+                                    🖨️ Receipt
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" style="padding: 28px; text-align: center; color: var(--text-muted);">No payment receipts recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Recent Invoices / Challans -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="card-title"><span>📑 Recent Fee Invoices</span></div>
+            <a href="{% url 'fees:invoice_list' %}" class="btn btn-sm btn-outline">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
+                            <th style="padding: 12px 16px; text-align: left;">Invoice #</th>
+                            <th style="padding: 12px 16px; text-align: left;">Student</th>
+                            <th style="padding: 12px 16px; text-align: left;">Month</th>
+                            <th style="padding: 12px 16px; text-align: left;">Payable</th>
+                            <th style="padding: 12px 16px; text-align: left;">Status</th>
+                            <th style="padding: 12px 16px; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in recent_invoices %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px 16px; font-weight: 600;">
+                                <a href="{% url 'fees:invoice_detail' inv.pk %}">{{ inv.invoice_number }}</a>
+                            </td>
+                            <td style="padding: 12px 16px;">
+                                <div style="font-weight: 600;">{{ inv.student.get_full_name }}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">{{ inv.class_room.name }}</div>
+                            </td>
+                            <td style="padding: 12px 16px; font-size: 12px;">{{ inv.fee_month }}</td>
+                            <td style="padding: 12px 16px; font-weight: 700;">Rs. {{ inv.payable_amount|floatformat:0 }}</td>
+                            <td style="padding: 12px 16px;">
+                                {% if inv.status == 'PAID' %}
+                                <span class="role-badge" style="background: var(--success-light); color: var(--success);">Paid</span>
+                                {% elif inv.status == 'PARTIAL' %}
+                                <span class="role-badge" style="background: var(--warning-light); color: var(--warning);">Partial (Due: {{ inv.balance_amount|floatformat:0 }})</span>
+                                {% elif inv.status == 'OVERDUE' %}
+                                <span class="role-badge" style="background: var(--danger-light); color: var(--danger);">Overdue</span>
+                                {% else %}
+                                <span class="role-badge" style="background: #f1f5f9; color: var(--text-muted);">Unpaid</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px 16px; text-align: center;">
+                                <a href="{% url 'fees:invoice_detail' inv.pk %}" class="btn btn-sm btn-outline" style="padding: 3px 8px; font-size: 12px;">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" style="padding: 28px; text-align: center; color: var(--text-muted);">No invoices generated yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

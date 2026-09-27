@@ -1,0 +1,84 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Bulk Fee Challan Generation - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'fees:invoice_list' %}" class="btn btn-sm btn-outline">← Back</a>
+            <h1 class="page-title" style="margin: 0;">⚡ Bulk Generate Monthly Fee Challans</h1>
+        </div>
+        <p class="page-subtitle" style="margin-top: 4px;">Automatically generate monthly fee vouchers for all enrolled students with active fee structures & student discounts.</p>
+    </div>
+</div>
+
+<div style="max-width: 780px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><span>⚙️ Batch Challan Parameters</span></div>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Academic Session *</label>
+                        {{ form.academic_year }}
+                        <span style="font-size: 11px; color: var(--text-muted);">Current active academic session</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Target Class (Optional)</label>
+                        {{ form.class_room }}
+                        <span style="font-size: 11px; color: var(--text-muted);">Leave empty to generate for ALL active classes in the school</span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 18px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Billing Month / Title *</label>
+                        {{ form.fee_month }}
+                        <span style="font-size: 11px; color: var(--text-muted);">e.g. "October 2026", "Annual Charges 2026"</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Year *</label>
+                        {{ form.fee_year }}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Challan Issue Date *</label>
+                        {{ form.issue_date }}
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Due Date *</label>
+                        {{ form.due_date }}
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid var(--card-border); padding: 16px; border-radius: var(--radius-md); margin-bottom: 24px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        {{ form.apply_discounts }}
+                        <span style="font-weight: 600; font-size: 13.5px;">Auto-Apply Student Scholarships & Sibling Concessions</span>
+                    </label>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-left: 26px; margin-top: 4px;">
+                        When checked, students with recorded kinship, staff-child or merit aid will automatically have their discounted amount calculated.
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <a href="{% url 'fees:invoice_list' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                        ⚡ Start Batch Generation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

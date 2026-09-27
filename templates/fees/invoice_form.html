@@ -1,0 +1,189 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Create Custom Fee Challan - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'fees:invoice_list' %}" class="btn btn-sm btn-outline">← Back</a>
+            <h1 class="page-title" style="margin: 0;">Create Custom Fee Challan</h1>
+        </div>
+        <p class="page-subtitle" style="margin-top: 4px;">Generate an individual or special invoice for a specific student</p>
+    </div>
+</div>
+
+<div style="max-width: 860px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><span>📝 Invoice Details & Line Items</span></div>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 18px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Select Student *</label>
+                        {{ form.student }}
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Academic Session *</label>
+                        {{ form.academic_year }}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Class *</label>
+                        {{ form.class_room }}
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Section (Optional)</label>
+                        {{ form.section }}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Billing Month / Title *</label>
+                        {{ form.fee_month }}
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Year</label>
+                        {{ form.fee_year }}
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Issue Date</label>
+                        {{ form.issue_date }}
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Due Date</label>
+                        {{ form.due_date }}
+                    </div>
+                </div>
+
+                <!-- Line items table -->
+                <div style="margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <label style="font-size: 14px; font-weight: 700;">Fee Line Items</label>
+                        <button type="button" class="btn btn-sm btn-outline" onclick="addLineItem()">+ Add Line Item</button>
+                    </div>
+
+                    <table id="lineItemsTable" style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                        <thead>
+                            <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
+                                <th style="padding: 10px; text-align: left;">Category</th>
+                                <th style="padding: 10px; text-align: left;">Description</th>
+                                <th style="padding: 10px; text-align: left; width: 140px;">Amount (Rs.)</th>
+                                <th style="padding: 10px; width: 40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="lineItemsBody">
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 8px;">
+                                    <select name="item_category[]" class="form-control">
+                                        {% for c in categories %}
+                                        <option value="{{ c.id }}">{{ c.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td style="padding: 8px;">
+                                    <input type="text" name="item_name[]" class="form-control" placeholder="Monthly Tuition Fee" value="Monthly Tuition Fee" required>
+                                </td>
+                                <td style="padding: 8px;">
+                                    <input type="number" step="0.01" name="item_amount[]" class="form-control item-amt" placeholder="3000" value="3000" oninput="calcTotals()" required>
+                                </td>
+                                <td style="padding: 8px; text-align: center;">
+                                    <button type="button" onclick="this.closest('tr').remove(); calcTotals();" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:16px;">✕</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Totals & Adjustments -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 18px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--card-border); margin-bottom: 24px;">
+                    <div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Discount / Scholarship Concession (Rs.)</label>
+                            <input type="number" step="0.01" name="discount_amount" id="discountInput" class="form-control" value="0.00" oninput="calcTotals()">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Late Fee / Surcharge (Rs.)</label>
+                            <input type="number" step="0.01" name="fine_amount" id="fineInput" class="form-control" value="0.00" oninput="calcTotals()">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-end; padding-right: 12px;">
+                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Gross Subtotal: <strong id="grossTotal">Rs. 3,000</strong></div>
+                        <div style="font-size: 13px; color: var(--success); margin-bottom: 6px;">Discount: -<strong id="discountDisplay">Rs. 0</strong></div>
+                        <div style="font-size: 20px; font-weight: 800; color: var(--primary);">Net Payable: <span id="netPayableDisplay">Rs. 3,000</span></div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Notes / Remarks</label>
+                    {{ form.notes }}
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <a href="{% url 'fees:invoice_list' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                        Create Challan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function addLineItem() {
+    const tbody = document.getElementById('lineItemsBody');
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid #f1f5f9';
+    tr.innerHTML = `
+        <td style="padding: 8px;">
+            <select name="item_category[]" class="form-control">
+                {% for c in categories %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td style="padding: 8px;">
+            <input type="text" name="item_name[]" class="form-control" placeholder="Fee Item" required>
+        </td>
+        <td style="padding: 8px;">
+            <input type="number" step="0.01" name="item_amount[]" class="form-control item-amt" placeholder="0" oninput="calcTotals()" required>
+        </td>
+        <td style="padding: 8px; text-align: center;">
+            <button type="button" onclick="this.closest('tr').remove(); calcTotals();" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:16px;">✕</button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+}
+
+function calcTotals() {
+    let subtotal = 0;
+    document.querySelectorAll('.item-amt').forEach(inp => {
+        const val = parseFloat(inp.value) || 0;
+        subtotal += val;
+    });
+
+    const discount = parseFloat(document.getElementById('discountInput').value) || 0;
+    const fine = parseFloat(document.getElementById('fineInput').value) || 0;
+    const net = Math.max(0, (subtotal - discount) + fine);
+
+    document.getElementById('grossTotal').innerText = 'Rs. ' + subtotal.toLocaleString();
+    document.getElementById('discountDisplay').innerText = 'Rs. ' + discount.toLocaleString();
+    document.getElementById('netPayableDisplay').innerText = 'Rs. ' + net.toLocaleString();
+}
+</script>
+{% endblock %}

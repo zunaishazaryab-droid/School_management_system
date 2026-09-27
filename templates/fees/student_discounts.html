@@ -1,0 +1,131 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Student Concessions & Scholarships - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'fees:fee_dashboard' %}" class="btn btn-sm btn-outline">← Back</a>
+            <h1 class="page-title" style="margin: 0;">🎁 Student Scholarships & Fee Concessions</h1>
+        </div>
+        <p class="page-subtitle" style="margin-top: 4px;">Manage sibling kinship discounts, staff-child aid, and merit scholarships</p>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left: Existing Discounts List -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><span>📜 Active Concessions & Aid ({{ discounts.count }})</span></div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
+                            <th style="padding: 12px 16px; text-align: left;">Student</th>
+                            <th style="padding: 12px 16px; text-align: left;">Class</th>
+                            <th style="padding: 12px 16px; text-align: left;">Reason / Scholarship</th>
+                            <th style="padding: 12px 16px; text-align: right;">Discount Value</th>
+                            <th style="padding: 12px 16px; text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in discounts %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px 16px;">
+                                <div style="font-weight: 700;">
+                                    <a href="{% url 'students:student_detail' d.student.pk %}" style="color: inherit;">
+                                        {{ d.student.get_full_name }}
+                                    </a>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted);">ID: {{ d.student.admission_number }}</div>
+                            </td>
+                            <td style="padding: 12px 16px;">{{ d.student.current_class.name }}</td>
+                            <td style="padding: 12px 16px;">
+                                <div style="font-weight: 600;">{{ d.reason }}</div>
+                                {% if d.fee_category %}
+                                <div style="font-size: 11px; color: var(--text-muted);">Applies to: {{ d.fee_category.name }}</div>
+                                {% else %}
+                                <div style="font-size: 11px; color: var(--text-muted);">Applies to: Total Monthly Fee</div>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px 16px; text-align: right; font-weight: 700; color: var(--success);">
+                                {% if d.discount_type == 'PERCENTAGE' %}
+                                {{ d.value|floatformat:0 }}% Off
+                                {% else %}
+                                Rs. {{ d.value|floatformat:0 }} Off
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px 16px; text-align: center;">
+                                {% if d.is_active %}
+                                <span class="role-badge" style="background: var(--success-light); color: var(--success); font-size: 11px;">Active</span>
+                                {% else %}
+                                <span class="role-badge" style="font-size: 11px;">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="padding: 32px; text-align: center; color: var(--text-muted);">
+                                No scholarships or kinship concessions recorded yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Add Concession Form -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><span>+ Assign New Concession / Aid</span></div>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Select Student *</label>
+                    {{ form.student }}
+                </div>
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Specific Fee Category (Optional)</label>
+                    {{ form.fee_category }}
+                    <span style="font-size: 11px; color: var(--text-muted);">Leave empty to apply to total monthly tuition</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Discount Type *</label>
+                        {{ form.discount_type }}
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Discount Value *</label>
+                        {{ form.value }}
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 18px;">
+                    <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Scholarship Reason / Title *</label>
+                    {{ form.reason }}
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                        {{ form.is_active }} Active Concession
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px;">
+                    Save Concession Record
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

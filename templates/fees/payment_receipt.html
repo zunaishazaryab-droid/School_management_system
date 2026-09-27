@@ -1,0 +1,158 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Fee Receipt #{{ payment.receipt_number }} - School ERP{% endblock %}
+
+{% block content %}
+<div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'fees:fee_dashboard' %}" class="btn btn-sm btn-outline">← Back to Dashboard</a>
+            <h1 class="page-title" style="margin: 0;">Receipt #{{ payment.receipt_number }}</h1>
+        </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'fees:invoice_detail' invoice.pk %}" class="btn btn-outline">
+            📄 View Challan
+        </a>
+        <button onclick="window.print()" class="btn btn-primary" style="padding: 9px 20px;">
+            🖨️ Print Receipt
+        </button>
+    </div>
+</div>
+
+<!-- Printable 3-Part Voucher Slip Container (School Copy, Bank/Accounts Copy, Student Copy) -->
+<div class="receipt-print-container" style="background: #ffffff; border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); max-width: 900px; margin: 0 auto;">
+    
+    <!-- Voucher Slip Box -->
+    <div class="voucher-slip" style="border: 2px dashed #94a3b8; border-radius: 8px; padding: 20px; background: #ffffff; margin-bottom: 20px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 12px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 32px;">🏫</div>
+                <div>
+                    <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">School Management ERP</h2>
+                    <div style="font-size: 11.5px; color: #64748b;">Excellence in Education • Official Fee Payment Receipt</div>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 12px; font-weight: 800; color: #0f172a; background: #f1f5f9; padding: 4px 10px; border-radius: 4px; display: inline-block;">
+                    STUDENT & PARENT COPY
+                </div>
+                <div style="font-size: 13px; font-weight: 700; color: #3b82f6; margin-top: 4px;">Receipt: {{ payment.receipt_number }}</div>
+            </div>
+        </div>
+
+        <!-- Student & Payment Info Grid -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; background: #f8fafc; padding: 12px; border-radius: 6px; font-size: 12.5px; margin-bottom: 16px;">
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Student Name:</span>
+                <strong style="color: #0f172a; font-size: 13.5px;">{{ payment.student.get_full_name }}</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Admission ID / Roll:</span>
+                <strong style="color: #0f172a;">{{ payment.student.admission_number }} / {{ payment.student.roll_number|default:"--" }}</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Class & Section:</span>
+                <strong style="color: #0f172a;">{{ invoice.class_room.name }} {% if invoice.section %}(Sec {{ invoice.section.name }}){% endif %}</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Father / Guardian:</span>
+                <strong style="color: #0f172a;">{{ payment.student.guardian_name }}</strong>
+            </div>
+
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Fee Month / Session:</span>
+                <strong style="color: #0f172a;">{{ invoice.fee_month }} ({{ invoice.academic_year.name }})</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Payment Date:</span>
+                <strong style="color: #0f172a;">{{ payment.payment_date }}</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Payment Mode:</span>
+                <strong style="color: #0f172a;">{{ payment.get_payment_method_display }}</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Transaction Ref:</span>
+                <strong style="color: #0f172a;">{{ payment.transaction_reference|default:"Cash Counter" }}</strong>
+            </div>
+        </div>
+
+        <!-- Breakdown Table -->
+        <table style="width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 16px;">
+            <thead>
+                <tr style="background: #e2e8f0; color: #1e293b;">
+                    <th style="padding: 8px 10px; text-align: left;">Description</th>
+                    <th style="padding: 8px 10px; text-align: right;">Gross Billed</th>
+                    <th style="padding: 8px 10px; text-align: right;">Concessions</th>
+                    <th style="padding: 8px 10px; text-align: right;">Net Payable</th>
+                    <th style="padding: 8px 10px; text-align: right;">Amount Paid</th>
+                    <th style="padding: 8px 10px; text-align: right;">Balance Due</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 8px 10px; font-weight: 600;">{{ invoice.fee_month }} Tuition & Academic Charges</td>
+                    <td style="padding: 8px 10px; text-align: right;">Rs. {{ invoice.subtotal_amount|floatformat:0 }}</td>
+                    <td style="padding: 8px 10px; text-align: right; color: #16a34a;">- Rs. {{ invoice.discount_amount|floatformat:0 }}</td>
+                    <td style="padding: 8px 10px; text-align: right; font-weight: 700;">Rs. {{ invoice.payable_amount|floatformat:0 }}</td>
+                    <td style="padding: 8px 10px; text-align: right; font-weight: 700; color: #16a34a; font-size: 13.5px;">Rs. {{ payment.amount|floatformat:0 }}</td>
+                    <td style="padding: 8px 10px; text-align: right; font-weight: 700; {% if invoice.balance_amount > 0 %}color: #dc2626;{% else %}color: #16a34a;{% endif %}">
+                        Rs. {{ invoice.balance_amount|floatformat:0 }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Footer / Signatures -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+            <div style="font-size: 11px; color: #64748b;">
+                <div><strong>Issued by:</strong> {{ payment.received_by.get_full_name|default:payment.received_by.username|default:"Accounts Office" }}</div>
+                <div>Computer-generated official receipt. Valid without official signature if stamped.</div>
+            </div>
+
+            <div style="display: flex; gap: 40px; text-align: center; font-size: 11px; color: #475569;">
+                <div>
+                    <div style="border-bottom: 1px solid #94a3b8; width: 140px; height: 30px; margin-bottom: 4px;"></div>
+                    <span>Cashier / Accounts Officer</span>
+                </div>
+                <div>
+                    <div style="border-bottom: 1px solid #94a3b8; width: 140px; height: 30px; margin-bottom: 4px;"></div>
+                    <span>Principal / Authorized Stamp</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+    .sidebar, .topbar, .no-print, .page-header {
+        display: none !important;
+    }
+    .main-wrapper {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    .page-container {
+        padding: 0 !important;
+    }
+    .receipt-print-container {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+    .voucher-slip {
+        border: 1px solid #000000 !important;
+        page-break-inside: avoid;
+    }
+}
+</style>
+{% endblock %}
