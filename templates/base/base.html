@@ -1,0 +1,186 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ page_title|default:"Dashboard" }}{% endblock %} | {{ school_settings.school_name }}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom ERP CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Sidebar Backdrop for Mobile -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="appSidebar">
+            <div class="sidebar-header">
+                <a href="{% url 'core:dashboard' %}" class="brand-link">
+                    <div class="brand-icon">🎓</div>
+                    <span>{{ school_settings.school_name|truncatechars:18 }}</span>
+                </a>
+            </div>
+
+            <div class="sidebar-body">
+                <div class="sidebar-section-title">Main Navigation</div>
+                
+                <a href="{% url 'core:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="sidebar-section-title">Academic & Records</div>
+
+                <a href="#" class="nav-item" title="Students Management (Sprint 1)">
+                    <span class="nav-icon">👨‍🎓</span>
+                    <span>Students</span>
+                    <span class="nav-badge">Sprint 1</span>
+                </a>
+
+                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+                <a href="#" class="nav-item" title="Teachers & Staff (Sprint 2)">
+                    <span class="nav-icon">👩‍🏫</span>
+                    <span>Teachers & Staff</span>
+                </a>
+
+                <a href="#" class="nav-item" title="Classes & Sections (Sprint 1)">
+                    <span class="nav-icon">🏫</span>
+                    <span>Classes & Sections</span>
+                </a>
+                {% endif %}
+
+                <a href="#" class="nav-item" title="Manual Attendance (Sprint 2)">
+                    <span class="nav-icon">📅</span>
+                    <span>Attendance</span>
+                </a>
+
+                <a href="#" class="nav-item" title="Lectures & Syllabus (Sprint 2)">
+                    <span class="nav-icon">📖</span>
+                    <span>Lectures & Syllabus</span>
+                </a>
+
+                {% if request.user.is_admin or request.user.is_principal %}
+                <div class="sidebar-section-title">Financial & Accounts</div>
+
+                <a href="#" class="nav-item" title="Fee Management (Sprint 3)">
+                    <span class="nav-icon">💳</span>
+                    <span>Fee Management</span>
+                </a>
+
+                <a href="#" class="nav-item" title="Expenses (Sprint 4)">
+                    <span class="nav-icon">🧾</span>
+                    <span>Expenses</span>
+                </a>
+                {% endif %}
+
+                <div class="sidebar-section-title">Examination & Reports</div>
+
+                <a href="#" class="nav-item" title="Exams & Results (Sprint 3)">
+                    <span class="nav-icon">📝</span>
+                    <span>Exams & Results</span>
+                </a>
+
+                <a href="#" class="nav-item" title="Reports Center (Sprint 4)">
+                    <span class="nav-icon">📈</span>
+                    <span>Reports Center</span>
+                </a>
+
+                <div class="sidebar-section-title">System & Alerts</div>
+
+                <a href="{% url 'core:notifications' %}" class="nav-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                    <span class="nav-icon">🔔</span>
+                    <span>Notifications</span>
+                    {% if unread_notifications_count > 0 %}
+                    <span class="nav-badge" style="background: var(--danger);">{{ unread_notifications_count }}</span>
+                    {% endif %}
+                </a>
+
+                <a href="{% url 'accounts:profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <span class="nav-icon">👤</span>
+                    <span>My Profile</span>
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-quick-profile">
+                    {% if request.user.avatar %}
+                        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}" class="user-avatar-sm">
+                    {% else %}
+                        <div class="user-avatar-sm">{{ request.user.first_name|first|default:request.user.username|first|upper }}</div>
+                    {% endif %}
+                    <div class="user-quick-info">
+                        <div class="user-quick-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                        <div class="user-quick-role">{{ request.user.get_role_display }}</div>
+                    </div>
+                    <a href="{% url 'accounts:logout' %}" title="Logout" style="color: var(--danger); font-size: 16px; margin-left: 6px;">🚪</a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <!-- Topbar Navigation -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
+                        ☰
+                    </button>
+                    <form action="{% url 'core:global_search' %}" method="GET" class="global-search-form">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" name="q" class="search-input" placeholder="Search student, teacher, receipt..." value="{{ request.GET.q|default:'' }}">
+                    </form>
+                </div>
+
+                <div class="topbar-right">
+                    <span class="role-badge">
+                        🛡️ {{ request.user.get_role_display }}
+                    </span>
+
+                    <a href="{% url 'core:notifications' %}" class="topbar-action-btn" title="Notifications">
+                        🔔
+                        {% if unread_notifications_count > 0 %}
+                        <span class="notif-badge-dot">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
+
+                    <a href="{% url 'accounts:profile' %}" class="topbar-action-btn" title="Profile Settings">
+                        ⚙️
+                    </a>
+
+                    <a href="{% url 'accounts:logout' %}" class="btn btn-outline btn-sm" style="border-color: #fecaca; color: var(--danger);">
+                        Logout
+                    </a>
+                </div>
+            </header>
+
+            <!-- Page Container -->
+            <main class="page-container">
+                <!-- Flash Messages -->
+                {% if messages %}
+                <div class="alert-container">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }}">
+                        <span>{{ message }}</span>
+                        <button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-weight:bold;">✕</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Content Block -->
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Main JavaScript -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

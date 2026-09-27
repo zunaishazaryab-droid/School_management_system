@@ -1,0 +1,64 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Notifications & Alerts | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Notifications & System Alerts</h1>
+        <p class="page-subtitle">Stay updated with academic reminders, fee alerts, and system notices.</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <span>📬 All Notifications</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="{% url 'core:notifications' %}" class="btn btn-outline btn-sm">All</a>
+            <a href="{% url 'core:notifications' %}?type=WARNING" class="btn btn-outline btn-sm" style="color: var(--warning);">Warnings</a>
+            <a href="{% url 'core:notifications' %}?type=DANGER" class="btn btn-outline btn-sm" style="color: var(--danger);">Urgent</a>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if notifications %}
+            {% for notif in notifications %}
+            <div class="activity-item" style="padding: 16px 0; {% if not notif.is_read %}background: #f8fafc; padding-left: 12px; border-left: 3px solid var(--primary);{% endif %}">
+                <div class="activity-badge" style="
+                    {% if notif.notification_type == 'DANGER' %}background: var(--danger-light); color: var(--danger);
+                    {% elif notif.notification_type == 'WARNING' %}background: var(--warning-light); color: var(--warning);
+                    {% elif notif.notification_type == 'SUCCESS' %}background: var(--success-light); color: var(--success);
+                    {% else %}background: var(--info-light); color: var(--info);{% endif %}
+                ">
+                    {% if notif.notification_type == 'DANGER' %}🚨
+                    {% elif notif.notification_type == 'WARNING' %}⚠️
+                    {% elif notif.notification_type == 'SUCCESS' %}✅
+                    {% else %}ℹ️{% endif %}
+                </div>
+                <div class="activity-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 600; color: var(--text-main);">{{ notif.title }}</h4>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">{{ notif.message }}</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="activity-time">{{ notif.created_at|timesince }} ago</span>
+                            {% if not notif.is_read %}
+                            <a href="{% url 'core:mark_notification_read' notif.pk %}" class="btn btn-outline btn-sm" style="padding: 3px 8px; font-size: 11px;">
+                                Mark as read
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: var(--text-muted); font-size: 13.5px; text-align: center; padding: 30px 0;">
+                No notifications found.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}User Profile — {{ user_obj.get_full_name|default:user_obj.username }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">My Account Profile</h1>
+        <p class="page-subtitle">Manage your personal information, role details, and security credentials.</p>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left Column: Personal Information Form -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>👤 Personal Information</span>
+                </div>
+                <span class="role-badge">Role: {{ user_obj.get_role_display }}</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_profile">
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="id_first_name">First Name</label>
+                            {{ profile_form.first_name }}
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="id_last_name">Last Name</label>
+                            {{ profile_form.last_name }}
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="id_email">Email Address</label>
+                            {{ profile_form.email }}
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="id_phone_number">Phone / WhatsApp</label>
+                            {{ profile_form.phone_number }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id_avatar">Profile Picture / Avatar</label>
+                        {{ profile_form.avatar }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id_bio">Bio / Staff Remarks</label>
+                        {{ profile_form.bio }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        💾 Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: User Overview & Password Change -->
+    <div>
+        <!-- Profile Summary Card -->
+        <div class="card" style="text-align: center;">
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 16px;">
+                    {% if user_obj.avatar %}
+                        <img src="{{ user_obj.avatar.url }}" alt="{{ user_obj.username }}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-border);">
+                    {% else %}
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background: #334155; color: #fff; font-size: 30px; font-weight: 700; display: flex; align-items: center; justify-content: center;">
+                            {{ user_obj.first_name|first|default:user_obj.username|first|upper }}
+                        </div>
+                    {% endif %}
+                    <div>
+                        <h3 style="font-size: 17px; font-weight: 700; color: var(--text-main);">{{ user_obj.get_full_name|default:user_obj.username }}</h3>
+                        <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">@{{ user_obj.username }}</p>
+                    </div>
+                    <span class="role-badge">{{ user_obj.get_role_display }}</span>
+                </div>
+
+                <div style="border-top: 1px solid var(--card-border); padding-top: 14px; text-align: left; font-size: 13px;">
+                    <div style="margin-bottom: 8px;"><strong>Email:</strong> <span style="color: var(--text-muted);">{{ user_obj.email|default:"Not set" }}</span></div>
+                    <div style="margin-bottom: 8px;"><strong>Phone:</strong> <span style="color: var(--text-muted);">{{ user_obj.phone_number|default:"Not set" }}</span></div>
+                    <div><strong>Joined:</strong> <span style="color: var(--text-muted);">{{ user_obj.date_joined|date:"M d, Y" }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Change Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🔒 Change Password</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_password">
+
+                    {% for field in password_form %}
+                    <div class="form-group">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <small style="color: var(--danger);">{{ field.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-outline btn-block">
+                        Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

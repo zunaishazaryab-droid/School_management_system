@@ -1,0 +1,34 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Search Results | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Global Search Results</h1>
+        <p class="page-subtitle">Showing system records matching: <strong>"{{ query }}"</strong></p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if results %}
+            {% for res in results %}
+            <div style="padding: 16px; border: 1px solid var(--card-border); border-radius: var(--radius-md); margin-bottom: 12px; background: #f8fafc;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <h3 style="font-size: 15px; font-weight: 600; color: var(--primary);">{{ res.title }}</h3>
+                    <span class="role-badge">{{ res.type }}</span>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted);">{{ res.details }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px 20px;">
+                <div style="font-size: 36px; margin-bottom: 12px;">🔍</div>
+                <h3 style="font-size: 16px; color: var(--text-main); margin-bottom: 6px;">No records found</h3>
+                <p style="font-size: 13px; color: var(--text-muted);">Please try searching with student name, ID, teacher name, or receipt number.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
