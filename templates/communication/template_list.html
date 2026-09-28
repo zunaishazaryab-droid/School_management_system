@@ -1,0 +1,101 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            📋 Reusable Message Templates
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Standardized templates for Absences, Fee Recoveries, Exam Schedules, Homework Diary, and General School Circulars.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'communication:broadcast_center' %}" class="btn btn-primary">
+            💬 Broadcast Center
+        </a>
+        <a href="{% url 'communication:announcement_list' %}" class="btn btn-outline">
+            📢 Notice Board
+        </a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
+    <!-- Create Template Card -->
+    <div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 24px; height: fit-content;">
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text-main);">
+            ➕ Create New Template
+        </h3>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="create_template" value="1">
+
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Template Title</label>
+                {{ form.title }}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Category</label>
+                {{ form.category }}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Message Template Body</label>
+                {{ form.body }}
+                <small style="color: var(--text-muted); font-size: 11px; margin-top: 4px; display: block;">
+                    Available tokens: <code>{student_name}</code>, <code>{guardian_name}</code>, <code>{class_name}</code>, <code>{fee_month}</code>, <code>{due_amount}</code>, <code>{date}</code>, <code>{school_name}</code>
+                </small>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; font-weight: 700;">
+                💾 Save Template
+            </button>
+        </form>
+    </div>
+
+    <!-- Existing Templates Grid -->
+    <div>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+            {% for t in templates %}
+            <div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                    <div>
+                        <div style="font-size: 16px; font-weight: 700; color: var(--text-main);">
+                            {{ t.title }}
+                        </div>
+                        <span class="badge" style="background: #e0f2fe; color: #0284c7; font-size: 11px; font-weight: 700; margin-top: 4px; display: inline-block;">
+                            {{ t.get_category_display }}
+                        </span>
+                    </div>
+                    <form action="{% url 'communication:template_delete' t.pk %}" method="POST" onsubmit="return confirm('Delete this template?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline" style="border-color: #fecaca; color: var(--danger);" title="Delete Template">
+                            🗑️
+                        </button>
+                    </form>
+                </div>
+                <div style="background: #f8fafc; padding: 12px 14px; border-radius: 8px; font-family: monospace; font-size: 13px; color: #334155; line-height: 1.5; white-space: pre-wrap; margin-bottom: 12px;">
+                    {{ t.body }}
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted);">
+                    <span>Last updated: {{ t.updated_at|date:"d M, Y" }}</span>
+                    <a href="{% url 'communication:broadcast_center' %}" class="btn btn-sm btn-outline" style="font-size: 12px; padding: 4px 10px;">
+                        💬 Use in Broadcast
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="card" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <div style="font-size: 36px; margin-bottom: 12px;">📝</div>
+                <h4>No Templates Created Yet</h4>
+                <p>Create templates on the left for quick message composition.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

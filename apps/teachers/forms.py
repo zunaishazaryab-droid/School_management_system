@@ -70,3 +70,24 @@ class StaffLeaveForm(forms.ModelForm):
             'end_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'State reason for leave...'}),
         }
+
+
+class TeacherPerformanceForm(forms.ModelForm):
+    class Meta:
+        model = TeacherPerformance
+        fields = [
+            'teacher', 'evaluation_month', 'punctuality_rating', 
+            'syllabus_coverage_pct', 'homework_regularity_pct', 
+            'copies_checked_pct', 'overall_score', 'coordinator_remarks'
+        ]
+        widgets = {
+            'teacher': forms.Select(attrs={'class': 'form-control'}),
+            'evaluation_month': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. September 2026'}),
+            'punctuality_rating': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100, 'placeholder': 'e.g. 95'}),
+            'syllabus_coverage_pct': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100, 'placeholder': 'e.g. 88'}),
+            'homework_regularity_pct': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100, 'placeholder': 'e.g. 90'}),
+            'copies_checked_pct': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100, 'placeholder': 'e.g. 92'}),
+            'overall_score': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': 0, 'max': 10, 'placeholder': 'e.g. 9.1'}),
+            'coordinator_remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Evaluator qualitative assessment, observations, strengths and improvement areas...'}),
+        }
+

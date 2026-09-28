@@ -1,0 +1,103 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            📢 {% if is_edit %}Edit Announcement{% else %}Create Official Circular / Announcement{% endif %}
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Publish circulars, holiday notices, examination alerts or general updates to faculty, parents, and students.
+        </p>
+    </div>
+    <a href="{% url 'communication:announcement_list' %}" class="btn btn-outline">
+        ← Back to Notice Board
+    </a>
+</div>
+
+<div class="card" style="max-width: 900px; margin: 0 auto; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+    <div class="card-body" style="padding: 28px;">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Notice Title <span style="color: var(--danger);">*</span></label>
+                    {{ form.title }}
+                    {% if form.title.errors %}<div class="text-danger" style="font-size: 12px; margin-top: 4px;">{{ form.title.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Priority Level</label>
+                    {{ form.priority }}
+                    {% if form.priority.errors %}<div class="text-danger" style="font-size: 12px; margin-top: 4px;">{{ form.priority.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Target Audience</label>
+                    {{ form.audience }}
+                    {% if form.audience.errors %}<div class="text-danger" style="font-size: 12px; margin-top: 4px;">{{ form.audience.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Target Class (Optional)</label>
+                    {{ form.target_class }}
+                    {% if form.target_class.errors %}<div class="text-danger" style="font-size: 12px; margin-top: 4px;">{{ form.target_class.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Target Section (Optional)</label>
+                    {{ form.target_section }}
+                    {% if form.target_section.errors %}<div class="text-danger" style="font-size: 12px; margin-top: 4px;">{{ form.target_section.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Detailed Content / Circular Description <span style="color: var(--danger);">*</span></label>
+                {{ form.content }}
+                {% if form.content.errors %}<div class="text-danger" style="font-size: 12px; margin-top: 4px;">{{ form.content.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Publish Date</label>
+                    {{ form.publish_date }}
+                    {% if form.publish_date.errors %}<div class="text-danger" style="font-size: 12px; margin-top: 4px;">{{ form.publish_date.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Expiry Date (Optional)</label>
+                    {{ form.expiry_date }}
+                    <small style="color: var(--text-muted); font-size: 11px;">Notice will auto-archive after this date.</small>
+                    {% if form.expiry_date.errors %}<div class="text-danger" style="font-size: 12px; margin-top: 4px;">{{ form.expiry_date.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Attach Document / Flyer</label>
+                    {{ form.attachment }}
+                    {% if form.attachment.errors %}<div class="text-danger" style="font-size: 12px; margin-top: 4px;">{{ form.attachment.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 28px; background: #f8fafc; padding: 14px 18px; border-radius: 8px; display: flex; align-items: center; gap: 12px;">
+                {{ form.is_published }}
+                <label for="{{ form.is_published.id_for_label }}" style="font-weight: 600; margin-bottom: 0; cursor: pointer;">
+                    Publish immediately (Visible on Dashboards and Notice Boards)
+                </label>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="{% url 'communication:announcement_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 600;">
+                    💾 {% if is_edit %}Save Changes{% else %}Publish Announcement{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

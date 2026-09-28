@@ -1,34 +1,233 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}Search Results | {{ school_settings.school_name }}{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
     <div>
-        <h1 class="page-title">Global Search Results</h1>
-        <p class="page-subtitle">Showing system records matching: <strong>"{{ query }}"</strong></p>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            🔍 Global System Search
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            {% if query %}
+                Found <strong>{{ total_matches }}</strong> matching records across the institution for query: <strong>"{{ query }}"</strong>
+            {% else %}
+                Enter search query in the top bar to search students, faculty, classes, receipts, and circulars.
+            {% endif %}
+        </p>
+    </div>
+    <div style="width: 320px;">
+        <form action="{% url 'core:global_search' %}" method="GET" style="display: flex; gap: 8px;">
+            <input type="text" name="q" class="form-control" placeholder="Search anything..." value="{{ query }}">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        {% if results %}
-            {% for res in results %}
-            <div style="padding: 16px; border: 1px solid var(--card-border); border-radius: var(--radius-md); margin-bottom: 12px; background: #f8fafc;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <h3 style="font-size: 15px; font-weight: 600; color: var(--primary);">{{ res.title }}</h3>
-                    <span class="role-badge">{{ res.type }}</span>
-                </div>
-                <p style="font-size: 13px; color: var(--text-muted);">{{ res.details }}</p>
+{% if query %}
+    {% if total_matches > 0 %}
+        <!-- Students Section -->
+        {% if student_results %}
+        <div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 24px; overflow: hidden;">
+            <div class="card-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0;">
+                    👨‍🎓 Students ({{ student_results|length }})
+                </h3>
             </div>
-            {% endfor %}
-        {% else %}
-            <div style="text-align: center; padding: 40px 20px;">
-                <div style="font-size: 36px; margin-bottom: 12px;">🔍</div>
-                <h3 style="font-size: 16px; color: var(--text-main); margin-bottom: 6px;">No records found</h3>
-                <p style="font-size: 13px; color: var(--text-muted);">Please try searching with student name, ID, teacher name, or receipt number.</p>
+            <div class="table-responsive">
+                <table class="data-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); background: #fafafa;">
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Admission No</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Student Name</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Class & Section</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Guardian</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Contact</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stu in student_results %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px 18px; font-family: monospace; font-weight: 700; color: var(--primary-color);">
+                                {{ stu.admission_number }}
+                            </td>
+                            <td style="padding: 12px 18px; font-weight: 600; color: #1e293b;">
+                                {{ stu.get_full_name }}
+                            </td>
+                            <td style="padding: 12px 18px; font-size: 13px;">
+                                <span class="badge" style="background: #e0f2fe; color: #0284c7;">
+                                    {{ stu.current_class.name }} - {{ stu.current_section.name }}
+                                </span>
+                            </td>
+                            <td style="padding: 12px 18px; font-size: 13px; color: #334155;">
+                                {{ stu.guardian_name }}
+                            </td>
+                            <td style="padding: 12px 18px; font-size: 13px; font-family: monospace;">
+                                {{ stu.guardian_phone }}
+                            </td>
+                            <td style="padding: 12px 18px; text-align: right;">
+                                <a href="{% url 'students:student_detail' stu.pk %}" class="btn btn-sm btn-primary">
+                                    View Profile ↗
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
+        </div>
         {% endif %}
+
+        <!-- Faculty Section -->
+        {% if teacher_results %}
+        <div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 24px; overflow: hidden;">
+            <div class="card-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0;">
+                    👩‍🏫 Faculty & Staff ({{ teacher_results|length }})
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); background: #fafafa;">
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Employee ID</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Name</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Designation</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Department</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Phone</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tch in teacher_results %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px 18px; font-family: monospace; font-weight: 700; color: var(--primary-color);">
+                                {{ tch.employee_id }}
+                            </td>
+                            <td style="padding: 12px 18px; font-weight: 600; color: #1e293b;">
+                                {{ tch.get_full_name }}
+                            </td>
+                            <td style="padding: 12px 18px; font-size: 13px;">
+                                {{ tch.get_designation_display }}
+                            </td>
+                            <td style="padding: 12px 18px; font-size: 13px; color: #334155;">
+                                {{ tch.department }}
+                            </td>
+                            <td style="padding: 12px 18px; font-size: 13px; font-family: monospace;">
+                                {{ tch.phone_number }}
+                            </td>
+                            <td style="padding: 12px 18px; text-align: right;">
+                                <a href="{% url 'teachers:teacher_detail' tch.pk %}" class="btn btn-sm btn-outline">
+                                    Profile ↗
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Fee Invoices / Accounts Section -->
+        {% if invoice_results %}
+        <div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 24px; overflow: hidden;">
+            <div class="card-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0;">
+                    💳 Fee Invoices & Challans ({{ invoice_results|length }})
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); background: #fafafa;">
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Challan #</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Student</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Month</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Payable</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Balance</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Status</th>
+                            <th style="padding: 12px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in invoice_results %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px 18px; font-family: monospace; font-weight: 700; color: var(--primary-color);">
+                                {{ inv.invoice_number }}
+                            </td>
+                            <td style="padding: 12px 18px; font-weight: 600;">
+                                {{ inv.student.get_full_name }}
+                            </td>
+                            <td style="padding: 12px 18px; font-size: 13px;">
+                                {{ inv.billing_month }}
+                            </td>
+                            <td style="padding: 12px 18px; font-weight: 700;">
+                                Rs. {{ inv.total_payable|floatformat:0 }}
+                            </td>
+                            <td style="padding: 12px 18px; font-weight: 700; color: {% if inv.balance_amount > 0 %}var(--danger){% else %}#16a34a{% endif %};">
+                                Rs. {{ inv.balance_amount|floatformat:0 }}
+                            </td>
+                            <td style="padding: 12px 18px;">
+                                <span class="badge" style="background: #f1f5f9; color: #334155; font-weight: 700;">
+                                    {{ inv.get_status_display }}
+                                </span>
+                            </td>
+                            <td style="padding: 12px 18px; text-align: right;">
+                                <a href="{% url 'fees:invoice_detail' inv.pk %}" class="btn btn-sm btn-outline">
+                                    Challan ↗
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Announcements / Circulars Section -->
+        {% if notice_results %}
+        <div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 24px; padding: 20px;">
+            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 14px;">
+                📢 Circulars & Notices ({{ notice_results|length }})
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                {% for n in notice_results %}
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <a href="{% url 'communication:announcement_detail' n.pk %}" style="font-weight: 700; color: var(--primary-color); font-size: 14px; text-decoration: none;">
+                            {{ n.title }}
+                        </a>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">{{ n.publish_date|date:"d M, Y" }} • {{ n.get_audience_display }}</div>
+                    </div>
+                    <a href="{% url 'communication:announcement_detail' n.pk %}" class="btn btn-sm btn-outline">
+                        View Notice ↗
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    {% else %}
+        <div class="card" style="text-align: center; padding: 60px 20px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color);">
+            <div style="font-size: 48px; margin-bottom: 12px;">🔍</div>
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">No Records Found</h3>
+            <p style="font-size: 14px; color: var(--text-muted); max-width: 480px; margin: 0 auto;">
+                We couldn't find any students, teachers, challans, or circulars matching <strong>"{{ query }}"</strong>. Try checking the spelling or search by Admission # or Phone.
+            </p>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="card" style="text-align: center; padding: 60px 20px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color);">
+        <div style="font-size: 48px; margin-bottom: 12px;">🌐</div>
+        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Global Real-Time ERP Search</h3>
+        <p style="font-size: 14px; color: var(--text-muted); max-width: 520px; margin: 0 auto;">
+            Search any student name, father name, registration number, faculty member, class, fee invoice challan, or official school circular in real time.
+        </p>
     </div>
-</div>
+{% endif %}
 {% endblock %}

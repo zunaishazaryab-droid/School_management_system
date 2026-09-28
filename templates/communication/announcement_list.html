@@ -1,0 +1,158 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Notice Board & Circulars - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title">📢 Notice Board & Circulars</h1>
+        <p class="page-subtitle">School-wide official announcements, parent circulars, exam schedules, and staff notices</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'communication:broadcast_center' %}" class="btn btn-outline" style="color: #2563eb; border-color: #93c5fd;">
+            💬 Parent Broadcast Center
+        </a>
+        <a href="{% url 'communication:template_list' %}" class="btn btn-outline">
+            📋 Message Templates
+        </a>
+        {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+        <a href="{% url 'communication:announcement_create' %}" class="btn btn-primary">
+            + Post New Circular
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Stats / KPIs -->
+<div class="kpi-grid" style="margin-bottom: 24px;">
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--primary-light); color: var(--primary);">📢</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Active Notices</span>
+            <span class="kpi-value">{{ total_active }}</span>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--danger-light); color: var(--danger);">🚨</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Urgent Alerts</span>
+            <span class="kpi-value">{{ announcements|length }} Listed</span>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--success-light); color: var(--success);">👥</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Target Audience</span>
+            <span class="kpi-value">Students & Staff</span>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-body" style="padding: 16px;">
+        <form method="GET" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search notices by title, content..." class="form-control" style="flex: 1; min-width: 200px;">
+            
+            <select name="audience" class="form-control" style="width: auto;">
+                <option value="">-- All Audiences --</option>
+                {% for code, label in audiences %}
+                <option value="{{ code }}" {% if audience_filter == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="priority" class="form-control" style="width: auto;">
+                <option value="">-- All Priorities --</option>
+                {% for code, label in priorities %}
+                <option value="{{ code }}" {% if priority_filter == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="status" class="form-control" style="width: auto;">
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Notices</option>
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Records</option>
+                <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Drafts</option>
+                <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired Notices</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary">Filter</button>
+            {% if query or audience_filter or priority_filter or status_filter != 'active' %}
+            <a href="{% url 'communication:announcement_list' %}" class="btn btn-outline">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Notice Cards Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px;">
+    {% for ann in announcements %}
+    <div class="card" style="border-top: 4px solid {% if ann.priority == 'URGENT' %}#ef4444;{% elif ann.priority == 'IMPORTANT' %}#f59e0b;{% else %}#2563eb;{% endif %} display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="card-body">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 8px;">
+                <span class="role-badge" style="font-size: 11px; font-weight: 700; background: {% if ann.priority == 'URGENT' %}#fee2e2; color: #b91c1c;{% elif ann.priority == 'IMPORTANT' %}#fef3c7; color: #b45309;{% else %}#eff6ff; color: #1d4ed8;{% endif %}">
+                    {% if ann.priority == 'URGENT' %}🚨 URGENT ALERT{% elif ann.priority == 'IMPORTANT' %}⚠️ IMPORTANT{% else %}📢 NOTICE{% endif %}
+                </span>
+                <span style="font-size: 12px; color: var(--text-light);">
+                    📅 {{ ann.publish_date }}
+                </span>
+            </div>
+
+            <h3 style="font-size: 16.5px; font-weight: 700; color: var(--text-dark); margin-bottom: 10px; line-height: 1.35;">
+                <a href="{% url 'communication:announcement_detail' ann.pk %}" style="color: inherit; text-decoration: none;">
+                    {{ ann.title }}
+                </a>
+            </h3>
+
+            <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                {{ ann.content }}
+            </p>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; margin-bottom: 14px;">
+                <span style="background: #f1f5f9; padding: 3px 8px; border-radius: 4px; color: var(--text-muted);">
+                    👥 {{ ann.get_audience_display }}
+                </span>
+                {% if ann.target_class %}
+                <span style="background: #e0f2fe; padding: 3px 8px; border-radius: 4px; color: #0369a1; font-weight: 600;">
+                    🏫 {{ ann.target_class.name }}
+                </span>
+                {% endif %}
+                {% if ann.attachment %}
+                <span style="background: #f0fdf4; padding: 3px 8px; border-radius: 4px; color: #15803d; font-weight: 600;">
+                    📎 Attachment Included
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card-footer" style="background: #f8fafc; border-top: 1px solid var(--card-border); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11.5px; color: var(--text-light);">
+                By: {{ ann.author.get_full_name|default:"Administration" }}
+            </span>
+            <div style="display: flex; gap: 6px;">
+                <a href="{% url 'communication:announcement_detail' ann.pk %}" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 12px;">
+                    Read Details →
+                </a>
+                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+                <a href="{% url 'communication:announcement_edit' ann.pk %}" class="btn btn-sm btn-outline" style="padding: 4px 8px; font-size: 12px;">
+                    ✏️
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px;">
+        <div style="font-size: 40px; margin-bottom: 12px;">📢</div>
+        <h3 style="font-size: 17px; margin-bottom: 6px; color: var(--text-dark);">No Circulars Found</h3>
+        <p style="font-size: 13.5px; color: var(--text-muted); max-width: 420px; margin: 0 auto 16px;">
+            There are no notices matching your current search and filter criteria.
+        </p>
+        {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+        <a href="{% url 'communication:announcement_create' %}" class="btn btn-primary">
+            + Post First Circular
+        </a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

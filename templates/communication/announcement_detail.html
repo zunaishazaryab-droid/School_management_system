@@ -1,0 +1,141 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .sidebar, .topbar, .no-print {
+        display: none !important;
+    }
+    .main-wrapper {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .page-container {
+        padding: 0 !important;
+    }
+    .circular-sheet {
+        box-shadow: none !important;
+        border: 2px solid #000 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            📢 Official Notice Details
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            View circular specifications, targeted recipients, and printable official sheet.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" class="btn btn-outline">
+            🖨️ Print Circular
+        </button>
+        {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+        <a href="{% url 'communication:announcement_edit' announcement.pk %}" class="btn btn-outline" style="border-color: #93c5fd; color: #2563eb;">
+            ✏️ Edit Notice
+        </a>
+        <form action="{% url 'communication:announcement_delete' announcement.pk %}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this announcement?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline" style="border-color: #fecaca; color: var(--danger);">
+                🗑️ Delete
+            </button>
+        </form>
+        {% endif %}
+        <a href="{% url 'communication:announcement_list' %}" class="btn btn-outline">
+            ← Notice Board
+        </a>
+    </div>
+</div>
+
+<div class="circular-sheet card" style="max-width: 850px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 16px rgba(0,0,0,0.06); padding: 40px;">
+    <!-- School Official Header -->
+    <div style="text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 20px; margin-bottom: 24px;">
+        <div style="font-size: 26px; font-weight: 800; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px;">
+            {{ school_settings.school_name }}
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+            {{ school_settings.tagline|default:"Knowledge, Excellence & Integrity" }} • {{ school_settings.phone }}
+        </div>
+        <div style="display: inline-block; background: #f1f5f9; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #334155; margin-top: 10px; text-transform: uppercase;">
+            OFFICIAL CIRCULAR / NOTIFICATION
+        </div>
+    </div>
+
+    <!-- Metadata Row -->
+    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; font-size: 13px;">
+        <div>
+            <strong>Ref No:</strong> EMS/CIRC/{{ announcement.pk|stringformat:"04d" }}<br>
+            <strong>Date of Issue:</strong> {{ announcement.publish_date|date:"d M, Y" }}
+        </div>
+        <div style="text-align: right;">
+            <strong>Target Audience:</strong> 
+            <span class="badge" style="background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-weight: 600;">
+                {{ announcement.get_audience_display }}
+                {% if announcement.target_class %} ({{ announcement.target_class.name }}{% if announcement.target_section %} - {{ announcement.target_section.name }}{% endif %}){% endif %}
+            </span><br>
+            <strong>Priority:</strong> 
+            {% if announcement.priority == 'URGENT' %}
+                <span class="badge" style="background: #fee2e2; color: #dc2626; font-weight: 700;">URGENT</span>
+            {% elif announcement.priority == 'IMPORTANT' %}
+                <span class="badge" style="background: #fef3c7; color: #d97706; font-weight: 700;">IMPORTANT</span>
+            {% else %}
+                <span class="badge" style="background: #f1f5f9; color: #475569; font-weight: 600;">NORMAL</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Subject / Title -->
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 8px; border-left: 4px solid var(--primary-color); padding-left: 12px;">
+            Subject: {{ announcement.title }}
+        </h2>
+    </div>
+
+    <!-- Main Circular Body -->
+    <div style="font-size: 15px; line-height: 1.8; color: #334155; white-space: pre-line; margin-bottom: 40px; min-height: 200px;">
+        {{ announcement.content }}
+    </div>
+
+    <!-- Attachment Section if any -->
+    {% if announcement.attachment %}
+    <div class="no-print" style="margin-bottom: 30px; background: #f0fdf4; border: 1px dashed #86efac; border-radius: 8px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">📎</span>
+            <div>
+                <div style="font-weight: 600; font-size: 14px; color: #166534;">Official Attachment / Circular Document</div>
+                <div style="font-size: 12px; color: #15803d;">Click to preview or download the attached PDF / file</div>
+            </div>
+        </div>
+        <a href="{{ announcement.attachment.url }}" target="_blank" class="btn btn-sm btn-primary">
+            📥 Download Document
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Authority Sign-off -->
+    <div style="display: flex; justify-content: space-between; margin-top: 50px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted);">Issued by:</div>
+            <div style="font-weight: 600; font-size: 14px; color: #1e293b;">
+                {{ announcement.author.get_full_name|default:announcement.author.username|default:"Administration" }}
+            </div>
+            <div style="font-size: 12px; color: #64748b;">{{ announcement.author.get_role_display|default:"Office of Administration" }}</div>
+        </div>
+        <div style="text-align: center; min-width: 160px;">
+            <div style="height: 45px; border-bottom: 1px solid #94a3b8; margin-bottom: 6px;"></div>
+            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Principal / Authorized Stamp</div>
+            <div style="font-size: 11px; color: #64748b;">{{ school_settings.school_name }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

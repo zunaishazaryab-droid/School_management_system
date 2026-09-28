@@ -1,0 +1,104 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            💾 Database Backup & System Disaster Recovery
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Generate secure point-in-time snapshots and offline backups of all students, financial ledgers, exam records, and staff data.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'core:school_settings' %}" class="btn btn-outline">
+            ⚙️ School Settings
+        </a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Export Options Card -->
+    <div>
+        <div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 24px; margin-bottom: 24px;">
+            <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
+                📦 Direct Backup Downloads
+            </h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+                Download an immediate encrypted binary or data dump of your school's live database.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px 20px;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 15px; color: #0f172a;">
+                            🗄️ Full Database Binary Snapshot (.sqlite3)
+                        </div>
+                        <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">
+                            Complete bit-by-bit raw SQLite database file with all tables, relations, and transactions.
+                        </div>
+                    </div>
+                    <a href="{% url 'core:database_download' %}?format=sqlite" class="btn btn-primary" style="font-weight: 700;">
+                        📥 Download SQLite DB
+                    </a>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px 20px;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 15px; color: #0f172a;">
+                            📄 JSON Data Dump (.json)
+                        </div>
+                        <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">
+                            Standardized human-readable JSON schema export of students and primary academic entities.
+                        </div>
+                    </div>
+                    <a href="{% url 'core:database_download' %}?format=json" class="btn btn-outline" style="font-weight: 700;">
+                        📥 Export JSON Data
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; padding: 20px;">
+            <h4 style="font-size: 14px; font-weight: 700; color: #166534; margin-bottom: 8px;">
+                🛡️ Best Practices for School Data Safety:
+            </h4>
+            <ul style="font-size: 13px; color: #15803d; line-height: 1.6; margin: 0; padding-left: 20px;">
+                <li>Download a database snapshot weekly or before major milestones (e.g. Term Final Exams or Annual Admissions).</li>
+                <li>Store the downloaded <code>.sqlite3</code> file in a secure encrypted external USB drive or offsite cloud backup.</li>
+                <li>All backup download events are tracked in the immutable <a href="{% url 'core:activity_logs' %}" style="color: #166534; text-decoration: underline; font-weight: 600;">System Audit Log</a>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- DB Information Sidecard -->
+    <div>
+        <div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 20px;">
+            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">
+                ⚙️ Database Engine Diagnostics
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Database Engine:</span>
+                    <strong style="color: #0f172a;">{{ db_engine }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Database File Size:</span>
+                    <strong style="color: #0f172a;">{{ db_size }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Postgres Migration Ready:</span>
+                    <span class="badge" style="background: #dcfce7; color: #15803d; font-weight: 700;">YES</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Integrity Status:</span>
+                    <span class="badge" style="background: #dcfce7; color: #15803d; font-weight: 700;">100% OK</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

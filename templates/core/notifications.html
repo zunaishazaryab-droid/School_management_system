@@ -1,63 +1,96 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}Notifications & Alerts | {{ school_settings.school_name }}{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
     <div>
-        <h1 class="page-title">Notifications & System Alerts</h1>
-        <p class="page-subtitle">Stay updated with academic reminders, fee alerts, and system notices.</p>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            🔔 Notifications & System Alerts
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Stay updated with automated alerts regarding student fees, teacher attendance, exam schedules, and circulars.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'core:mark_all_notifications_read' %}" class="btn btn-outline" style="border-color: #93c5fd; color: #2563eb;">
+            ✓ Mark All as Read
+        </a>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <div class="card-title">
-            <span>📬 All Notifications</span>
-        </div>
+<div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.02); overflow: hidden;">
+    <div class="card-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
         <div style="display: flex; gap: 8px;">
-            <a href="{% url 'core:notifications' %}" class="btn btn-outline btn-sm">All</a>
-            <a href="{% url 'core:notifications' %}?type=WARNING" class="btn btn-outline btn-sm" style="color: var(--warning);">Warnings</a>
-            <a href="{% url 'core:notifications' %}?type=DANGER" class="btn btn-outline btn-sm" style="color: var(--danger);">Urgent</a>
+            <a href="{% url 'core:notifications' %}" class="btn btn-sm {% if not selected_type %}btn-primary{% else %}btn-outline{% endif %}">
+                All Alerts
+            </a>
+            <a href="{% url 'core:notifications' %}?type=WARNING" class="btn btn-sm {% if selected_type == 'WARNING' %}btn-primary{% else %}btn-outline{% endif %}" style="{% if selected_type != 'WARNING' %}color: #d97706; border-color: #fde68a;{% endif %}">
+                ⚠️ Warnings
+            </a>
+            <a href="{% url 'core:notifications' %}?type=DANGER" class="btn btn-sm {% if selected_type == 'DANGER' %}btn-primary{% else %}btn-outline{% endif %}" style="{% if selected_type != 'DANGER' %}color: #dc2626; border-color: #fecaca;{% endif %}">
+                🚨 Urgent
+            </a>
+            <a href="{% url 'core:notifications' %}?type=SUCCESS" class="btn btn-sm {% if selected_type == 'SUCCESS' %}btn-primary{% else %}btn-outline{% endif %}" style="{% if selected_type != 'SUCCESS' %}color: #16a34a; border-color: #bbf7d0;{% endif %}">
+                ✅ Success
+            </a>
+            <a href="{% url 'core:notifications' %}?type=INFO" class="btn btn-sm {% if selected_type == 'INFO' %}btn-primary{% else %}btn-outline{% endif %}">
+                ℹ️ Information
+            </a>
         </div>
     </div>
-    <div class="card-body">
+    <div class="card-body" style="padding: 0;">
         {% if notifications %}
-            {% for notif in notifications %}
-            <div class="activity-item" style="padding: 16px 0; {% if not notif.is_read %}background: #f8fafc; padding-left: 12px; border-left: 3px solid var(--primary);{% endif %}">
-                <div class="activity-badge" style="
-                    {% if notif.notification_type == 'DANGER' %}background: var(--danger-light); color: var(--danger);
-                    {% elif notif.notification_type == 'WARNING' %}background: var(--warning-light); color: var(--warning);
-                    {% elif notif.notification_type == 'SUCCESS' %}background: var(--success-light); color: var(--success);
-                    {% else %}background: var(--info-light); color: var(--info);{% endif %}
-                ">
-                    {% if notif.notification_type == 'DANGER' %}🚨
-                    {% elif notif.notification_type == 'WARNING' %}⚠️
-                    {% elif notif.notification_type == 'SUCCESS' %}✅
-                    {% else %}ℹ️{% endif %}
-                </div>
-                <div class="activity-content">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <h4 style="font-size: 14px; font-weight: 600; color: var(--text-main);">{{ notif.title }}</h4>
-                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">{{ notif.message }}</p>
+            <div style="display: flex; flex-direction: column;">
+                {% for notif in notifications %}
+                <div style="padding: 18px 24px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; {% if not notif.is_read %}background: #f0f9ff; border-left: 4px solid var(--primary-color);{% endif %}">
+                    <div style="display: flex; gap: 16px; align-items: flex-start;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+                            {% if notif.notification_type == 'DANGER' %}background: #fee2e2; color: #dc2626;
+                            {% elif notif.notification_type == 'WARNING' %}background: #fef3c7; color: #d97706;
+                            {% elif notif.notification_type == 'SUCCESS' %}background: #dcfce7; color: #16a34a;
+                            {% else %}background: #e0f2fe; color: #0284c7;{% endif %}
+                        ">
+                            {% if notif.notification_type == 'DANGER' %}🚨
+                            {% elif notif.notification_type == 'WARNING' %}⚠️
+                            {% elif notif.notification_type == 'SUCCESS' %}✅
+                            {% else %}ℹ️{% endif %}
                         </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span class="activity-time">{{ notif.created_at|timesince }} ago</span>
-                            {% if not notif.is_read %}
-                            <a href="{% url 'core:mark_notification_read' notif.pk %}" class="btn btn-outline btn-sm" style="padding: 3px 8px; font-size: 11px;">
-                                Mark as read
-                            </a>
-                            {% endif %}
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h4 style="font-size: 14.5px; font-weight: 700; color: #0f172a; margin: 0;">{{ notif.title }}</h4>
+                                {% if not notif.is_read %}
+                                <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 800;">NEW</span>
+                                {% endif %}
+                            </div>
+                            <p style="font-size: 13.5px; color: #334155; margin-top: 4px; line-height: 1.5; margin-bottom: 0;">{{ notif.message }}</p>
+                            <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 6px;">
+                                🕒 {{ notif.created_at|timesince }} ago ({{ notif.created_at|date:"d M, Y H:i" }})
+                            </div>
                         </div>
                     </div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                        {% if notif.link %}
+                        <a href="{{ notif.link }}" class="btn btn-sm btn-outline">
+                            View ↗
+                        </a>
+                        {% endif %}
+                        {% if not notif.is_read %}
+                        <a href="{% url 'core:mark_notification_read' notif.pk %}" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px;">
+                            Mark Read
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         {% else %}
-            <p style="color: var(--text-muted); font-size: 13.5px; text-align: center; padding: 30px 0;">
-                No notifications found.
-            </p>
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 40px; margin-bottom: 12px;">🎉</div>
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">All Caught Up!</h3>
+                <p style="font-size: 13px; color: var(--text-muted);">You have no pending notifications or alerts at this time.</p>
+            </div>
         {% endif %}
     </div>
 </div>

@@ -79,6 +79,27 @@
                     <span>Syllabus Tracker</span>
                 </a>
 
+                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+                <a href="{% url 'teachers:performance_dashboard' %}" class="nav-item {% if 'performance' in request.path %}active{% endif %}">
+                    <span class="nav-icon">⭐</span>
+                    <span>Teacher Performance</span>
+                </a>
+                {% endif %}
+
+                <div class="sidebar-section-title">Communication & Notices</div>
+
+                <a href="{% url 'communication:announcement_list' %}" class="nav-item {% if 'communication/announcements' in request.path or request.resolver_match.url_name == 'announcement_list' %}active{% endif %}">
+                    <span class="nav-icon">📢</span>
+                    <span>Notice Board</span>
+                </a>
+
+                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+                <a href="{% url 'communication:broadcast_center' %}" class="nav-item {% if 'broadcast' in request.path %}active{% endif %}">
+                    <span class="nav-icon">💬</span>
+                    <span>Broadcast Center</span>
+                </a>
+                {% endif %}
+
                 {% if request.user.is_admin or request.user.is_principal %}
                 <div class="sidebar-section-title">Financial & Accounts</div>
 
@@ -105,7 +126,33 @@
                     <span>Reports Center</span>
                 </a>
 
-                <div class="sidebar-section-title">System & Alerts</div>
+                {% if request.user.is_admin or request.user.is_principal %}
+                <div class="sidebar-section-title">Administration & System</div>
+
+                <a href="{% url 'core:activity_logs' %}" class="nav-item {% if 'activity-logs' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🛡️</span>
+                    <span>Audit Trail Log</span>
+                </a>
+
+                {% if request.user.is_admin %}
+                <a href="{% url 'core:user_management' %}" class="nav-item {% if 'settings/users' in request.path %}active{% endif %}">
+                    <span class="nav-icon">👥</span>
+                    <span>Staff Accounts</span>
+                </a>
+
+                <a href="{% url 'core:school_settings' %}" class="nav-item {% if 'settings/school' in request.path %}active{% endif %}">
+                    <span class="nav-icon">⚙️</span>
+                    <span>School Settings</span>
+                </a>
+
+                <a href="{% url 'core:database_backup' %}" class="nav-item {% if 'settings/backup' in request.path %}active{% endif %}">
+                    <span class="nav-icon">💾</span>
+                    <span>Database Backup</span>
+                </a>
+                {% endif %}
+                {% endif %}
+
+                <div class="sidebar-section-title">User Area</div>
 
                 <a href="{% url 'core:notifications' %}" class="nav-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
                     <span class="nav-icon">🔔</span>

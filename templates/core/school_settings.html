@@ -1,0 +1,96 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            ⚙️ Institution Profile & System Settings
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Configure school branding, contact details, active academic session, and currency symbols across the ERP.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'core:user_management' %}" class="btn btn-outline">
+            👥 Staff Accounts
+        </a>
+        <a href="{% url 'core:database_backup' %}" class="btn btn-outline">
+            💾 Database Backup
+        </a>
+    </div>
+</div>
+
+<div class="card" style="max-width: 900px; margin: 0 auto; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+    <div class="card-body" style="padding: 28px;">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div style="display: flex; align-items: center; gap: 20px; background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+                <div style="width: 70px; height: 70px; border-radius: 12px; background: #e0f2fe; display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0;">
+                    🎓
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0;">{{ settings_obj.school_name }}</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">{{ settings_obj.tagline|default:"Knowledge, Excellence & Integrity" }}</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Institution / School Name <span style="color: var(--danger);">*</span></label>
+                    {{ form.school_name }}
+                    {% if form.school_name.errors %}<div class="text-danger" style="font-size: 12px; margin-top: 4px;">{{ form.school_name.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">School Motto / Tagline</label>
+                    {{ form.tagline }}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Official Contact Phone</label>
+                    {{ form.phone }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Official Email Address</label>
+                    {{ form.email }}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Campus Physical Address</label>
+                {{ form.address }}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Current Academic Session</label>
+                    {{ form.current_academic_session }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Currency Symbol</label>
+                    {{ form.currency_symbol }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">School Logo Upload</label>
+                    {{ form.logo }}
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                <button type="submit" class="btn btn-primary" style="padding: 10px 28px; font-weight: 700;">
+                    💾 Save Institution Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
