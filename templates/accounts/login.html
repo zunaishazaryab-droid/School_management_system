@@ -13,16 +13,13 @@
 <body class="login-page-body">
     <div class="login-card-container">
         <div class="login-card">
-            <div class="login-header">
-                <div class="login-logo-box" style="background: transparent; box-shadow: none; width: auto; height: auto; margin-bottom: 14px;">
-                    {% if school_settings.logo %}
-                    <img src="{{ school_settings.logo.url }}" alt="Logo" style="width: 78px; height: 92px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.18));">
-                    {% else %}
-                    <img src="{% static 'images/logo.png' %}" alt="Logo" style="width: 78px; height: 92px; object-fit: contain;">
-                    {% endif %}
+            <div class="login-header" style="text-align: center; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 12px;">
+                    <img src="{% static 'images/logo.svg' %}" alt="GEN'X VISION SCHOOL SYSTEM" style="width: 140px; height: 168px; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.15)); transition: transform 0.3s ease;">
                 </div>
-                <h1 class="login-title" style="font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">{{ school_settings.school_name|default:"GEN'X VISION SCHOOL SYSTEM" }}</h1>
-                <p class="login-subtitle" style="color: #dc2626; font-weight: 700; font-size: 13px; letter-spacing: 1px;">CAMPUS MANAGEMENT PORTAL</p>
+                <div style="display: inline-block; background: #fee2e2; color: #b91c1c; font-size: 11.5px; font-weight: 800; padding: 5px 16px; border-radius: 20px; letter-spacing: 1.5px; text-transform: uppercase; border: 1px solid #fecaca;">
+                    Campus Management Portal
+                </div>
             </div>
 
             {% if messages %}
