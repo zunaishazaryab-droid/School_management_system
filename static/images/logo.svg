@@ -1,92 +1,108 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 720" width="100%" height="100%">
   <defs>
-    <!-- Outer Shield Path -->
-    <clipPath id="shield-clip">
-      <path d="M 300,30 L 530,95 L 530,410 C 530,550 430,640 300,690 C 170,640 70,550 70,410 L 70,95 Z" />
+    <!-- Outer Shield Outline Path -->
+    <!-- Top curved upward to center peak, vertical straight sides, angled bottom pointing to center tip -->
+    <clipPath id="shield-outer-clip">
+      <path d="M 300,35 Q 420,55 530,90 L 530,390 C 530,545 425,640 300,695 C 175,640 70,545 70,390 L 70,90 Q 180,55 300,35 Z" />
     </clipPath>
-    <!-- Inner Shield Path -->
-    <clipPath id="inner-shield-clip">
-      <path d="M 300,48 L 512,108 L 512,406 C 512,536 418,622 300,670 C 182,622 88,536 88,406 L 88,108 Z" />
+
+    <!-- Inner Shield Clip (inset by 18px for the white border) -->
+    <clipPath id="shield-inner-clip">
+      <path d="M 300,53 Q 412,71 512,102 L 512,388 C 512,530 415,620 300,672 C 185,620 88,530 88,388 L 88,102 Q 188,71 300,53 Z" />
     </clipPath>
   </defs>
 
-  <!-- Dark Outer Border / Shadow -->
-  <path d="M 300,20 L 540,88 L 540,414 C 540,560 436,654 300,706 C 164,654 60,560 60,414 L 60,88 Z" fill="#0d1b2a" />
+  <!-- 1. Thick Outer Black/Navy Shield Shadow & Frame -->
+  <path d="M 300,24 Q 425,45 540,82 L 540,394 C 540,556 430,655 300,712 C 170,655 60,556 60,394 L 60,82 Q 175,45 300,24 Z" fill="#0b131f" />
 
-  <!-- Crisp White Outer Stroke Line -->
-  <path d="M 300,34 L 526,98 L 526,410 C 526,546 426,634 300,684 C 174,634 74,546 74,410 L 74,98 Z" fill="#ffffff" />
+  <!-- 2. Crisp White Shield Border -->
+  <path d="M 300,38 Q 418,57 528,92 L 528,390 C 528,542 423,636 300,690 C 177,636 72,542 72,390 L 72,92 Q 182,57 300,38 Z" fill="#ffffff" />
 
-  <!-- Shield Interior Container -->
-  <g clip-path="url(#inner-shield-clip)">
-    <!-- 1. TOP CRIMSON RED SECTION -->
-    <rect x="0" y="0" width="600" height="370" fill="#b91c1c" />
+  <!-- 3. Shield Contents (Clipped to Inner Boundary) -->
+  <g clip-path="url(#shield-inner-clip)">
+    <!-- TOP RED FIELD -->
+    <rect x="0" y="0" width="600" height="375" fill="#b91c1c" />
 
-    <!-- Globe, Cap & Open Book Group -->
-    <g transform="translate(300, 210)">
-      <!-- Globe Circle -->
-      <circle cx="0" cy="-28" r="54" fill="#0284c7" stroke="#ffffff" stroke-width="3"/>
-      <!-- Globe Continents in White -->
-      <path d="M -32,-42 C -18,-54 6,-50 16,-44 C 28,-36 22,-14 6,-24 C -8,-32 -24,-26 -32,-42 Z" fill="#ffffff"/>
-      <path d="M -38,-12 C -22,-20 -8,-8 -16,14 C -28,26 -44,14 -38,-12 Z" fill="#ffffff"/>
-      <path d="M 12,-16 C 32,-24 44,-6 40,16 C 26,24 16,6 12,-16 Z" fill="#ffffff"/>
+    <!-- EDUCATION EMBLEM GRAPHICS -->
+    <g transform="translate(300, 215)">
+      <!-- Globe Base Circle -->
+      <circle cx="0" cy="-30" r="56" fill="#0284c7" stroke="#ffffff" stroke-width="3.5"/>
+      
+      <!-- Globe Continents in White with Golden Edge Details -->
+      <!-- Continent 1 (North/Eurasia) -->
+      <path d="M -34,-48 C -20,-60 6,-56 18,-48 C 30,-40 24,-16 6,-26 C -10,-36 -26,-30 -34,-48 Z" fill="#ffffff"/>
+      <path d="M -14,-46 C -2,-52 12,-48 16,-42" stroke="#f59e0b" stroke-width="2" fill="none"/>
+      
+      <!-- Continent 2 (South America/Africa) -->
+      <path d="M -40,-14 C -24,-24 -8,-10 -18,16 C -30,30 -48,16 -40,-14 Z" fill="#ffffff"/>
+      <path d="M -32,2 C -24,-10 -12,0 -18,14" stroke="#f59e0b" stroke-width="2" fill="none"/>
+      
+      <!-- Continent 3 (Asia/Australia) -->
+      <path d="M 14,-18 C 34,-26 48,-8 44,16 C 30,26 18,6 14,-18 Z" fill="#ffffff"/>
+      <path d="M 22,-8 C 34,-14 42,-2 38,12" stroke="#f59e0b" stroke-width="2" fill="none"/>
 
       <!-- Graduation Cap / Mortarboard -->
-      <!-- Diamond Top -->
-      <polygon points="0,-72 68,-52 0,-32 -68,-52" fill="#0f172a" stroke="#020617" stroke-width="2"/>
-      <!-- Cap Base / Skullcap -->
-      <path d="M -32,-42 C -32,-24 32,-24 32,-42 Z" fill="#0f172a"/>
-      <!-- Cap Button & Golden Tassel -->
-      <circle cx="0" cy="-52" r="4" fill="#0f172a"/>
-      <path d="M 0,-52 Q -48,-46 -48,-16" stroke="#f59e0b" stroke-width="3.5" fill="none"/>
-      <circle cx="-48" cy="-14" r="4.5" fill="#f59e0b"/>
+      <!-- Cap Diamond Top -->
+      <polygon points="0,-76 72,-54 0,-32 -72,-54" fill="#0f172a" stroke="#000000" stroke-width="1.5"/>
+      <!-- Cap Base Skullcap -->
+      <path d="M -34,-44 C -34,-24 34,-24 34,-44 Z" fill="#0f172a" stroke="#000000" stroke-width="1"/>
+      <!-- Cap Golden Tassel (Left Side) -->
+      <circle cx="0" cy="-54" r="4.5" fill="#f59e0b"/>
+      <path d="M 0,-54 Q -52,-48 -52,-14" stroke="#f59e0b" stroke-width="4" fill="none"/>
+      <polygon points="-52,-14 -47,-2 -57,-2" fill="#f59e0b"/>
 
-      <!-- Open Book -->
-      <!-- Left Page -->
-      <path d="M 0,22 C -45,12 -88,26 -115,44 C -115,58 -70,38 0,46 Z" fill="#0f172a" stroke="#020617" stroke-width="2"/>
-      <path d="M -12,28 C -45,20 -82,32 -105,46" stroke="#ffffff" stroke-width="2" fill="none"/>
-      <path d="M -12,34 C -45,26 -78,38 -98,51" stroke="#ffffff" stroke-width="2" fill="none"/>
-      <!-- Right Page -->
-      <path d="M 0,22 C 45,12 88,26 115,44 C 115,58 70,38 0,46 Z" fill="#0f172a" stroke="#020617" stroke-width="2"/>
-      <path d="M 12,28 C 45,20 82,32 105,46" stroke="#ffffff" stroke-width="2" fill="none"/>
-      <path d="M 12,34 C 45,26 78,38 98,51" stroke="#ffffff" stroke-width="2" fill="none"/>
-      <!-- Center Spine -->
-      <polygon points="-3,22 3,22 0,48" fill="#f59e0b"/>
+      <!-- Open Book Beneath Globe -->
+      <!-- Left Book Page -->
+      <path d="M 0,22 C -48,10 -94,26 -122,46 C -122,60 -74,38 0,48 Z" fill="#0f172a" stroke="#000000" stroke-width="1.5"/>
+      <path d="M -14,28 C -48,20 -88,32 -112,48" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+      <path d="M -14,35 C -48,27 -84,39 -104,54" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+      
+      <!-- Right Book Page -->
+      <path d="M 0,22 C 48,10 94,26 122,46 C 122,60 74,38 0,48 Z" fill="#0f172a" stroke="#000000" stroke-width="1.5"/>
+      <path d="M 14,28 C 48,20 88,32 112,48" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+      <path d="M 14,35 C 48,27 84,39 104,54" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+      
+      <!-- Center Book Binding Ribbon -->
+      <polygon points="-4,22 4,22 0,50" fill="#f59e0b"/>
     </g>
 
-    <!-- 2. MIDDLE WHITE RIBBON -->
-    <rect x="0" y="365" width="600" height="120" fill="#ffffff" />
-    <line x1="0" y1="365" x2="600" y2="365" stroke="#0d1b2a" stroke-width="4"/>
-    <line x1="0" y1="485" x2="600" y2="485" stroke="#0d1b2a" stroke-width="4"/>
+    <!-- MIDDLE WHITE BANNER -->
+    <rect x="0" y="370" width="600" height="124" fill="#ffffff" />
+    <line x1="0" y1="370" x2="600" y2="370" stroke="#0b131f" stroke-width="4.5"/>
+    <line x1="0" y1="494" x2="600" y2="494" stroke="#0b131f" stroke-width="4.5"/>
 
-    <!-- School Name Text -->
-    <text x="300" y="424" 
+    <!-- Bold Condensed GEN'X VISION text -->
+    <text x="300" y="432" 
           font-family="'Impact', 'Arial Black', 'Trebuchet MS', sans-serif" 
-          font-size="44" 
+          font-size="48" 
           font-weight="900" 
           text-anchor="middle" 
-          fill="#0d1b2a" 
+          fill="#0b131f" 
           letter-spacing="0.5">GEN&#39;X VISION</text>
     
-    <text x="300" y="465" 
-          font-family="'Arial Black', 'Arial', sans-serif" 
-          font-size="23" 
+    <!-- Bold Red SCHOOL SYSTEM text -->
+    <text x="300" y="474" 
+          font-family="'Arial Black', 'Impact', sans-serif" 
+          font-size="24" 
           font-weight="900" 
           text-anchor="middle" 
           fill="#b91c1c" 
-          letter-spacing="4">SCHOOL SYSTEM</text>
+          letter-spacing="4.5">SCHOOL SYSTEM</text>
 
-    <!-- 3. BOTTOM ROYAL NAVY BLUE SECTION -->
-    <rect x="0" y="485" width="600" height="250" fill="#0f3b73" />
+    <!-- BOTTOM ROYAL NAVY BLUE SECTION -->
+    <rect x="0" y="494" width="600" height="250" fill="#0f3b73" />
 
-    <!-- Fountain Pen Nib Symbol -->
-    <g transform="translate(300, 565)">
-      <!-- Pen Nib Body -->
-      <path d="M 0,-62 L 34,-4 L 24,42 L -24,42 L -34,-4 Z" fill="#ffffff" />
-      <!-- Nib Slit & Breather Hole -->
-      <line x1="0" y1="-60" x2="0" y2="-10" stroke="#0f3b73" stroke-width="4.5" stroke-linecap="round"/>
-      <circle cx="0" cy="-10" r="6" fill="#0f3b73"/>
-      <!-- Base Ring -->
-      <path d="M -18,42 L 18,42 L 14,52 L -14,52 Z" fill="#ffffff"/>
+    <!-- FOUNTAIN PEN NIB SYMBOL -->
+    <g transform="translate(300, 580)">
+      <!-- Pen Nib Body Shape (White) -->
+      <path d="M 0,-72 L 38,-4 L 26,46 L -26,46 L -38,-4 Z" fill="#ffffff" stroke="#ffffff" stroke-width="1"/>
+      
+      <!-- Center Slit & Breather Hole (Navy Blue) -->
+      <line x1="0" y1="-70" x2="0" y2="-12" stroke="#0f3b73" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="0" cy="-12" r="6.5" fill="#0f3b73"/>
+      
+      <!-- Base Collar Ring (White) -->
+      <path d="M -20,46 L 20,46 L 16,56 L -16,56 Z" fill="#ffffff"/>
     </g>
   </g>
 </svg>
