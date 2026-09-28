@@ -60,11 +60,18 @@
 <div class="circular-sheet card" style="max-width: 850px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 16px rgba(0,0,0,0.06); padding: 40px;">
     <!-- School Official Header -->
     <div style="text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 20px; margin-bottom: 24px;">
-        <div style="font-size: 26px; font-weight: 800; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px;">
+        <div style="margin-bottom: 10px;">
+            {% if school_settings.logo %}
+            <img src="{{ school_settings.logo.url }}" alt="Logo" style="width: 52px; height: 62px; object-fit: contain;">
+            {% else %}
+            <img src="{% static 'images/logo.png' %}" alt="Logo" style="width: 52px; height: 62px; object-fit: contain;">
+            {% endif %}
+        </div>
+        <div style="font-size: 24px; font-weight: 800; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px;">
             {{ school_settings.school_name }}
         </div>
         <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
-            {{ school_settings.tagline|default:"Knowledge, Excellence & Integrity" }} • {{ school_settings.phone }}
+            {{ school_settings.tagline|default:"Inspiring Excellence, Empowering Future" }} • {{ school_settings.phone }}
         </div>
         <div style="display: inline-block; background: #f1f5f9; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #334155; margin-top: 10px; text-transform: uppercase;">
             OFFICIAL CIRCULAR / NOTIFICATION

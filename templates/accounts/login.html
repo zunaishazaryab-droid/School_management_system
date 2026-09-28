@@ -14,9 +14,15 @@
     <div class="login-card-container">
         <div class="login-card">
             <div class="login-header">
-                <div class="login-logo-box">🎓</div>
-                <h1 class="login-title">{{ school_settings.school_name|default:"Beacon Heights Model School" }}</h1>
-                <p class="login-subtitle">School Management ERP — Version 2.0</p>
+                <div class="login-logo-box" style="background: transparent; box-shadow: none; width: auto; height: auto; margin-bottom: 14px;">
+                    {% if school_settings.logo %}
+                    <img src="{{ school_settings.logo.url }}" alt="Logo" style="width: 78px; height: 92px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.18));">
+                    {% else %}
+                    <img src="{% static 'images/logo.png' %}" alt="Logo" style="width: 78px; height: 92px; object-fit: contain;">
+                    {% endif %}
+                </div>
+                <h1 class="login-title" style="font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">{{ school_settings.school_name|default:"GEN'X VISION SCHOOL SYSTEM" }}</h1>
+                <p class="login-subtitle" style="color: #dc2626; font-weight: 700; font-size: 13px; letter-spacing: 1px;">CAMPUS MANAGEMENT PORTAL</p>
             </div>
 
             {% if messages %}

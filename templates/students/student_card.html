@@ -109,9 +109,16 @@
 <body>
 
     <div class="card-preview-wrapper">
-        <div class="card-top">
-            <div class="school-name">{{ school_settings.school_name }}</div>
-            <div class="school-tagline">{{ school_settings.tagline }}</div>
+        <div class="card-top" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            {% if school_settings.logo %}
+            <img src="{{ school_settings.logo.url }}" alt="Logo" style="width: 28px; height: 34px; object-fit: contain;">
+            {% else %}
+            <img src="{% static 'images/logo.png' %}" alt="Logo" style="width: 28px; height: 34px; object-fit: contain;">
+            {% endif %}
+            <div style="text-align: left;">
+                <div class="school-name" style="font-size: 13px; line-height: 1.1;">{{ school_settings.school_name }}</div>
+                <div class="school-tagline" style="font-size: 9.5px; opacity: 0.9;">{{ school_settings.tagline }}</div>
+            </div>
         </div>
 
         <div class="photo-container">

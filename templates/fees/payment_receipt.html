@@ -1,6 +1,7 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}Fee Receipt #{{ payment.receipt_number }} - School ERP{% endblock %}
+{% block title %}Fee Receipt #{{ payment.receipt_number }} - {{ school_settings.school_name }}{% endblock %}
 
 {% block content %}
 <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -28,10 +29,14 @@
         <!-- Header -->
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 12px; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="font-size: 32px;">🏫</div>
+                {% if school_settings.logo %}
+                <img src="{{ school_settings.logo.url }}" alt="Logo" style="width: 44px; height: 54px; object-fit: contain;">
+                {% else %}
+                <img src="{% static 'images/logo.png' %}" alt="Logo" style="width: 44px; height: 54px; object-fit: contain;">
+                {% endif %}
                 <div>
-                    <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">School Management ERP</h2>
-                    <div style="font-size: 11.5px; color: #64748b;">Excellence in Education • Official Fee Payment Receipt</div>
+                    <h2 style="font-size: 18px; font-weight: 900; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">{{ school_settings.school_name|default:"GEN'X VISION SCHOOL SYSTEM" }}</h2>
+                    <div style="font-size: 11.5px; color: #64748b;">{{ school_settings.tagline|default:"Inspiring Excellence, Empowering Future" }} • Official Fee Payment Receipt</div>
                 </div>
             </div>
             <div style="text-align: right;">

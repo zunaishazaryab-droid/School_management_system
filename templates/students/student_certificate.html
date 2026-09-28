@@ -61,11 +61,18 @@
 <div class="certificate-sheet card" style="max-width: 850px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 3px double #1e3a8a; box-shadow: 0 8px 24px rgba(0,0,0,0.06); padding: 50px; position: relative;">
     <!-- School Header -->
     <div style="text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 30px;">
-        <div style="font-size: 30px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; letter-spacing: 1px;">
+        <div style="margin-bottom: 12px;">
+            {% if school_settings.logo %}
+            <img src="{{ school_settings.logo.url }}" alt="Logo" style="width: 64px; height: 76px; object-fit: contain;">
+            {% else %}
+            <img src="{% static 'images/logo.png' %}" alt="Logo" style="width: 64px; height: 76px; object-fit: contain;">
+            {% endif %}
+        </div>
+        <div style="font-size: 26px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; letter-spacing: 1px;">
             {{ school_settings.school_name }}
         </div>
-        <div style="font-size: 14px; color: #475569; margin-top: 4px; font-weight: 500;">
-            {{ school_settings.tagline|default:"Knowledge, Excellence & Integrity" }}
+        <div style="font-size: 13.5px; color: #475569; margin-top: 4px; font-weight: 600;">
+            {{ school_settings.tagline|default:"Inspiring Excellence, Empowering Future" }}
         </div>
         <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
             {{ school_settings.address }} • Tel: {{ school_settings.phone }} • Email: {{ school_settings.email }}
