@@ -1,0 +1,137 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .sidebar, .topbar, .no-print {
+        display: none !important;
+    }
+    .main-wrapper, .page-container {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .certificate-sheet {
+        box-shadow: none !important;
+        border: 4px double #1e3a8a !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            📜 Official Student Certificate Generator
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Generate and print verified School Leaving (SLC), Character & Conduct, or Bonafide Enrollment Certificates.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" class="btn btn-primary">
+            🖨️ Print Certificate
+        </button>
+        <a href="{% url 'students:student_detail' student.pk %}" class="btn btn-outline">
+            ← Student Profile
+        </a>
+    </div>
+</div>
+
+<!-- Certificate Type Selector Bar -->
+<div class="card no-print" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 12px; align-items: center;">
+    <span style="font-size: 13px; font-weight: 700; color: var(--text-muted);">Certificate Type:</span>
+    <a href="?type=SLC" class="btn btn-sm {% if cert_type == 'SLC' or not cert_type %}btn-primary{% else %}btn-outline{% endif %}">
+        🎓 School Leaving / Transfer Certificate
+    </a>
+    <a href="?type=CHARACTER" class="btn btn-sm {% if cert_type == 'CHARACTER' %}btn-primary{% else %}btn-outline{% endif %}">
+        ⭐ Character & Conduct Certificate
+    </a>
+    <a href="?type=BONAFIDE" class="btn btn-sm {% if cert_type == 'BONAFIDE' %}btn-primary{% else %}btn-outline{% endif %}">
+        📄 Bonafide Student Certificate
+    </a>
+</div>
+
+<!-- Certificate Canvas Sheet -->
+<div class="certificate-sheet card" style="max-width: 850px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 3px double #1e3a8a; box-shadow: 0 8px 24px rgba(0,0,0,0.06); padding: 50px; position: relative;">
+    <!-- School Header -->
+    <div style="text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 30px;">
+        <div style="font-size: 30px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; letter-spacing: 1px;">
+            {{ school_settings.school_name }}
+        </div>
+        <div style="font-size: 14px; color: #475569; margin-top: 4px; font-weight: 500;">
+            {{ school_settings.tagline|default:"Knowledge, Excellence & Integrity" }}
+        </div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+            {{ school_settings.address }} • Tel: {{ school_settings.phone }} • Email: {{ school_settings.email }}
+        </div>
+        <div style="display: inline-block; background: #1e3a8a; color: #ffffff; padding: 6px 24px; border-radius: 20px; font-size: 14px; font-weight: 800; margin-top: 16px; text-transform: uppercase; letter-spacing: 1px;">
+            {% if cert_type == 'CHARACTER' %}
+                CHARACTER & CONDUCT CERTIFICATE
+            {% elif cert_type == 'BONAFIDE' %}
+                BONAFIDE ENROLLMENT CERTIFICATE
+            {% else %}
+                SCHOOL LEAVING / TRANSFER CERTIFICATE
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Certificate Serial & Date -->
+    <div style="display: flex; justify-content: space-between; font-size: 13px; color: #334155; margin-bottom: 30px;">
+        <div><strong>Certificate Ref No:</strong> EMS/CERT/{{ student.admission_number }}/{{ today|date:"Y" }}</div>
+        <div><strong>Date of Issue:</strong> {{ today|date:"d F, Y" }}</div>
+    </div>
+
+    <!-- Certificate Body Paragraph -->
+    <div style="font-size: 16px; line-height: 2.2; color: #1e293b; text-align: justify; margin-bottom: 60px;">
+        {% if cert_type == 'CHARACTER' %}
+            This is to certify that <strong>{{ student.get_full_name }}</strong>, child of <strong>{{ student.guardian_name }}</strong>, 
+            bearing Admission No. <strong>{{ student.admission_number }}</strong>, has been a bonafide student of this institution in Class 
+            <strong>{{ student.current_class.name }}</strong> (Section <strong>{{ student.current_section.name }}</strong>). 
+            During his/her stay in this school, his/her moral character, conduct, academic dedication, and general behavior have been found to be 
+            <strong>EXCELLENT</strong>. He/She bears no disciplinary remarks on official records. We wish him/her all the best in future endeavors.
+        {% elif cert_type == 'BONAFIDE' %}
+            This is to certify that <strong>{{ student.get_full_name }}</strong>, child of <strong>{{ student.guardian_name }}</strong>, 
+            residing at <em>{{ student.residential_address|default:"Campus Jurisdiction" }}</em>, is a regular enrolled student of 
+            <strong>{{ school_settings.school_name }}</strong> in Class <strong>{{ student.current_class.name }} (Section {{ student.current_section.name }})</strong> 
+            under Admission Registration No. <strong>{{ student.admission_number }}</strong> for the academic session 
+            <strong>{{ student.academic_year.name }}</strong>. This certificate is issued upon guardian request for official verification purposes.
+        {% else %}
+            This is to certify that <strong>{{ student.get_full_name }}</strong>, child of <strong>{{ student.guardian_name }}</strong>, 
+            was admitted to this institution on <strong>{{ student.admission_date|date:"d F, Y" }}</strong> under Admission No. 
+            <strong>{{ student.admission_number }}</strong> and has left this school on <strong>{{ today|date:"d F, Y" }}</strong>. 
+            He/She was studying in Class <strong>{{ student.current_class.name }}</strong> (Section <strong>{{ student.current_section.name }}</strong>). 
+            All school dues, tuition charges, and library books have been cleared up to <strong>{{ today|date:"F Y" }}</strong>. 
+            Reason for leaving: <em>Completion of course / Parent relocation</em>. His/Her date of birth according to the school admission register is 
+            <strong>{{ student.date_of_birth|date:"d F, Y" }}</strong>.
+        {% endif %}
+    </div>
+
+    <!-- Signatures Row -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; padding-top: 20px;">
+        <div style="text-align: center; min-width: 180px;">
+            <div style="height: 40px; border-bottom: 1px solid #64748b; margin-bottom: 6px;"></div>
+            <div style="font-size: 13px; font-weight: 700; color: #1e293b;">Class Teacher / Incharge</div>
+            <div style="font-size: 11px; color: #64748b;">Prepared by</div>
+        </div>
+
+        <div style="text-align: center; min-width: 160px;">
+            <div style="width: 80px; height: 80px; border: 2px dashed #94a3b8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #94a3b8; margin: 0 auto 6px auto; text-transform: uppercase;">
+                School Seal
+            </div>
+            <div style="font-size: 11px; color: #64748b;">Official Institutional Stamp</div>
+        </div>
+
+        <div style="text-align: center; min-width: 180px;">
+            <div style="height: 40px; border-bottom: 1px solid #64748b; margin-bottom: 6px;"></div>
+            <div style="font-size: 13px; font-weight: 700; color: #1e293b;">Principal / Headmaster</div>
+            <div style="font-size: 11px; color: #64748b;">{{ school_settings.school_name }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

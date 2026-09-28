@@ -42,11 +42,22 @@
                     <span>Students</span>
                 </a>
 
+                <a href="{% url 'students:parent_portal' %}" class="nav-item {% if 'portal' in request.path %}active{% endif %}">
+                    <span class="nav-icon">👨‍👩‍👧</span>
+                    <span>Parent Portal</span>
+                </a>
+
+                <a href="{% url 'students:batch_id_cards' %}" class="nav-item {% if 'batch-id-cards' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🪪</span>
+                    <span>Batch ID Cards</span>
+                </a>
+
                 {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
                 <a href="{% url 'academics:class_list' %}" class="nav-item {% if 'academics/classes' in request.path %}active{% endif %}">
                     <span class="nav-icon">🏫</span>
                     <span>Classes & Sections</span>
                 </a>
+
 
                 <a href="{% url 'academics:subject_list' %}" class="nav-item {% if 'academics/subjects' in request.path %}active{% endif %}">
                     <span class="nav-icon">📚</span>
@@ -149,6 +160,11 @@
                     <span class="nav-icon">💾</span>
                     <span>Database Backup</span>
                 </a>
+
+                <a href="{% url 'api:docs' %}" class="nav-item {% if 'api/v1' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🚀</span>
+                    <span>REST API & Mobile Hub</span>
+                </a>
                 {% endif %}
                 {% endif %}
 
@@ -199,6 +215,10 @@
                 </div>
 
                 <div class="topbar-right">
+                    <button id="themeToggleBtn" class="topbar-action-btn" title="Toggle Dark/Light Mode" onclick="toggleTheme()" style="cursor: pointer; background: transparent; border: 1px solid var(--border-color); border-radius: 8px;">
+                        🌙
+                    </button>
+
                     <span class="role-badge">
                         🛡️ {{ request.user.get_role_display }}
                     </span>
@@ -219,6 +239,7 @@
                     </a>
                 </div>
             </header>
+
 
             <!-- Page Container -->
             <main class="page-container">

@@ -1,0 +1,44 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            🚀 Mobile REST API Reference & Developer Hub
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Production-ready JSON REST endpoints for future Flutter / React Native Mobile Apps for Teachers, Students & Parents.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="/api/v1/" target="_blank" class="btn btn-primary">
+            🌐 Open DRF Root API
+        </a>
+    </div>
+</div>
+
+<!-- API Endpoints List -->
+<div style="display: flex; flex-direction: column; gap: 20px;">
+    {% for ep in endpoints %}
+    <div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+        <div style="padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="badge" style="background: #dcfce7; color: #15803d; font-weight: 800; font-size: 13px; padding: 4px 12px;">
+                    {{ ep.method }}
+                </span>
+                <code style="font-size: 15px; font-weight: 700; color: #1e293b;">{{ ep.path }}</code>
+            </div>
+            <a href="{{ ep.path }}" target="_blank" class="btn btn-sm btn-outline" style="font-size: 12px; padding: 4px 12px;">
+                Execute API Request ↗
+            </a>
+        </div>
+        <div style="padding: 16px 20px; font-size: 13.5px; color: #475569; line-height: 1.5;">
+            {{ ep.desc }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

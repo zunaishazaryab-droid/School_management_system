@@ -67,4 +67,29 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => alert.remove(), 500);
         }, 5000);
     });
+
+    // 5. Dark Mode Persistent Theme Initializer
+    const currentTheme = localStorage.getItem('school_erp_theme') || 'light';
+    if (currentTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        const themeBtn = document.getElementById('themeToggleBtn');
+        if (themeBtn) themeBtn.textContent = '☀️';
+    }
 });
+
+// Global Theme Toggle
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    if (newTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+    }
+    localStorage.setItem('school_erp_theme', newTheme);
+    const themeBtn = document.getElementById('themeToggleBtn');
+    if (themeBtn) {
+        themeBtn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    }
+}
+

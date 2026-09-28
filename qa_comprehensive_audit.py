@@ -233,6 +233,45 @@ def run_qa_audit():
     assert_test("attachment" in resp_download.headers.get('Content-Disposition', ''), "Content-Disposition attachment header present", "CORE")
 
     # ---------------------------------------------------------
+    # 10. SPRINT 6: ADVANCED PORTAL, CERTIFICATES & REST APIS
+    # ---------------------------------------------------------
+    print("\n--- 10. Testing Sprint 6: Portals, Certificates & REST APIs ---")
+    
+    # Parent & Student Portal
+    resp = client.get(reverse('students:parent_portal'))
+    assert_test(resp.status_code == 200, "Student & Parent Unified Portal loads (200)", "PORTAL")
+
+    # Official Certificates
+    if student:
+        resp = client.get(reverse('students:student_certificate', kwargs={'pk': student.pk}) + "?type=SLC")
+        assert_test(resp.status_code == 200, "School Leaving Certificate (SLC) loads (200)", "CERTIFICATES")
+        
+        resp = client.get(reverse('students:student_certificate', kwargs={'pk': student.pk}) + "?type=CHARACTER")
+        assert_test(resp.status_code == 200, "Character & Conduct Certificate loads (200)", "CERTIFICATES")
+
+        resp = client.get(reverse('students:student_certificate', kwargs={'pk': student.pk}) + "?type=BONAFIDE")
+        assert_test(resp.status_code == 200, "Bonafide Student Certificate loads (200)", "CERTIFICATES")
+
+    # Batch PVC ID Cards
+    resp = client.get(reverse('students:batch_id_cards'))
+    assert_test(resp.status_code == 200, "Batch PVC Student ID Cards page renders (200)", "ID_CARDS")
+
+    # REST API Hub & Endpoints
+    resp = client.get(reverse('api:docs'))
+    assert_test(resp.status_code == 200, "REST API Interactive Reference page loads (200)", "API")
+
+    resp = client.get('/api/v1/students/')
+    assert_test(resp.status_code == 200, "GET /api/v1/students/ JSON endpoint works (200)", "API")
+    assert_test(isinstance(resp.json(), (list, dict)), "JSON students payload returned", "API")
+
+    resp = client.get('/api/v1/announcements/')
+    assert_test(resp.status_code == 200, "GET /api/v1/announcements/ JSON endpoint works (200)", "API")
+
+    resp = client.get('/api/v1/fees/')
+    assert_test(resp.status_code == 200, "GET /api/v1/fees/ JSON endpoint works (200)", "API")
+
+
+    # ---------------------------------------------------------
     # FINAL QA SUMMARY REPORT
     # ---------------------------------------------------------
     print("\n======================================================================")

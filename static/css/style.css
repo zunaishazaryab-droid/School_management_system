@@ -49,6 +49,19 @@
   --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+[data-theme="dark"] {
+  --bg-main: #0b1120;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+  --sidebar-bg: #030712;
+  --primary-light: #1e3a8a;
+  --primary-border: #3b82f6;
+}
+
+
 /* Reset & Global */
 *, *::before, *::after {
   box-sizing: border-box;

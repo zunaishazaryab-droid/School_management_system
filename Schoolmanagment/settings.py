@@ -34,7 +34,9 @@ DJANGO_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'rest_framework',
 ]
+
 
 LOCAL_APPS = [
     'apps.accounts',
@@ -50,7 +52,9 @@ LOCAL_APPS = [
     'apps.expenses',
     'apps.communication',
     'apps.reports',
+    'apps.api',
 ]
+
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
 
