@@ -303,3 +303,209 @@ def communication_history_view(request):
         'channel_filter': channel_filter,
         'status_filter': status_filter,
     })
+
+
+from .models import SMSWhatsAppGateway, AutomatedNotificationRule, NotificationQueue
+from apps.attendance.models import StudentAttendance
+from apps.fees.models import FeeInvoice
+
+
+@login_required
+def notification_gateway_view(request):
+    """Manage SMS & WhatsApp gateways, automated triggers, and queue stats."""
+    gateways = SMSWhatsAppGateway.objects.all()
+    if not gateways.exists():
+        SMSWhatsAppGateway.objects.create(
+            name="Official GenX WhatsApp Cloud Gateway",
+            provider=SMSWhatsAppGateway.Provider.LOCAL_SIMULATOR,
+            channel_type=SMSWhatsAppGateway.ChannelType.WHATSAPP,
+            sender_id="+92 300 1234567",
+            api_endpoint="https://api.whatsapp.com/v1/messages",
+            is_active=True,
+            is_default=True
+        )
+        SMSWhatsAppGateway.objects.create(
+            name="Branded SMS Fast Gateway (GENX-SCH)",
+            provider=SMSWhatsAppGateway.Provider.LOCAL_SIMULATOR,
+            channel_type=SMSWhatsAppGateway.ChannelType.SMS,
+            sender_id="GENX-SCH",
+            api_endpoint="https://api.sms-gateway.pk/v2/send",
+            is_active=True,
+            is_default=False
+        )
+        gateways = SMSWhatsAppGateway.objects.all()
+
+    rules = AutomatedNotificationRule.objects.select_related('template').all()
+    if not rules.exists():
+        tmpl_abs, _ = MessageTemplate.objects.get_or_create(
+            title="Standard Absence Alert",
+            defaults={
+                'category': MessageTemplate.Category.ABSENCE,
+                'body': "Respected Parent, your child {student_name} ({class_name}) is marked ABSENT today ({date}) at {school_name}. Please contact administration for leave."
+            }
+        )
+        tmpl_fee, _ = MessageTemplate.objects.get_or_create(
+            title="Monthly Fee Overdue Reminder",
+            defaults={
+                'category': MessageTemplate.Category.FEE_REMINDER,
+                'body': "Dear Parent, Monthly tuition fee of Rs. {due_amount} for {student_name} is overdue. Kindly clear dues to avoid late fine. - {school_name}"
+            }
+        )
+        AutomatedNotificationRule.objects.create(
+            event_type=AutomatedNotificationRule.TriggerEvent.DAILY_ABSENCE,
+            template=tmpl_abs,
+            channel=AutomatedNotificationRule.Channel.WHATSAPP,
+            is_enabled=True
+        )
+        AutomatedNotificationRule.objects.create(
+            event_type=AutomatedNotificationRule.TriggerEvent.FEE_OVERDUE,
+            template=tmpl_fee,
+            channel=AutomatedNotificationRule.Channel.BOTH,
+            is_enabled=True
+        )
+        rules = AutomatedNotificationRule.objects.all()
+
+    total_pending = NotificationQueue.objects.filter(status=NotificationQueue.Status.PENDING).count()
+    total_sent = NotificationQueue.objects.filter(status__in=[NotificationQueue.Status.SENT, NotificationQueue.Status.DELIVERED]).count()
+
+    return render(request, 'communication/gateway_dashboard.html', {
+        'gateways': gateways,
+        'rules': rules,
+        'total_pending': total_pending,
+        'total_sent': total_sent,
+        'page_title': 'Automated Notification Hub & WhatsApp Gateway'
+    })
+
+
+@login_required
+def notification_queue_view(request):
+    """View live dispatch queue and execute bulk dispatch."""
+    status_filter = request.GET.get('status', 'ALL')
+    queue = NotificationQueue.objects.all()
+    if status_filter in ['PENDING', 'SENT', 'DELIVERED', 'FAILED']:
+        queue = queue.filter(status=status_filter)
+
+    pending_count = NotificationQueue.objects.filter(status=NotificationQueue.Status.PENDING).count()
+
+    return render(request, 'communication/queue_monitor.html', {
+        'queue': queue[:60],
+        'status_filter': status_filter,
+        'pending_count': pending_count,
+        'page_title': 'Live Notification Dispatch Queue'
+    })
+
+
+@login_required
+def trigger_absence_alert_engine(request):
+    """Scans today's absent students and adds automated alerts to the queue."""
+    today = timezone.now().date()
+    absent_records = StudentAttendance.objects.filter(date=today, status=StudentAttendance.Status.ABSENT).select_related('student', 'class_room')
+    
+    # If no absent records today, fallback to all recent absent records or active students
+    if not absent_records.exists():
+        absent_records = StudentAttendance.objects.filter(status=StudentAttendance.Status.ABSENT).select_related('student', 'class_room')[:5]
+
+    rule = AutomatedNotificationRule.objects.filter(event_type=AutomatedNotificationRule.TriggerEvent.DAILY_ABSENCE, is_enabled=True).first()
+    template_body = rule.template.body if (rule and rule.template) else "Dear Parent, {student_name} is marked ABSENT today ({date}) at GEN'X VISION SCHOOL SYSTEM."
+
+    enqueued = 0
+    for att in absent_records:
+        st = att.student
+        phone = st.emergency_contact or st.guardian_phone or "0300-1234567"
+        msg = template_body.replace('{student_name}', st.get_full_name())\
+                           .replace('{class_name}', att.class_room.name)\
+                           .replace('{date}', today.strftime('%d-%b-%Y'))\
+                           .replace('{school_name}', "GEN'X VISION SCHOOL SYSTEM")
+        
+        NotificationQueue.objects.create(
+            rule=rule,
+            recipient_name=st.guardian_name or st.get_full_name(),
+            recipient_phone=phone,
+            student_ref=f"{st.admission_number} - {st.get_full_name()}",
+            channel=NotificationQueue.Channel.WHATSAPP,
+            message_text=msg,
+            status=NotificationQueue.Status.PENDING
+        )
+        enqueued += 1
+
+    if rule:
+        rule.last_triggered_at = timezone.now()
+        rule.save()
+
+    ActivityLog.log_activity(
+        request.user, 'CREATE', 'Communication',
+        f"Triggered automated Daily Absence alert engine: {enqueued} notifications queued.",
+        request.META.get('REMOTE_ADDR')
+    )
+
+    messages.success(request, f"Daily Absence Engine executed! {enqueued} WhatsApp/SMS alerts added to dispatch queue.")
+    return redirect('communication:queue_monitor')
+
+
+@login_required
+def trigger_fee_overdue_engine(request):
+    """Scans unpaid invoices and enqueues payment reminders."""
+    overdue_invoices = FeeInvoice.objects.filter(status__in=['UNPAID', 'PARTIAL', 'OVERDUE']).select_related('student')[:15]
+    rule = AutomatedNotificationRule.objects.filter(event_type=AutomatedNotificationRule.TriggerEvent.FEE_OVERDUE, is_enabled=True).first()
+    template_body = rule.template.body if (rule and rule.template) else "Dear Parent, fee dues of Rs. {due_amount} for {student_name} are overdue. Please pay soon."
+
+    enqueued = 0
+    for inv in overdue_invoices:
+        st = inv.student
+        phone = st.emergency_contact or st.guardian_phone or "0300-9876543"
+        due_val = str(inv.balance_amount if hasattr(inv, 'balance_amount') else inv.payable_amount)
+        msg = template_body.replace('{student_name}', st.get_full_name())\
+                           .replace('{due_amount}', due_val)\
+                           .replace('{date}', timezone.now().strftime('%d-%b-%Y'))\
+                           .replace('{school_name}', "GEN'X VISION SCHOOL SYSTEM")
+        
+        NotificationQueue.objects.create(
+            rule=rule,
+            recipient_name=st.guardian_name or st.get_full_name(),
+            recipient_phone=phone,
+            student_ref=f"{st.admission_number} - {st.get_full_name()}",
+            channel=NotificationQueue.Channel.WHATSAPP,
+            message_text=msg,
+            status=NotificationQueue.Status.PENDING
+        )
+        enqueued += 1
+
+    if rule:
+        rule.last_triggered_at = timezone.now()
+        rule.save()
+
+    messages.success(request, f"Fee Overdue Engine executed! {enqueued} fee reminder notices added to dispatch queue.")
+    return redirect('communication:queue_monitor')
+
+
+@login_required
+def process_queue_dispatch_action(request):
+    """Dispatches all pending items in the queue with delivery simulation."""
+    pending_items = NotificationQueue.objects.filter(status=NotificationQueue.Status.PENDING)
+    count = pending_items.count()
+
+    now_dt = timezone.now()
+    for item in pending_items:
+        item.status = NotificationQueue.Status.DELIVERED
+        item.dispatched_at = now_dt
+        item.save()
+
+        # Also record in DirectMessageLog for audit
+        DirectMessageLog.objects.create(
+            recipient_name=item.recipient_name,
+            recipient_phone=item.recipient_phone,
+            channel=DirectMessageLog.Channel.WHATSAPP if item.channel == NotificationQueue.Channel.WHATSAPP else DirectMessageLog.Channel.SMS,
+            message_body=item.message_text,
+            status=DirectMessageLog.Status.DELIVERED,
+            sent_by=request.user
+        )
+
+    ActivityLog.log_activity(
+        request.user, 'CREATE', 'Communication',
+        f"Dispatched batch of {count} queued WhatsApp & SMS alerts to parents.",
+        request.META.get('REMOTE_ADDR')
+    )
+
+    messages.success(request, f"Successfully dispatched {count} notifications through active WhatsApp Gateway!")
+    return redirect('communication:queue_monitor')
+

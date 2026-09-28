@@ -1,0 +1,105 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">📝 Student Leave Applications & Approvals</h1>
+        <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">Review digital leave requests submitted by parents, verify medical slips, and automatically excuse attendance records.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'attendance:submit_leave' %}" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px;">
+            <span>➕</span> Apply for Leave
+        </a>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div style="display: flex; gap: 10px; margin-bottom: 20px;">
+    <a href="{% url 'attendance:leave_list' %}?status=ALL" class="btn {% if status_filter == 'ALL' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 13px;">
+        All Applications
+    </a>
+    <a href="{% url 'attendance:leave_list' %}?status=PENDING" class="btn {% if status_filter == 'PENDING' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 13px; position: relative;">
+        Pending Review ({{ pending_count }})
+    </a>
+    <a href="{% url 'attendance:leave_list' %}?status=APPROVED" class="btn {% if status_filter == 'APPROVED' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 13px;">
+        Approved
+    </a>
+    <a href="{% url 'attendance:leave_list' %}?status=REJECTED" class="btn {% if status_filter == 'REJECTED' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 13px;">
+        Rejected
+    </a>
+</div>
+
+<!-- Table Card -->
+<div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 20px;">
+    <div style="overflow-x: auto;">
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-main); text-align: left; font-size: 12px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--card-border);">
+                    <th style="padding: 12px 14px;">App ID</th>
+                    <th style="padding: 12px 14px;">Student Details</th>
+                    <th style="padding: 12px 14px;">Leave Duration</th>
+                    <th style="padding: 12px 14px;">Category & Reason</th>
+                    <th style="padding: 12px 14px;">Applicant</th>
+                    <th style="padding: 12px 14px;">Status</th>
+                    <th style="padding: 12px 14px; text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in leaves %}
+                <tr style="border-bottom: 1px solid var(--card-border); font-size: 13.5px;">
+                    <td style="padding: 14px; font-weight: 700; color: var(--text-main);">#LEV-{{ l.id }}</td>
+                    <td style="padding: 14px;">
+                        <div style="font-weight: 700; color: var(--text-main);">{{ l.student.get_full_name }}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">{{ l.student.current_class.name }} - Sec {{ l.student.current_section.name }} | Roll #{{ l.student.roll_number }}</div>
+                    </td>
+                    <td style="padding: 14px; font-weight: 600;">
+                        <div>{{ l.start_date|date:"d M Y" }} to {{ l.end_date|date:"d M Y" }}</div>
+                    </td>
+                    <td style="padding: 14px;">
+                        <span class="badge" style="background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">
+                            {{ l.get_category_display }}
+                        </span>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px; max-width: 280px;">{{ l.reason }}</div>
+                        {% if l.document %}
+                        <a href="{{ l.document.url }}" target="_blank" style="font-size: 11.5px; color: #3b82f6; text-decoration: none; font-weight: 600; display: inline-block; margin-top: 2px;">📎 View Attachment</a>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px; color: var(--text-muted);">
+                        <div>{{ l.applied_by_name|default:"Parent" }}</div>
+                        <div style="font-size: 11px;">{{ l.applied_at|date:"M d, Y H:i" }}</div>
+                    </td>
+                    <td style="padding: 14px;">
+                        {% if l.status == 'APPROVED' %}
+                            <span class="badge" style="background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11.5px;">✓ Approved</span>
+                        {% elif l.status == 'REJECTED' %}
+                            <span class="badge" style="background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11.5px;">✕ Rejected</span>
+                        {% else %}
+                            <span class="badge" style="background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11.5px;">⏳ Pending</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px; text-align: right;">
+                        {% if l.status == 'PENDING' %}
+                        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                            <a href="{% url 'attendance:process_leave' l.id 'approve' %}" class="btn btn-sm btn-success" style="background: #10b981; color: #fff; padding: 4px 10px; font-size: 11.5px; font-weight: 700; border-radius: 4px; text-decoration: none;">Approve</a>
+                            <a href="{% url 'attendance:process_leave' l.id 'reject' %}" class="btn btn-sm btn-danger" style="background: #ef4444; color: #fff; padding: 4px 10px; font-size: 11.5px; font-weight: 700; border-radius: 4px; text-decoration: none;">Reject</a>
+                        </div>
+                        {% else %}
+                        <span style="font-size: 11.5px; color: var(--text-muted);">Reviewed by {{ l.reviewed_by.username|default:"Admin" }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="padding: 30px; text-align: center; color: var(--text-muted);">
+                        No leave requests found in this category.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -561,3 +561,24 @@ def student_discounts_view(request):
         'form': form,
     }
     return render(request, 'fees/student_discounts.html', context)
+
+
+@login_required
+def fee_challan_3part_view(request, pk):
+    """Render authentic 3-part (Bank, School, Student) printable Fee Challan voucher."""
+    invoice = get_object_or_404(FeeInvoice.objects.select_related('student', 'student__current_class', 'student__current_section', 'academic_year'), pk=pk)
+    items = invoice.items.all()
+    
+    copies = [
+        {'title': 'BANK COPY', 'badge_bg': '#e0f2fe', 'badge_color': '#0369a1'},
+        {'title': 'SCHOOL COPY', 'badge_bg': '#fef3c7', 'badge_color': '#92400e'},
+        {'title': 'STUDENT / PARENT COPY', 'badge_bg': '#dcfce7', 'badge_color': '#166534'}
+    ]
+
+    return render(request, 'fees/fee_challan_3part.html', {
+        'invoice': invoice,
+        'items': items,
+        'copies': copies,
+        'page_title': f"3-Part Fee Challan - {invoice.invoice_number}"
+    })
+

@@ -33,6 +33,9 @@ class DailyLecture(models.Model):
         return f"{self.date} - {self.class_room.name} ({self.subject.name}): {self.topic}"
 
 
+from apps.students.models import Student
+
+
 class Homework(models.Model):
     class Status(models.TextChoices):
         ACTIVE = 'ACTIVE', 'Active / In-Progress'
@@ -62,3 +65,38 @@ class Homework(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.class_room.name} ({self.subject.name})"
+
+
+class HomeworkSubmission(models.Model):
+    class Status(models.TextChoices):
+        SUBMITTED = 'SUBMITTED', 'Submitted (Pending Review)'
+        EVALUATED = 'EVALUATED', 'Evaluated & Graded'
+        RESUBMISSION_REQUIRED = 'RESUBMISSION_REQUIRED', 'Needs Revision / Incomplete'
+
+    homework = models.ForeignKey(Homework, on_delete=models.CASCADE, related_name='submissions')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='homework_submissions')
+    submission_text = models.TextField(blank=True, help_text="Typed answer or student note")
+    submission_file = models.FileField(upload_to='homework_submissions/', blank=True, null=True, help_text="Photo of notebook page or PDF")
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=30, choices=Status.choices, default=Status.SUBMITTED)
+    obtained_marks = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    max_marks = models.DecimalField(max_digits=5, decimal_places=2, default=10.00)
+    teacher_feedback = models.TextField(blank=True, help_text="Teacher's remarks & grading notes")
+    evaluated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='evaluated_homeworks'
+    )
+    evaluated_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+        unique_together = ('homework', 'student')
+        verbose_name = 'Homework Submission'
+        verbose_name_plural = 'Homework Submissions'
+
+    def __str__(self):
+        return f"Submission by {self.student.get_full_name()} for {self.homework.title} - {self.get_status_display()}"
+

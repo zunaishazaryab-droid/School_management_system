@@ -78,14 +78,24 @@
                     <span>Class Timetable</span>
                 </a>
 
-                <a href="{% url 'attendance:student_attendance' %}" class="nav-item {% if 'attendance' in request.path %}active{% endif %}">
+                <a href="{% url 'attendance:student_attendance' %}" class="nav-item {% if 'attendance/student' in request.path %}active{% endif %}">
                     <span class="nav-icon">📅</span>
                     <span>Daily Attendance</span>
                 </a>
 
-                <a href="{% url 'lectures:lecture_list' %}" class="nav-item {% if 'lectures' in request.path %}active{% endif %}">
+                <a href="{% url 'attendance:biometric_dashboard' %}" class="nav-item {% if 'attendance/biometric' in request.path %}active{% endif %}">
+                    <span class="nav-icon">⚡</span>
+                    <span>Biometric Device Sync</span>
+                </a>
+
+                <a href="{% url 'attendance:leave_list' %}" class="nav-item {% if 'attendance/leaves' in request.path %}active{% endif %}">
+                    <span class="nav-icon">📝</span>
+                    <span>Leave Requests</span>
+                </a>
+
+                <a href="{% url 'lectures:homework_list' %}" class="nav-item {% if 'lectures' in request.path %}active{% endif %}">
                     <span class="nav-icon">📖</span>
-                    <span>Lectures & Diary</span>
+                    <span>Homework & Diary</span>
                 </a>
 
                 <a href="{% url 'syllabus:tracker' %}" class="nav-item {% if 'syllabus' in request.path %}active{% endif %}">
@@ -111,6 +121,16 @@
                 <a href="{% url 'communication:broadcast_center' %}" class="nav-item {% if 'broadcast' in request.path %}active{% endif %}">
                     <span class="nav-icon">💬</span>
                     <span>Broadcast Center</span>
+                </a>
+
+                <a href="{% url 'communication:gateway_dashboard' %}" class="nav-item {% if 'gateways' in request.path %}active{% endif %}">
+                    <span class="nav-icon">📲</span>
+                    <span>WhatsApp Automation</span>
+                </a>
+
+                <a href="{% url 'communication:queue_monitor' %}" class="nav-item {% if 'queue' in request.path %}active{% endif %}">
+                    <span class="nav-icon">📨</span>
+                    <span>Dispatch Queue</span>
                 </a>
                 {% endif %}
 

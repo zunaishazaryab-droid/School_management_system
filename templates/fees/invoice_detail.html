@@ -12,6 +12,9 @@
         <p class="page-subtitle" style="margin-top: 4px;">Student Challan for {{ invoice.student.get_full_name }} ({{ invoice.fee_month }})</p>
     </div>
     <div style="display: flex; gap: 10px;">
+        <a href="{% url 'fees:fee_challan_3part' invoice.pk %}" target="_blank" class="btn btn-outline" style="border-color: #3b82f6; color: #2563eb; font-weight: 700;">
+            🖨️ 3-Part Bank Challan
+        </a>
         <a href="{% url 'fees:student_ledger' invoice.student.pk %}" class="btn btn-outline">
             📜 View Student Ledger
         </a>

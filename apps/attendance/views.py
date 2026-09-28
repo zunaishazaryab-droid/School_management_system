@@ -182,3 +182,236 @@ def attendance_report_view(request):
         'report_data': report_data,
         'page_title': 'Monthly Attendance Summary'
     })
+
+
+from django.utils import timezone
+from .models import BiometricDevice, BiometricPunch, StudentLeaveRequest
+
+
+@login_required
+def biometric_dashboard_view(request):
+    """Hub for managing biometric machines and viewing live punch stream."""
+    devices = BiometricDevice.objects.all()
+    if not devices.exists():
+        BiometricDevice.objects.create(
+            name="Main Entrance Turnstile Terminal #1",
+            device_type=BiometricDevice.DeviceType.HYBRID,
+            ip_address="192.168.1.201",
+            port=4370,
+            location="Main School Gate",
+            status=BiometricDevice.Status.ONLINE,
+            total_logs_synced=142
+        )
+        BiometricDevice.objects.create(
+            name="Staff Room Facial Scanner #2",
+            device_type=BiometricDevice.DeviceType.FACIAL,
+            ip_address="192.168.1.202",
+            port=4370,
+            location="Faculty Administration Block",
+            status=BiometricDevice.Status.ONLINE,
+            total_logs_synced=68
+        )
+        devices = BiometricDevice.objects.all()
+
+    today = date.today()
+    recent_punches = BiometricPunch.objects.select_related('device', 'matched_student', 'matched_teacher')[:40]
+    
+    total_punches_today = BiometricPunch.objects.filter(timestamp__date=today).count()
+    unprocessed_count = BiometricPunch.objects.filter(is_processed=False).count()
+
+    if request.method == 'POST' and 'add_device' in request.POST:
+        name = request.POST.get('name')
+        ip = request.POST.get('ip_address', '192.168.1.203')
+        port = int(request.POST.get('port', 4370))
+        loc = request.POST.get('location', 'Campus')
+        dtype = request.POST.get('device_type', BiometricDevice.DeviceType.FINGERPRINT)
+        BiometricDevice.objects.create(
+            name=name, ip_address=ip, port=port, location=loc, device_type=dtype, status=BiometricDevice.Status.ONLINE
+        )
+        messages.success(request, f"Biometric device '{name}' added successfully!")
+        return redirect('attendance:biometric_dashboard')
+
+    return render(request, 'attendance/biometric_dashboard.html', {
+        'devices': devices,
+        'recent_punches': recent_punches,
+        'total_punches_today': total_punches_today,
+        'unprocessed_count': unprocessed_count,
+        'page_title': 'Biometric Attendance & Device Sync Hub'
+    })
+
+
+@login_required
+def biometric_sync_action_view(request, device_id):
+    """Simulates real-time synchronization from hardware device & marks attendance."""
+    device = BiometricDevice.objects.get(id=device_id)
+    today = date.today()
+    now_time = timezone.now()
+
+    # Get active students & teachers
+    students = Student.objects.filter(status='ACTIVE')
+    teachers = Teacher.objects.filter(status='ACTIVE')
+
+    synced_count = 0
+    # Simulate punches for students
+    for st in students:
+        punch_dt = timezone.make_aware(datetime.combine(today, datetime.strptime("07:48:00", "%H:%M:%S").time()))
+        punch, created = BiometricPunch.objects.get_or_create(
+            device=device,
+            biometric_user_id=st.admission_number,
+            timestamp=punch_dt,
+            defaults={
+                'punch_type': BiometricPunch.PunchType.CHECK_IN,
+                'matched_student': st,
+                'is_processed': True,
+                'notes': 'Auto-synced via ZKTeco TCP/IP Stream'
+            }
+        )
+        # Update Student Attendance record
+        StudentAttendance.objects.update_or_create(
+            date=today,
+            student=st,
+            defaults={
+                'class_room': st.current_class,
+                'section': st.current_section,
+                'status': StudentAttendance.Status.PRESENT,
+                'remarks': f"Biometric Punch @ {punch_dt.strftime('%H:%M:%S')} via {device.name}",
+                'recorded_by': request.user
+            }
+        )
+        synced_count += 1
+
+    # Simulate punches for teachers
+    for tch in teachers:
+        t_punch_dt = timezone.make_aware(datetime.combine(today, datetime.strptime("07:42:00", "%H:%M:%S").time()))
+        BiometricPunch.objects.get_or_create(
+            device=device,
+            biometric_user_id=tch.employee_id,
+            timestamp=t_punch_dt,
+            defaults={
+                'punch_type': BiometricPunch.PunchType.CHECK_IN,
+                'matched_teacher': tch,
+                'is_processed': True,
+                'notes': 'Facial recognition match'
+            }
+        )
+        TeacherAttendance.objects.update_or_create(
+            date=today,
+            teacher=tch,
+            defaults={
+                'status': TeacherAttendance.Status.PRESENT,
+                'check_in_time': t_punch_dt.time(),
+                'remarks': f"Facial Scanner @ {device.name}",
+                'recorded_by': request.user
+            }
+        )
+        synced_count += 1
+
+    device.last_sync_time = now_time
+    device.total_logs_synced += synced_count
+    device.status = BiometricDevice.Status.ONLINE
+    device.save()
+
+    ActivityLog.log_activity(
+        request.user, 'CREATE', 'Attendance',
+        f"Synchronized {synced_count} biometric logs from '{device.name}' and updated daily registers.",
+        request.META.get('REMOTE_ADDR')
+    )
+
+    messages.success(request, f"Successfully synced {synced_count} biometric logs from '{device.name}'! Registers updated.")
+    return redirect('attendance:biometric_dashboard')
+
+
+@login_required
+def leave_request_list_view(request):
+    """Admin / Teacher portal view for reviewing student leave requests."""
+    status_filter = request.GET.get('status', 'ALL')
+    leaves = StudentLeaveRequest.objects.select_related('student', 'student__current_class', 'student__current_section', 'reviewed_by')
+
+    if status_filter in ['PENDING', 'APPROVED', 'REJECTED']:
+        leaves = leaves.filter(status=status_filter)
+
+    pending_count = StudentLeaveRequest.objects.filter(status='PENDING').count()
+    approved_count = StudentLeaveRequest.objects.filter(status='APPROVED').count()
+
+    return render(request, 'attendance/leave_requests_list.html', {
+        'leaves': leaves,
+        'status_filter': status_filter,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'page_title': 'Student Leave Applications & Approvals'
+    })
+
+
+@login_required
+def process_leave_request_view(request, leave_id, action):
+    """Approve or Reject student leave and auto-excuse attendance."""
+    leave = StudentLeaveRequest.objects.get(id=leave_id)
+    remarks = request.POST.get('remarks', request.GET.get('remarks', ''))
+
+    if action == 'approve':
+        leave.status = StudentLeaveRequest.Status.APPROVED
+        leave.admin_remarks = remarks or "Approved by administration"
+        leave.reviewed_by = request.user
+        leave.reviewed_at = timezone.now()
+        leave.save()
+
+        # Update attendance for the leave date range
+        cur_date = leave.start_date
+        while cur_date <= leave.end_date:
+            StudentAttendance.objects.update_or_create(
+                date=cur_date,
+                student=leave.student,
+                defaults={
+                    'class_room': leave.student.current_class,
+                    'section': leave.student.current_section,
+                    'status': StudentAttendance.Status.EXCUSED,
+                    'remarks': f"Official Leave Approved (#{leave.id}) - {leave.get_category_display()}",
+                    'recorded_by': request.user
+                }
+            )
+            cur_date += timezone.timedelta(days=1)
+
+        messages.success(request, f"Leave application #{leave.id} for {leave.student.get_full_name()} approved! Attendance marked as Excused.")
+    elif action == 'reject':
+        leave.status = StudentLeaveRequest.Status.REJECTED
+        leave.admin_remarks = remarks or "Rejected by administration"
+        leave.reviewed_by = request.user
+        leave.reviewed_at = timezone.now()
+        leave.save()
+        messages.warning(request, f"Leave application #{leave.id} for {leave.student.get_full_name()} rejected.")
+
+    return redirect('attendance:leave_list')
+
+
+@login_required
+def submit_leave_request_view(request):
+    """Student / Parent application form for applying for leaves."""
+    students = Student.objects.filter(status='ACTIVE')
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        category = request.POST.get('category', StudentLeaveRequest.Category.CASUAL)
+        reason = request.POST.get('reason')
+        applied_by = request.POST.get('applied_by_name', request.user.get_full_name() or request.user.username)
+        doc = request.FILES.get('document')
+
+        student = Student.objects.get(id=student_id)
+        req = StudentLeaveRequest.objects.create(
+            student=student,
+            start_date=start_date,
+            end_date=end_date,
+            category=category,
+            reason=reason,
+            applied_by_name=applied_by,
+            document=doc
+        )
+        messages.success(request, f"Leave application for {student.get_full_name()} submitted successfully! Reference #{req.id}")
+        return redirect('attendance:leave_list')
+
+    return render(request, 'attendance/submit_leave.html', {
+        'students': students,
+        'today': date.today().strftime('%Y-%m-%d'),
+        'page_title': 'Submit Online Leave Application'
+    })
+

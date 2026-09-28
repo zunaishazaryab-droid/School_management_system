@@ -1,0 +1,208 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <a href="{% url 'lectures:homework_list' %}" style="color: var(--text-muted); text-decoration: none; font-size: 13px;">← Back to Diary</a>
+            <span style="color: var(--text-muted);">/</span>
+            <span style="font-size: 13px; color: var(--text-muted);">{{ homework.class_room.name }}</span>
+        </div>
+        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin: 0;">📖 {{ homework.title }}</h1>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="document.getElementById('submitModal').style.display='flex'" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px;">
+            <span>📤</span> Upload Student Submission
+        </button>
+    </div>
+</div>
+
+<!-- Details Card -->
+<div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 22px; margin-bottom: 24px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--card-border); padding-bottom: 16px;">
+        <div>
+            <div style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Class & Subject</div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-top: 2px;">{{ homework.class_room.name }} (Sec {{ homework.section.name }}) - {{ homework.subject.name }}</div>
+        </div>
+        <div>
+            <div style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Assigned By</div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-top: 2px;">{{ homework.teacher.get_full_name|default:homework.teacher.username }}</div>
+        </div>
+        <div>
+            <div style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Assigned Date</div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-top: 2px;">{{ homework.assigned_date|date:"d M Y" }}</div>
+        </div>
+        <div>
+            <div style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Submission Deadline</div>
+            <div style="font-size: 15px; font-weight: 700; color: #ef4444; margin-top: 2px;">{{ homework.due_date|date:"d M Y" }}</div>
+        </div>
+    </div>
+    
+    <div>
+        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Instructions & Diary Description</div>
+        <div style="font-size: 14px; color: var(--text-main); line-height: 1.6; background: var(--bg-main); padding: 14px; border-radius: var(--radius-sm);">
+            {{ homework.description|linebreaks }}
+        </div>
+        {% if homework.attachment %}
+        <div style="margin-top: 12px;">
+            <a href="{{ homework.attachment.url }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
+                <span>📎</span> Download Attached Worksheet / File
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Student Digital Submissions & Evaluations Table -->
+<div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 20px;">
+    <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>📝</span> Student Digital Submissions & Evaluation Grading ({{ submissions.count }} Received)
+    </h3>
+    <div style="overflow-x: auto;">
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-main); text-align: left; font-size: 12px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--card-border);">
+                    <th style="padding: 12px 14px;">Student Details</th>
+                    <th style="padding: 12px 14px;">Submitted On</th>
+                    <th style="padding: 12px 14px;">Work / Attachment</th>
+                    <th style="padding: 12px 14px;">Status</th>
+                    <th style="padding: 12px 14px;">Score / Marks</th>
+                    <th style="padding: 12px 14px;">Teacher Remarks</th>
+                    <th style="padding: 12px 14px; text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in submissions %}
+                <tr style="border-bottom: 1px solid var(--card-border); font-size: 13.5px;">
+                    <td style="padding: 14px; font-weight: 700; color: var(--text-main);">
+                        {{ sub.student.get_full_name }}
+                        <div style="font-size: 11.5px; font-weight: normal; color: var(--text-muted);">Roll #{{ sub.student.roll_number }} | {{ sub.student.admission_number }}</div>
+                    </td>
+                    <td style="padding: 14px; font-size: 12px; color: var(--text-muted);">
+                        {{ sub.submitted_at|date:"M d, Y H:i" }}
+                    </td>
+                    <td style="padding: 14px;">
+                        {% if sub.submission_file %}
+                        <a href="{{ sub.submission_file.url }}" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                            <span>📄</span> View Notebook
+                        </a>
+                        {% endif %}
+                        {% if sub.submission_text %}
+                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">{{ sub.submission_text|truncatechars:45 }}</div>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px;">
+                        {% if sub.status == 'EVALUATED' %}
+                            <span class="badge" style="background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">✓ Checked</span>
+                        {% elif sub.status == 'RESUBMISSION_REQUIRED' %}
+                            <span class="badge" style="background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">⚠ Re-submit</span>
+                        {% else %}
+                            <span class="badge" style="background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">⏳ Pending Check</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px; font-weight: 700;">
+                        {% if sub.obtained_marks is not None %}
+                            <span style="color: #10b981; font-size: 14px;">{{ sub.obtained_marks }}</span> / <span style="color: var(--text-muted); font-size: 12px;">{{ sub.max_marks }}</span>
+                        {% else %}
+                            <span style="color: var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px; font-size: 12px; color: var(--text-muted); max-width: 200px;">
+                        {{ sub.teacher_feedback|default:"No comments added" }}
+                    </td>
+                    <td style="padding: 14px; text-align: right;">
+                        <button onclick="openGradingModal('{{ sub.id }}', '{{ sub.student.get_full_name }}', '{{ sub.obtained_marks|default:'' }}', '{{ sub.teacher_feedback|escapejs }}')" class="btn btn-sm btn-secondary" style="font-size: 12px; font-weight: 600;">
+                            ✏️ Grade Work
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="padding: 30px; text-align: center; color: var(--text-muted);">
+                        No students have submitted digital homework for this task yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Upload Submission Modal -->
+<div id="submitModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: var(--card-bg); width: 100%; max-width: 480px; padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0;">Upload Homework Submission</h3>
+            <button type="button" onclick="document.getElementById('submitModal').style.display='none'" style="background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);">✕</button>
+        </div>
+        <form method="POST" action="{% url 'lectures:submit_homework' homework.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">Select Student</label>
+                <select name="student_id" required class="form-control" style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+                    {% for st in students %}
+                    <option value="{{ st.id }}">{{ st.get_full_name }} (Roll #{{ st.roll_number }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">Attach Work (Photo / PDF Document)</label>
+                <input type="file" name="submission_file" class="form-control" style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">Typed Answer / Comments (Optional)</label>
+                <textarea name="submission_text" rows="3" class="form-control" placeholder="Type answer or notes here..." style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="document.getElementById('submitModal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Upload Work</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Teacher Grading Modal -->
+<div id="gradeModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: var(--card-bg); width: 100%; max-width: 460px; padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0;" id="gradeModalTitle">Evaluate Submission</h3>
+            <button type="button" onclick="document.getElementById('gradeModal').style.display='none'" style="background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);">✕</button>
+        </div>
+        <form id="gradeForm" method="POST">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">Marks Obtained (Out of 10.0)</label>
+                <input type="number" step="0.5" max="10" min="0" name="obtained_marks" id="gradeMarks" class="form-control" placeholder="e.g. 9.5" style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">Evaluation Status</label>
+                <select name="status" class="form-control" style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+                    <option value="EVALUATED">Evaluated & Approved</option>
+                    <option value="RESUBMISSION_REQUIRED">Needs Revision / Incomplete</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">Teacher Feedback & Remarks</label>
+                <textarea name="teacher_feedback" id="gradeFeedback" rows="3" class="form-control" placeholder="e.g. Good handwriting, solve Question 4 again." style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="document.getElementById('gradeModal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Evaluation</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openGradingModal(subId, studentName, marks, feedback) {
+    document.getElementById('gradeModalTitle').innerText = "Grade: " + studentName;
+    document.getElementById('gradeForm').action = "/lectures/homework/evaluate/" + subId + "/";
+    document.getElementById('gradeMarks').value = marks;
+    document.getElementById('gradeFeedback').value = feedback;
+    document.getElementById('gradeModal').style.display = 'flex';
+}
+</script>
+{% endblock %}

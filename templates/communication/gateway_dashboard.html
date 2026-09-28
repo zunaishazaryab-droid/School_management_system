@@ -1,0 +1,143 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">📲 WhatsApp & SMS Automated Notification Engine</h1>
+        <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">Configure WhatsApp Business Cloud API, SMS gateways, and set up automated trigger rules for absences and fee recoveries.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'communication:queue_monitor' %}" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px;">
+            <span>📨</span> View Dispatch Queue ({{ total_pending }} Pending)
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <div class="stat-card" style="background: var(--card-bg); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--card-border); display: flex; align-items: center; gap: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(37, 211, 102, 0.12); color: #25d366; display: flex; align-items: center; justify-content: center; font-size: 22px;">💬</div>
+        <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Active Gateways</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--text-main);">{{ gateways.count }} Online</div>
+        </div>
+    </div>
+    <div class="stat-card" style="background: var(--card-bg); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--card-border); display: flex; align-items: center; gap: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 130, 246, 0.12); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 22px;">⚡</div>
+        <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Automated Rules</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--text-main);">{{ rules.count }} Active</div>
+        </div>
+    </div>
+    <div class="stat-card" style="background: var(--card-bg); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--card-border); display: flex; align-items: center; gap: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 22px;">🚀</div>
+        <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Dispatched Alerts</div>
+            <div style="font-size: 24px; font-weight: 800; color: #10b981;">{{ total_sent }} Delivered</div>
+        </div>
+    </div>
+</div>
+
+<!-- Instant Trigger Control Station -->
+<div class="card" style="background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(16,185,129,0.06)); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 22px; margin-bottom: 24px;">
+    <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">⚡ Run Automated Intelligent Dispatch Scanners</h3>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Trigger instant background scan & enqueue automated alerts for parents with 1-click.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+        <a href="{% url 'communication:trigger_absence' %}" class="btn btn-primary" style="background: #2563eb; display: flex; align-items: center; gap: 8px; font-weight: 700;">
+            <span>🚨</span> Run Daily Student Absence Alert Engine
+        </a>
+        <a href="{% url 'communication:trigger_fee_overdue' %}" class="btn btn-warning" style="background: #f59e0b; color: #fff; display: flex; align-items: center; gap: 8px; font-weight: 700;">
+            <span>💳</span> Run Fee Defaulter / Dues Notice Engine
+        </a>
+    </div>
+</div>
+
+<!-- Configured Gateways -->
+<div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 20px; margin-bottom: 24px;">
+    <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>🔌</span> Configured Message Dispatch Gateways
+    </h3>
+    <div style="overflow-x: auto;">
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-main); text-align: left; font-size: 12px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--card-border);">
+                    <th style="padding: 12px 14px;">Gateway Name</th>
+                    <th style="padding: 12px 14px;">Channel & Protocol</th>
+                    <th style="padding: 12px 14px;">Sender / Masking ID</th>
+                    <th style="padding: 12px 14px;">API Endpoint</th>
+                    <th style="padding: 12px 14px;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in gateways %}
+                <tr style="border-bottom: 1px solid var(--card-border); font-size: 13.5px;">
+                    <td style="padding: 14px; font-weight: 700; color: var(--text-main);">
+                        {{ g.name }}
+                        {% if g.is_default %}<span class="badge" style="background: #e0f2fe; color: #0284c7; font-size: 10.5px; margin-left: 6px;">Default</span>{% endif %}
+                    </td>
+                    <td style="padding: 14px;">
+                        <span class="badge" style="background: {% if 'WhatsApp' in g.get_channel_type_display %}#dcfce7; color: #15803d;{% else %}#e0e7ff; color: #4338ca;{% endif %} padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">
+                            {{ g.get_channel_type_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 14px; font-weight: 600; color: var(--text-main);">{{ g.sender_id }}</td>
+                    <td style="padding: 14px; font-family: monospace; font-size: 12px; color: var(--text-muted);">{{ g.api_endpoint|truncatechars:35 }}</td>
+                    <td style="padding: 14px;">
+                        <span class="badge" style="background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">
+                            ✓ Online & Ready
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Automated Notification Rules -->
+<div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 20px;">
+    <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>⚙️</span> Automated Event-Trigger Dispatch Rules
+    </h3>
+    <div style="overflow-x: auto;">
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-main); text-align: left; font-size: 12px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--card-border);">
+                    <th style="padding: 12px 14px;">Trigger Event</th>
+                    <th style="padding: 12px 14px;">Channel Target</th>
+                    <th style="padding: 12px 14px;">Linked Template</th>
+                    <th style="padding: 12px 14px;">Last Automated Run</th>
+                    <th style="padding: 12px 14px;">Rule Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rules %}
+                <tr style="border-bottom: 1px solid var(--card-border); font-size: 13.5px;">
+                    <td style="padding: 14px; font-weight: 700; color: var(--text-main);">{{ r.get_event_type_display }}</td>
+                    <td style="padding: 14px;">
+                        <span class="badge" style="background: #f1f5f9; color: #334155; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">
+                            {{ r.get_channel_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 14px; color: var(--text-main); font-size: 13px;">
+                        <div>{{ r.template.title }}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">{{ r.template.body|truncatechars:60 }}</div>
+                    </td>
+                    <td style="padding: 14px; color: var(--text-muted); font-size: 12px;">
+                        {{ r.last_triggered_at|date:"M d, Y H:i"|default:"Pending Schedule" }}
+                    </td>
+                    <td style="padding: 14px;">
+                        <span class="badge" style="background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 20px; font-weight: 700; font-size: 11px;">
+                            Active
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

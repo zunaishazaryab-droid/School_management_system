@@ -1,0 +1,68 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 24px;">
+    <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">✍️ Submit Online Student Leave Application</h1>
+    <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">Submit an advance leave notice or medical certificate for review by school administration.</p>
+</div>
+
+<div class="card" style="background: var(--card-bg); max-width: 680px; margin: 0 auto; border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 28px; box-shadow: var(--shadow-sm);">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Select Student</label>
+            <select name="student_id" required class="form-control" style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;">
+                <option value="">-- Choose Student --</option>
+                {% for st in students %}
+                <option value="{{ st.id }}">{{ st.get_full_name }} ({{ st.current_class.name }} - Sec {{ st.current_section.name }} | Roll #{{ st.roll_number }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Leave From (Start Date)</label>
+                <input type="date" name="start_date" required class="form-control" value="{{ today }}" style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;">
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Leave To (End Date)</label>
+                <input type="date" name="end_date" required class="form-control" value="{{ today }}" style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Leave Category</label>
+            <select name="category" class="form-control" style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;">
+                <option value="SICK">Medical / Sickness</option>
+                <option value="CASUAL" selected>Casual / Family Urgent Matter</option>
+                <option value="EMERGENCY">Emergency / Hospitalization</option>
+                <option value="OFFICIAL">Sports / External Competition</option>
+                <option value="OTHER">Other Reason</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Applicant Full Name / Guardian</label>
+            <input type="text" name="applied_by_name" class="form-control" placeholder="e.g. Muhammad Aslam (Father)" style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Reason for Leave</label>
+            <textarea name="reason" rows="3" required class="form-control" placeholder="Please provide clear details explaining reason for absence..." style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;"></textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+            <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Supporting Document (Optional PDF / Photo)</label>
+            <input type="file" name="document" class="form-control" style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <a href="{% url 'attendance:leave_list' %}" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 700;">Submit Application</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

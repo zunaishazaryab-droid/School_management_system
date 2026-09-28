@@ -14,4 +14,12 @@ urlpatterns = [
     path('templates/', views.template_list_view, name='template_list'),
     path('templates/<int:pk>/delete/', views.template_delete_view, name='template_delete'),
     path('history/', views.communication_history_view, name='history'),
+
+    # Sprint 8: Automated Gateway & Trigger Engine
+    path('gateways/', views.notification_gateway_view, name='gateway_dashboard'),
+    path('queue/', views.notification_queue_view, name='queue_monitor'),
+    path('queue/dispatch/', views.process_queue_dispatch_action, name='process_queue_dispatch'),
+    path('trigger/absence/', views.trigger_absence_alert_engine, name='trigger_absence'),
+    path('trigger/fee-overdue/', views.trigger_fee_overdue_engine, name='trigger_fee_overdue'),
 ]
+
