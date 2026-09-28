@@ -39,6 +39,12 @@ def coordinator_required(view_func):
     return role_required('ADMIN', 'PRINCIPAL', 'COORDINATOR')(view_func)
 
 
+def accountant_required(view_func):
+    """Restricts view access to Accountant/Admin/Principal/Coordinator."""
+    return role_required('ADMIN', 'PRINCIPAL', 'COORDINATOR')(view_func)
+
+
 def teacher_required(view_func):
     """Restricts view access to Teacher, Coordinator, Principal or Admin."""
     return role_required('ADMIN', 'PRINCIPAL', 'COORDINATOR', 'TEACHER')(view_func)
+

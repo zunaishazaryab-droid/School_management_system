@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            📦 Add Inventory Item
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Register new stationery, lab gear, hardware or school consumable into stock tracking.
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'inventory:item_list' %}" class="btn btn-outline">
+            ⬅️ Back to Inventory
+        </a>
+    </div>
+</div>
+
+<div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 28px; max-width: 800px; margin: 0 auto;">
+    <form method="POST">
+        {% csrf_token %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Item Name *</label>
+                {{ form.name }}
+                {% if form.name.errors %}<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.name.errors }}</div>{% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Item Code / SKU *</label>
+                {{ form.item_code }}
+                {% if form.item_code.errors %}<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.item_code.errors }}</div>{% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Category</label>
+                {{ form.category }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Initial Quantity *</label>
+                {{ form.quantity_in_stock }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Unit of Measure *</label>
+                {{ form.unit }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Unit Price (Rs.)</label>
+                {{ form.unit_price }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Min Reorder Level (Low stock threshold)</label>
+                {{ form.min_reorder_level }}
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Storage Location</label>
+                {{ form.location }}
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Description / Remarks</label>
+                {{ form.description }}
+            </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+            <a href="{% url 'inventory:item_list' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">💾 Save Inventory Item</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

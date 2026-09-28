@@ -1,0 +1,78 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            📍 Transport Routes & Stops
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Manage pickup locations, route timings, designated stops, and monthly transport fares.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'transport:route_add' %}" class="btn btn-primary">
+            ➕ Add New Route
+        </a>
+        <a href="{% url 'transport:dashboard' %}" class="btn btn-outline">
+            ← Transport Hub
+        </a>
+    </div>
+</div>
+
+<div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+    <div class="table-responsive">
+        <table class="data-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background: #f8fafc; border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: 14px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Route Title</th>
+                    <th style="padding: 14px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Start Location</th>
+                    <th style="padding: 14px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">End Location</th>
+                    <th style="padding: 14px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Monthly Fare</th>
+                    <th style="padding: 14px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Allocated Students</th>
+                    <th style="padding: 14px 18px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in routes %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 14px 18px; font-weight: 700; font-size: 14px; color: var(--primary-color);">
+                        {{ r.title }}
+                    </td>
+                    <td style="padding: 14px 18px; font-size: 13px; color: #334155;">
+                        {{ r.start_point }}
+                    </td>
+                    <td style="padding: 14px 18px; font-size: 13px; color: #334155;">
+                        {{ r.end_point }}
+                    </td>
+                    <td style="padding: 14px 18px; font-weight: 700; font-size: 13px; color: #1e293b;">
+                        Rs. {{ r.monthly_fare }}
+                    </td>
+                    <td style="padding: 14px 18px;">
+                        <span class="badge" style="background: #e0f2fe; color: #0284c7; font-weight: 700;">
+                            {{ r.allocated_students.count }} Students
+                        </span>
+                    </td>
+                    <td style="padding: 14px 18px;">
+                        {% if r.is_active %}
+                            <span class="badge" style="background: #dcfce7; color: #15803d; font-weight: 700;">Active</span>
+                        {% else %}
+                            <span class="badge" style="background: #fee2e2; color: #dc2626; font-weight: 700;">Inactive</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No transport routes created yet. Click "Add New Route" above.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

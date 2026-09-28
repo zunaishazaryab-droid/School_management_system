@@ -50,6 +50,15 @@ urlpatterns = [
     
     # REST API & Mobile Endpoints (Sprint 6)
     path('api/v1/', include('apps.api.urls', namespace='api')),
+    
+    # Transport & Fleet Management (Sprint 7)
+    path('transport/', include('apps.transport.urls', namespace='transport')),
+    
+    # Library Management & Books (Sprint 7)
+    path('library/', include('apps.library.urls', namespace='library')),
+    
+    # Inventory & Asset Tracking (Sprint 7)
+    path('inventory/', include('apps.inventory.urls', namespace='inventory')),
 ]
 
 

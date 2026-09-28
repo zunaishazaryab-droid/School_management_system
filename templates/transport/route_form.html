@@ -1,0 +1,69 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            📍 Create Transport Route
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Specify route title, departure point, destination, and monthly transport fare fee.
+        </p>
+    </div>
+    <a href="{% url 'transport:route_list' %}" class="btn btn-outline">
+        ← Back to Routes
+    </a>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+    <div class="card-body" style="padding: 28px;">
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Route Title <span style="color: var(--danger);">*</span></label>
+                {{ form.title }}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Starting / Pickup Origin</label>
+                    {{ form.start_point }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Ending / Destination Point</label>
+                    {{ form.end_point }}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Monthly Transport Fare (Rs.) <span style="color: var(--danger);">*</span></label>
+                {{ form.monthly_fare }}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Description / Major Landmarks</label>
+                {{ form.description }}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 28px; background: #f8fafc; padding: 14px 18px; border-radius: 8px; display: flex; align-items: center; gap: 12px;">
+                {{ form.is_active }}
+                <label for="{{ form.is_active.id_for_label }}" style="font-weight: 600; margin-bottom: 0; cursor: pointer;">
+                    Active route (Available for student allocations)
+                </label>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="{% url 'transport:route_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 700;">
+                    💾 Save Route
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

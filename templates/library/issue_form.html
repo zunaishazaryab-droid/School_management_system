@@ -1,0 +1,62 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            📖 Issue Book to Student
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Select student, book from catalog, issuance date and expected due return date.
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'library:issue_list' %}" class="btn btn-outline">
+            ⬅️ Issue Register
+        </a>
+    </div>
+</div>
+
+<div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 28px; max-width: 650px; margin: 0 auto;">
+    <form method="POST">
+        {% csrf_token %}
+        <div style="display: flex; flex-direction: column; gap: 18px;">
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Select Book *</label>
+                {{ form.book }}
+                {% if form.book.errors %}<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.book.errors }}</div>{% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Select Student *</label>
+                {{ form.student }}
+                {% if form.student.errors %}<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.student.errors }}</div>{% endif %}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Issue Date *</label>
+                    {{ form.issue_date }}
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Due Date *</label>
+                    {{ form.due_date }}
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Notes / Condition</label>
+                {{ form.notes }}
+            </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+            <a href="{% url 'library:issue_list' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">📖 Issue Book Now</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

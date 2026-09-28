@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            🚌 Register School Vehicle / Bus
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Enter vehicle registration number, model, capacity, and driver contact credentials.
+        </p>
+    </div>
+    <a href="{% url 'transport:vehicle_list' %}" class="btn btn-outline">
+        ← Back to Fleet
+    </a>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+    <div class="card-body" style="padding: 28px;">
+        <form method="POST">
+            {% csrf_token %}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Vehicle Number / Reg Plate <span style="color: var(--danger);">*</span></label>
+                    {{ form.vehicle_number }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Vehicle Model / Type <span style="color: var(--danger);">*</span></label>
+                    {{ form.model_name }}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Seating Capacity <span style="color: var(--danger);">*</span></label>
+                    {{ form.seating_capacity }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Status</label>
+                    {{ form.status }}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Driver Name <span style="color: var(--danger);">*</span></label>
+                    {{ form.driver_name }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Driver Phone <span style="color: var(--danger);">*</span></label>
+                    {{ form.driver_phone }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">License Number</label>
+                    {{ form.driver_license_number }}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 28px;">
+                <label class="form-label" style="font-weight: 600; margin-bottom: 6px; display: block;">Notes / Remarks</label>
+                {{ form.notes }}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="{% url 'transport:vehicle_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 700;">
+                    💾 Save Vehicle
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

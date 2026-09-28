@@ -270,6 +270,47 @@ def run_qa_audit():
     resp = client.get('/api/v1/fees/')
     assert_test(resp.status_code == 200, "GET /api/v1/fees/ JSON endpoint works (200)", "API")
 
+    # ---------------------------------------------------------
+    # 11. SPRINT 7: TRANSPORT, LIBRARY & INVENTORY MODULES
+    # ---------------------------------------------------------
+    print("\n--- 11. Testing Sprint 7: Transport, Library & Inventory ---")
+
+    # Transport Management
+    resp = client.get(reverse('transport:dashboard'))
+    assert_test(resp.status_code == 200, "Transport Dashboard renders (200)", "TRANSPORT")
+
+    resp = client.get(reverse('transport:vehicle_list'))
+    assert_test(resp.status_code == 200, "School Vehicle Fleet list renders (200)", "TRANSPORT")
+
+    resp = client.get(reverse('transport:route_list'))
+    assert_test(resp.status_code == 200, "Transport Routes & Stops list renders (200)", "TRANSPORT")
+
+    resp = client.get(reverse('transport:allocation_list'))
+    assert_test(resp.status_code == 200, "Student Transport Allocations list renders (200)", "TRANSPORT")
+
+    # Library Management
+    resp = client.get(reverse('library:dashboard'))
+    assert_test(resp.status_code == 200, "Library Catalog Dashboard renders (200)", "LIBRARY")
+
+    resp = client.get(reverse('library:book_list'))
+    assert_test(resp.status_code == 200, "Library Book Catalog index renders (200)", "LIBRARY")
+
+    resp = client.get(reverse('library:issue_list'))
+    assert_test(resp.status_code == 200, "Book Issuance & Return Register renders (200)", "LIBRARY")
+
+    # Inventory & Asset Tracking
+    resp = client.get(reverse('inventory:dashboard'))
+    assert_test(resp.status_code == 200, "Inventory & Asset Dashboard renders (200)", "INVENTORY")
+
+    resp = client.get(reverse('inventory:item_list'))
+    assert_test(resp.status_code == 200, "Inventory Stock Items table renders (200)", "INVENTORY")
+
+    resp = client.get(reverse('inventory:transaction_list'))
+    assert_test(resp.status_code == 200, "Stock In / Out Movement Ledger renders (200)", "INVENTORY")
+
+    resp = client.get(reverse('inventory:supplier_list'))
+    assert_test(resp.status_code == 200, "Vendor & Supplier Directory renders (200)", "INVENTORY")
+
 
     # ---------------------------------------------------------
     # FINAL QA SUMMARY REPORT

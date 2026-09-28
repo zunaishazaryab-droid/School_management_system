@@ -137,6 +137,25 @@
                     <span>Reports Center</span>
                 </a>
 
+                <div class="sidebar-section-title">Auxiliary & Logistics</div>
+
+                <a href="{% url 'transport:dashboard' %}" class="nav-item {% if request.resolver_match.app_name == 'transport' %}active{% endif %}">
+                    <span class="nav-icon">🚌</span>
+                    <span>Transport Fleet</span>
+                </a>
+
+                <a href="{% url 'library:dashboard' %}" class="nav-item {% if request.resolver_match.app_name == 'library' %}active{% endif %}">
+                    <span class="nav-icon">📚</span>
+                    <span>Library Catalog</span>
+                </a>
+
+                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+                <a href="{% url 'inventory:dashboard' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' %}active{% endif %}">
+                    <span class="nav-icon">📦</span>
+                    <span>Inventory & Assets</span>
+                </a>
+                {% endif %}
+
                 {% if request.user.is_admin or request.user.is_principal %}
                 <div class="sidebar-section-title">Administration & System</div>
 

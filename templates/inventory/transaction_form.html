@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            🔄 Record Stock Transaction (IN / OUT)
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Add received supplier stock or log materials issued to staff/departments.
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'inventory:transaction_list' %}" class="btn btn-outline">
+            ⬅️ Transaction Ledger
+        </a>
+    </div>
+</div>
+
+<div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 28px; max-width: 800px; margin: 0 auto;">
+    <form method="POST">
+        {% csrf_token %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Select Item *</label>
+                {{ form.item }}
+                {% if form.item.errors %}<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.item.errors }}</div>{% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Movement Type *</label>
+                {{ form.transaction_type }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Quantity *</label>
+                {{ form.quantity }}
+                {% if form.quantity.errors %}<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.quantity.errors }}</div>{% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Unit Cost (Rs.)</label>
+                {{ form.unit_price }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Transaction Date *</label>
+                {{ form.transaction_date }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Supplier (for Stock IN)</label>
+                {{ form.supplier }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Issued To / Department (for Stock OUT)</label>
+                {{ form.issued_to }}
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Reference / Invoice #</label>
+                {{ form.reference_number }}
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Notes / Remarks</label>
+                {{ form.notes }}
+            </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+            <a href="{% url 'inventory:transaction_list' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">💾 Submit Movement</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            📋 Book Issuance & Return Register
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Track active book loans, returns, overdue penalties, and student library history.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'library:issue_create' %}" class="btn btn-primary">
+            📖 Issue New Book
+        </a>
+        <a href="{% url 'library:dashboard' %}" class="btn btn-outline">
+            ⬅️ Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 16px; margin-bottom: 24px; display: flex; gap: 12px; align-items: center;">
+    <span style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Status Filter:</span>
+    <a href="{% url 'library:issue_list' %}" class="btn {% if not status_filter %}btn-primary{% else %}btn-outline{% endif %}" style="padding: 6px 14px; font-size: 13px;">All</a>
+    <a href="{% url 'library:issue_list' %}?status=ISSUED" class="btn {% if status_filter == 'ISSUED' %}btn-primary{% else %}btn-outline{% endif %}" style="padding: 6px 14px; font-size: 13px;">Currently Issued</a>
+    <a href="{% url 'library:issue_list' %}?status=RETURNED" class="btn {% if status_filter == 'RETURNED' %}btn-primary{% else %}btn-outline{% endif %}" style="padding: 6px 14px; font-size: 13px;">Returned</a>
+</div>
+
+<!-- Issue Table -->
+<div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden;">
+    <div style="overflow-x: auto;">
+        <table class="table" style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background: var(--bg-surface, #f8fafc); border-bottom: 1px solid var(--border-color); font-size: 12.5px; text-transform: uppercase; color: var(--text-muted);">
+                    <th style="padding: 14px 16px;">Book</th>
+                    <th style="padding: 14px 16px;">Student</th>
+                    <th style="padding: 14px 16px;">Issue Date</th>
+                    <th style="padding: 14px 16px;">Due Date</th>
+                    <th style="padding: 14px 16px;">Return Date</th>
+                    <th style="padding: 14px 16px;">Status</th>
+                    <th style="padding: 14px 16px; text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for iss in issues %}
+                <tr style="border-bottom: 1px solid var(--border-color); font-size: 13.5px;">
+                    <td style="padding: 14px 16px;">
+                        <div style="font-weight: 700; color: var(--text-main);">{{ iss.book.title }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">By {{ iss.book.author }}</div>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        <div style="font-weight: 600; color: var(--text-main);">{{ iss.student.get_full_name }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Adm: {{ iss.student.admission_number }} | {{ iss.student.current_class.name }}</div>
+                    </td>
+                    <td style="padding: 14px 16px; color: var(--text-muted);">
+                        {{ iss.issue_date|date:"d M Y" }}
+                    </td>
+                    <td style="padding: 14px 16px; font-weight: 600; {% if iss.is_overdue and iss.status == 'ISSUED' %}color: #dc2626;{% else %}color: var(--text-main);{% endif %}">
+                        {{ iss.due_date|date:"d M Y" }}
+                    </td>
+                    <td style="padding: 14px 16px; color: var(--text-muted);">
+                        {{ iss.return_date|date:"d M Y"|default:"—" }}
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        {% if iss.status == 'ISSUED' %}
+                            {% if iss.is_overdue %}
+                            <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 700;">Overdue</span>
+                            {% else %}
+                            <span class="badge" style="background: #fef3c7; color: #d97706; font-weight: 700;">Issued</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge" style="background: #dcfce7; color: #15803d; font-weight: 700;">Returned</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px 16px; text-align: right;">
+                        {% if iss.status == 'ISSUED' %}
+                        <form method="POST" action="{% url 'library:book_return' iss.id %}" style="display: inline;" onsubmit="return confirm('Mark this book as returned and restore inventory copy?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: #16a34a; border-color: #16a34a;">
+                                📥 Return
+                            </button>
+                        </form>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: 12px;">Completed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No book issuances recorded.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            📚 Add Book to Catalog
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Register new title, author, edition, rack shelf location, and inventory copies.
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'library:book_list' %}" class="btn btn-outline">
+            ⬅️ Back to Catalog
+        </a>
+    </div>
+</div>
+
+<div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 28px; max-width: 800px; margin: 0 auto;">
+    <form method="POST">
+        {% csrf_token %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Book Title *</label>
+                {{ form.title }}
+                {% if form.title.errors %}<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.title.errors }}</div>{% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Author *</label>
+                {{ form.author }}
+                {% if form.author.errors %}<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.author.errors }}</div>{% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Category</label>
+                {{ form.category }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">ISBN Number</label>
+                {{ form.isbn }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Publisher</label>
+                {{ form.publisher }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Edition / Year</label>
+                {{ form.edition }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Rack / Shelf Location</label>
+                {{ form.rack_location }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Total Copies *</label>
+                {{ form.total_copies }}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Price per Book (Rs.)</label>
+                {{ form.price }}
+            </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+            <a href="{% url 'library:book_list' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">💾 Save Book to Catalog</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

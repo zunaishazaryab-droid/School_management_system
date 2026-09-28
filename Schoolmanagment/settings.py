@@ -53,6 +53,9 @@ LOCAL_APPS = [
     'apps.communication',
     'apps.reports',
     'apps.api',
+    'apps.transport',
+    'apps.library',
+    'apps.inventory',
 ]
 
 

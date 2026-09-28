@@ -1,0 +1,62 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            🏭 Add Supplier / Vendor
+        </h1>
+        <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
+            Register new vendor profile, contact details, and supplier address.
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'inventory:supplier_list' %}" class="btn btn-outline">
+            ⬅️ Back to Suppliers
+        </a>
+    </div>
+</div>
+
+<div class="card" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 28px; max-width: 650px; margin: 0 auto;">
+    <form method="POST">
+        {% csrf_token %}
+        <div style="display: flex; flex-direction: column; gap: 18px;">
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Supplier / Vendor Name *</label>
+                {{ form.name }}
+                {% if form.name.errors %}<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.name.errors }}</div>{% endif %}
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Contact Person</label>
+                {{ form.contact_person }}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Phone *</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}<div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.phone.errors }}</div>{% endif %}
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Email</label>
+                    {{ form.email }}
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Address / City</label>
+                {{ form.address }}
+            </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+            <a href="{% url 'inventory:supplier_list' %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">💾 Save Supplier</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
