@@ -163,7 +163,7 @@ def announcement_delete_view(request, pk):
 def broadcast_center_view(request):
     """Direct Parent/Teacher SMS & WhatsApp messaging center with variable auto-fill and web link dispatch"""
     students = Student.objects.filter(status='ACTIVE').select_related('current_class', 'current_section')
-    teachers = Teacher.objects.filter(is_active=True).select_related('user')
+    teachers = Teacher.objects.filter(status='ACTIVE').select_related('user')
     templates = MessageTemplate.objects.all()
     classes = ClassRoom.objects.all()
 
@@ -201,7 +201,7 @@ def broadcast_center_view(request):
             tch = Teacher.objects.filter(id=teacher_id).first()
             if tch:
                 target_name = tch.user.get_full_name()
-                target_phone = tch.phone
+                target_phone = tch.phone_number
                 msg_text = msg_text.replace('{teacher_name}', tch.user.get_full_name())
                 msg_text = msg_text.replace('{date}', timezone.now().strftime('%d-%b-%Y'))
         else:
