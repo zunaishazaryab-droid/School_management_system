@@ -5,6 +5,8 @@ app_name = 'syllabus'
 
 urlpatterns = [
     path('', views.syllabus_tracker_view, name='tracker'),
+    path('tracker/', views.syllabus_tracker_view, name='tracker_alias'),
     path('chapter/add/', views.chapter_create_view, name='chapter_add'),
     path('topic/add/', views.topic_create_view, name='topic_add'),
 ]
+
