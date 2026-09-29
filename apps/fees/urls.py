@@ -13,6 +13,7 @@ urlpatterns = [
     path('collect/<int:invoice_id>/', views.collect_payment_view, name='collect_invoice_payment'),
     path('receipts/<int:pk>/', views.payment_receipt_view, name='payment_receipt'),
     path('challans/<int:pk>/3part/', views.fee_challan_3part_view, name='fee_challan_3part'),
+    path('invoices/<int:pk>/challan/', views.fee_challan_3part_view, name='invoice_challan_alias'),
     path('ledger/<int:student_id>/', views.student_ledger_view, name='student_ledger'),
     path('defaulters/', views.fee_defaulters_view, name='defaulters_list'),
     path('structures/', views.fee_structures_view, name='fee_structures'),

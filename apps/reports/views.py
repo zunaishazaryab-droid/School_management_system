@@ -234,7 +234,7 @@ def teacher_workload_report_view(request):
     for t in teachers:
         user_obj = t.user
         slots_count = TimetableEntry.objects.filter(teacher=user_obj, academic_year=academic_year).count() if user_obj else 0
-        subjects_assigned = t.assigned_subjects.all()
+        subjects_assigned = user_obj.teaching_subjects.select_related('class_room', 'subject').all() if user_obj else []
         teacher_stats.append({
             'teacher': t,
             'user': user_obj,

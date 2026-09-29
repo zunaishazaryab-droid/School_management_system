@@ -14,6 +14,7 @@ urlpatterns = [
     path('<int:exam_id>/calculate/', views.exam_calculate_results_view, name='calculate_results'),
     path('<int:exam_id>/results/class/<int:class_id>/', views.exam_class_result_view, name='class_result'),
     path('<int:exam_id>/report-card/<int:student_id>/', views.student_report_card_view, name='student_report_card'),
+    path('report-card/<int:exam_id>/<int:student_id>/', views.student_report_card_view, name='student_report_card_alias'),
     path('grade-scales/', views.grading_scale_list_view, name='grade_scales'),
 
     # Sprint 9: Online CBT Assessments
@@ -21,6 +22,7 @@ urlpatterns = [
     path('cbt/create/', views.cbt_assessment_create_view, name='cbt_create'),
     path('cbt/<int:pk>/questions/', views.cbt_assessment_questions_view, name='cbt_questions'),
     path('cbt/<int:pk>/take/', views.cbt_assessment_take_view, name='cbt_take'),
+    path('cbt/<int:pk>/start/', views.cbt_assessment_take_view, name='cbt_start_alias'),
     path('cbt/<int:pk>/results/', views.cbt_assessment_results_view, name='cbt_results'),
 ]
 
