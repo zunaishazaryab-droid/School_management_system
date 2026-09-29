@@ -1,0 +1,82 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">💻 Computer-Based Testing (CBT) & Online Quizzes</h1>
+        <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">Create timed online assessments, manage MCQs and True/False questions, and conduct automated evaluations with instant grading.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'examinations:cbt_create' %}" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px;">
+            <span>➕</span> Create New Online Assessment
+        </a>
+    </div>
+</div>
+
+<div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 20px;">
+    <div style="overflow-x: auto;">
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-main); text-align: left; font-size: 12px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--card-border);">
+                    <th style="padding: 12px 14px;">Assessment Title</th>
+                    <th style="padding: 12px 14px;">Class & Subject</th>
+                    <th style="padding: 12px 14px;">Duration & Total Marks</th>
+                    <th style="padding: 12px 14px;">Questions Count</th>
+                    <th style="padding: 12px 14px;">Student Attempts</th>
+                    <th style="padding: 12px 14px;">Status</th>
+                    <th style="padding: 12px 14px; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for q in quizzes %}
+                <tr style="border-bottom: 1px solid var(--card-border); font-size: 13.5px;">
+                    <td style="padding: 14px; font-weight: 700; color: var(--text-main);">
+                        <a href="{% url 'examinations:cbt_questions' q.id %}" style="color: var(--text-main); text-decoration: none;">{{ q.title }}</a>
+                        <div style="font-size: 11px; font-weight: normal; color: var(--text-muted);">Created {{ q.created_at|date:"M d, Y" }} by {{ q.created_by.username|default:"Staff" }}</div>
+                    </td>
+                    <td style="padding: 14px;">
+                        <span class="badge" style="background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">
+                            {{ q.class_room.name }}
+                        </span>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">{{ q.subject.name }}</div>
+                    </td>
+                    <td style="padding: 14px; font-weight: 600;">
+                        <div>⏱️ {{ q.duration_minutes }} Mins</div>
+                        <div style="font-size: 11.5px; color: #10b981;">Total: {{ q.total_marks }} Marks (Pass: {{ q.passing_percentage }}%)</div>
+                    </td>
+                    <td style="padding: 14px; font-weight: 700; color: #3b82f6;">{{ q.questions_count }} Questions</td>
+                    <td style="padding: 14px; font-weight: 700; color: var(--text-main);">{{ q.attempts_count }} Submissions</td>
+                    <td style="padding: 14px;">
+                        <span class="badge" style="background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">
+                            {{ q.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 14px; text-align: right;">
+                        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                            <a href="{% url 'examinations:cbt_take' q.id %}" class="btn btn-sm btn-primary" style="padding: 5px 10px; font-size: 12px; font-weight: 700; background: #2563eb;">
+                                ✍️ Launch Test
+                            </a>
+                            <a href="{% url 'examinations:cbt_questions' q.id %}" class="btn btn-sm btn-secondary" style="padding: 5px 10px; font-size: 12px;">
+                                ⚙️ Questions
+                            </a>
+                            <a href="{% url 'examinations:cbt_results' q.id %}" class="btn btn-sm btn-secondary" style="padding: 5px 10px; font-size: 12px;">
+                                📊 Results
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="padding: 30px; text-align: center; color: var(--text-muted);">
+                        No online assessments found. Click <strong>Create New Online Assessment</strong> above.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

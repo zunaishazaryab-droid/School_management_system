@@ -150,14 +150,24 @@
 
                 <div class="sidebar-section-title">Examination & Reports</div>
 
-                <a href="{% url 'examinations:exam_list' %}" class="nav-item {% if request.resolver_match.app_name == 'examinations' %}active{% endif %}">
+                <a href="{% url 'examinations:exam_list' %}" class="nav-item {% if request.resolver_match.app_name == 'examinations' and 'cbt' not in request.path %}active{% endif %}">
                     <span class="nav-icon">📝</span>
                     <span>Exams & Results</span>
                 </a>
 
-                <a href="{% url 'reports:reports_hub' %}" class="nav-item {% if request.resolver_match.app_name == 'reports' %}active{% endif %}">
+                <a href="{% url 'examinations:cbt_list' %}" class="nav-item {% if 'cbt' in request.path %}active{% endif %}">
+                    <span class="nav-icon">💻</span>
+                    <span>Online CBT Quizzes</span>
+                </a>
+
+                <a href="{% url 'reports:reports_hub' %}" class="nav-item {% if request.resolver_match.app_name == 'reports' and 'executive' not in request.path %}active{% endif %}">
                     <span class="nav-icon">📈</span>
                     <span>Reports Center</span>
+                </a>
+
+                <a href="{% url 'reports:executive_analytics' %}" class="nav-item {% if 'executive' in request.path %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Executive Analytics</span>
                 </a>
 
                 <div class="sidebar-section-title">Auxiliary & Logistics</div>
@@ -181,6 +191,16 @@
 
                 {% if request.user.is_admin or request.user.is_principal %}
                 <div class="sidebar-section-title">Administration & System</div>
+
+                <a href="{% url 'core:campus_list' %}" class="nav-item {% if 'campuses' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🏫</span>
+                    <span>Multi-Campus Branches</span>
+                </a>
+
+                <a href="{% url 'core:badge_scanner' %}" class="nav-item {% if 'security/scanner' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🪪</span>
+                    <span>QR Security Scanner</span>
+                </a>
 
                 <a href="{% url 'core:activity_logs' %}" class="nav-item {% if 'activity-logs' in request.path %}active{% endif %}">
                     <span class="nav-icon">🛡️</span>

@@ -28,4 +28,11 @@ urlpatterns = [
     # Database Backup & Recovery
     path('settings/backup/', views.database_backup_view, name='database_backup'),
     path('settings/backup/download/', views.database_download_view, name='database_download'),
+
+    # Sprint 9: Multi-Campus & QR Verification
+    path('campuses/', views.campus_list_view, name='campus_list'),
+    path('campuses/switch/<int:branch_id>/', views.switch_campus_view, name='switch_campus'),
+    path('verify-badge/<str:token>/', views.verify_badge_view, name='verify_badge'),
+    path('security/scanner/', views.badge_scanner_view, name='badge_scanner'),
 ]
+

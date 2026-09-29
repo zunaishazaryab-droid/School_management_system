@@ -141,3 +141,80 @@ class ExamStudentResult(models.Model):
 
     def __str__(self):
         return f"{self.student.get_full_name()} ({self.exam.title}) - {self.percentage}% [{self.grade}]"
+
+
+class OnlineAssessment(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = 'DRAFT', 'Draft'
+        PUBLISHED = 'PUBLISHED', 'Published / Live'
+        CLOSED = 'CLOSED', 'Closed / Archived'
+
+    title = models.CharField(max_length=200, help_text="e.g. Physics Chapter 4 Motion Online CBT Quiz")
+    class_room = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, related_name='online_quizzes')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='online_quizzes')
+    duration_minutes = models.PositiveIntegerField(default=30, help_text="Total test time in minutes")
+    total_marks = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('20.00'))
+    passing_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('40.00'))
+    start_window = models.DateTimeField(null=True, blank=True)
+    end_window = models.DateTimeField(null=True, blank=True)
+    shuffle_questions = models.BooleanField(default=True)
+    show_instant_result = models.BooleanField(default=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PUBLISHED)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Online Assessment / CBT Quiz'
+        verbose_name_plural = 'Online Assessments & CBT Quizzes'
+
+    def __str__(self):
+        return f"{self.title} ({self.class_room.name} - {self.subject.name})"
+
+
+class AssessmentQuestion(models.Model):
+    class QuestionType(models.TextChoices):
+        MCQ = 'MCQ', 'Multiple Choice Question (4 Options)'
+        TRUE_FALSE = 'TRUE_FALSE', 'True / False'
+
+    assessment = models.ForeignKey(OnlineAssessment, on_delete=models.CASCADE, related_name='questions')
+    question_text = models.TextField()
+    question_type = models.CharField(max_length=20, choices=QuestionType.choices, default=QuestionType.MCQ)
+    option_a = models.CharField(max_length=255, default='')
+    option_b = models.CharField(max_length=255, default='')
+    option_c = models.CharField(max_length=255, blank=True, default='')
+    option_d = models.CharField(max_length=255, blank=True, default='')
+    correct_answer = models.CharField(max_length=10, help_text="A, B, C, D, TRUE, or FALSE")
+    marks = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal('2.00'))
+    explanation = models.TextField(blank=True, help_text="Solution or reference explanation")
+    order_num = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ['order_num', 'id']
+        verbose_name = 'Assessment Question'
+        verbose_name_plural = 'Assessment Questions'
+
+    def __str__(self):
+        return f"Q#{self.order_num}: {self.question_text[:50]}"
+
+
+class StudentAssessmentAttempt(models.Model):
+    assessment = models.ForeignKey(OnlineAssessment, on_delete=models.CASCADE, related_name='attempts')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='quiz_attempts')
+    started_at = models.DateTimeField(auto_now_add=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    score_obtained = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+    is_passed = models.BooleanField(default=False)
+    answers_payload = models.JSONField(default=dict, blank=True)
+    time_taken_seconds = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-submitted_at']
+        unique_together = ('assessment', 'student')
+        verbose_name = 'Student CBT Attempt'
+        verbose_name_plural = 'Student CBT Attempts'
+
+    def __str__(self):
+        return f"{self.student.get_full_name()} on {self.assessment.title}: {self.score_obtained}/{self.assessment.total_marks} ({self.percentage}%)"
+

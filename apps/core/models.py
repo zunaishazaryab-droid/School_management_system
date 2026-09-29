@@ -95,3 +95,33 @@ class ActivityLog(models.Model):
             )
         except Exception:
             pass
+
+
+class Branch(models.Model):
+    class CampusType(models.TextChoices):
+        MAIN = 'MAIN', 'Main / Principal Campus'
+        JUNIOR = 'JUNIOR', 'Junior / Primary Wing'
+        GIRLS = 'GIRLS', 'Girls Wing'
+        BOYS = 'BOYS', 'Boys Wing'
+        CITY = 'CITY', 'City Branch'
+
+    name = models.CharField(max_length=150, help_text="e.g. Main Campus Johar Town")
+    code = models.CharField(max_length=20, unique=True, help_text="e.g. GXV-MC01")
+    campus_type = models.CharField(max_length=20, choices=CampusType.choices, default=CampusType.MAIN)
+    address = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, default="Lahore")
+    phone = models.CharField(max_length=30, blank=True)
+    email = models.EmailField(blank=True)
+    principal_name = models.CharField(max_length=120, blank=True)
+    is_main_branch = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_main_branch', 'name']
+        verbose_name = 'Campus / Branch'
+        verbose_name_plural = 'Campuses & Branches'
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+

@@ -416,3 +416,237 @@ def grading_scale_list_view(request):
         'form': form,
         'page_title': 'Grading Scales & GPA Setup'
     })
+
+
+from .models import OnlineAssessment, AssessmentQuestion, StudentAssessmentAttempt
+
+
+@login_required
+def cbt_assessment_list_view(request):
+    """List of all online CBT quizzes and tests."""
+    quizzes = OnlineAssessment.objects.select_related('class_room', 'subject', 'created_by').annotate(
+        questions_count=Count('questions', distinct=True),
+        attempts_count=Count('attempts', distinct=True)
+    )
+
+    if not quizzes.exists():
+        classroom = ClassRoom.objects.first()
+        subject = Subject.objects.first()
+        if classroom and subject:
+            q = OnlineAssessment.objects.create(
+                title="Physics Mid-Term CBT MCQ Assessment",
+                class_room=classroom,
+                subject=subject,
+                duration_minutes=20,
+                total_marks=Decimal('10.00'),
+                passing_percentage=Decimal('50.00'),
+                status=OnlineAssessment.Status.PUBLISHED,
+                created_by=request.user
+            )
+            AssessmentQuestion.objects.create(
+                assessment=q,
+                question_text="What is the standard SI unit of acceleration?",
+                question_type=AssessmentQuestion.QuestionType.MCQ,
+                option_a="m/s",
+                option_b="m/s²",
+                option_c="km/h",
+                option_d="Newton",
+                correct_answer="B",
+                marks=Decimal('2.00'),
+                order_num=1
+            )
+            AssessmentQuestion.objects.create(
+                assessment=q,
+                question_text="Acceleration due to gravity on Earth is approximately 9.8 m/s².",
+                question_type=AssessmentQuestion.QuestionType.TRUE_FALSE,
+                option_a="True",
+                option_b="False",
+                correct_answer="TRUE",
+                marks=Decimal('2.00'),
+                order_num=2
+            )
+            AssessmentQuestion.objects.create(
+                assessment=q,
+                question_text="Which of the following is a scalar quantity?",
+                question_type=AssessmentQuestion.QuestionType.MCQ,
+                option_a="Velocity",
+                option_b="Force",
+                option_c="Mass",
+                option_d="Displacement",
+                correct_answer="C",
+                marks=Decimal('2.00'),
+                order_num=3
+            )
+            AssessmentQuestion.objects.create(
+                assessment=q,
+                question_text="Newton's First Law is also known as the Law of Inertia.",
+                question_type=AssessmentQuestion.QuestionType.TRUE_FALSE,
+                option_a="True",
+                option_b="False",
+                correct_answer="TRUE",
+                marks=Decimal('2.00'),
+                order_num=4
+            )
+            AssessmentQuestion.objects.create(
+                assessment=q,
+                question_text="Rate of change of displacement is known as:",
+                question_type=AssessmentQuestion.QuestionType.MCQ,
+                option_a="Speed",
+                option_b="Velocity",
+                option_c="Work",
+                option_d="Power",
+                correct_answer="B",
+                marks=Decimal('2.00'),
+                order_num=5
+            )
+            quizzes = OnlineAssessment.objects.select_related('class_room', 'subject', 'created_by').annotate(
+                questions_count=Count('questions', distinct=True),
+                attempts_count=Count('attempts', distinct=True)
+            )
+
+    return render(request, 'examinations/cbt_quiz_list.html', {
+        'quizzes': quizzes,
+        'page_title': 'Online CBT Examinations & Assessments'
+    })
+
+
+@login_required
+def cbt_assessment_create_view(request):
+    """Create a new timed CBT quiz."""
+    classes = ClassRoom.objects.all()
+    subjects = Subject.objects.all()
+
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        class_id = request.POST.get('class_room')
+        subject_id = request.POST.get('subject')
+        duration = int(request.POST.get('duration_minutes', 30))
+        pass_pct = Decimal(request.POST.get('passing_percentage', '40.00'))
+
+        quiz = OnlineAssessment.objects.create(
+            title=title,
+            class_room_id=class_id,
+            subject_id=subject_id,
+            duration_minutes=duration,
+            passing_percentage=pass_pct,
+            created_by=request.user,
+            status=OnlineAssessment.Status.PUBLISHED
+        )
+        messages.success(request, f"Online Assessment '{title}' created! Now add questions.")
+        return redirect('examinations:cbt_questions', pk=quiz.id)
+
+    return render(request, 'examinations/cbt_quiz_form.html', {
+        'classes': classes,
+        'subjects': subjects,
+        'page_title': 'Create Online CBT Assessment'
+    })
+
+
+@login_required
+def cbt_assessment_questions_view(request, pk):
+    """Add and manage questions for online assessment."""
+    quiz = get_object_or_404(OnlineAssessment.objects.select_related('class_room', 'subject'), pk=pk)
+    questions = quiz.questions.all()
+
+    if request.method == 'POST' and 'add_question' in request.POST:
+        q_text = request.POST.get('question_text')
+        q_type = request.POST.get('question_type', AssessmentQuestion.QuestionType.MCQ)
+        opt_a = request.POST.get('option_a', '')
+        opt_b = request.POST.get('option_b', '')
+        opt_c = request.POST.get('option_c', '')
+        opt_d = request.POST.get('option_d', '')
+        ans = request.POST.get('correct_answer', 'A')
+        marks = Decimal(request.POST.get('marks', '2.00'))
+        order_num = questions.count() + 1
+
+        AssessmentQuestion.objects.create(
+            assessment=quiz,
+            question_text=q_text,
+            question_type=q_type,
+            option_a=opt_a,
+            option_b=opt_b,
+            option_c=opt_c,
+            option_d=opt_d,
+            correct_answer=ans.upper(),
+            marks=marks,
+            order_num=order_num
+        )
+        # Recalculate total marks
+        quiz.total_marks = sum(q.marks for q in quiz.questions.all())
+        quiz.save()
+
+        messages.success(request, "Question added to quiz!")
+        return redirect('examinations:cbt_questions', pk=quiz.id)
+
+    return render(request, 'examinations/cbt_quiz_questions.html', {
+        'quiz': quiz,
+        'questions': questions,
+        'page_title': f"Questions: {quiz.title}"
+    })
+
+
+@login_required
+def cbt_assessment_take_view(request, pk):
+    """Interactive student test-taking interface with auto-grading."""
+    quiz = get_object_or_404(OnlineAssessment.objects.select_related('class_room', 'subject'), pk=pk)
+    questions = list(quiz.questions.all())
+    
+    # Get active student
+    student = Student.objects.filter(status='ACTIVE').first()
+    if request.user.role == 'STUDENT':
+        student = getattr(request.user, 'student_profile', student)
+
+    attempt = StudentAssessmentAttempt.objects.filter(assessment=quiz, student=student).first()
+
+    if request.method == 'POST' and not attempt:
+        # Evaluate answers
+        total_score = Decimal('0.00')
+        answers = {}
+        for q in questions:
+            user_choice = request.POST.get(f'question_{q.id}', '').strip().upper()
+            answers[str(q.id)] = user_choice
+            if user_choice and user_choice == q.correct_answer.strip().upper():
+                total_score += q.marks
+
+        pct = (total_score / quiz.total_marks * Decimal('100.00')) if quiz.total_marks > 0 else Decimal('0.00')
+        is_pass = (pct >= quiz.passing_percentage)
+
+        attempt = StudentAssessmentAttempt.objects.create(
+            assessment=quiz,
+            student=student,
+            submitted_at=timezone.now(),
+            score_obtained=total_score,
+            percentage=round(pct, 2),
+            is_passed=is_pass,
+            answers_payload=answers
+        )
+
+        messages.success(request, f"Test submitted successfully! You scored {total_score}/{quiz.total_marks} ({round(pct,1)}%).")
+
+    return render(request, 'examinations/cbt_quiz_take.html', {
+        'quiz': quiz,
+        'questions': questions,
+        'student': student,
+        'attempt': attempt,
+        'page_title': f"CBT Assessment: {quiz.title}"
+    })
+
+
+@login_required
+def cbt_assessment_results_view(request, pk):
+    """View cohort performance & score ranking for CBT assessment."""
+    quiz = get_object_or_404(OnlineAssessment.objects.select_related('class_room', 'subject'), pk=pk)
+    attempts = quiz.attempts.select_related('student').order_by('-score_obtained')
+    
+    avg_score = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0.0
+    passed_count = attempts.filter(is_passed=True).count()
+    pass_rate = round((passed_count / attempts.count() * 100), 1) if attempts.exists() else 0.0
+
+    return render(request, 'examinations/cbt_quiz_results.html', {
+        'quiz': quiz,
+        'attempts': attempts,
+        'avg_score': round(avg_score, 1),
+        'pass_rate': pass_rate,
+        'page_title': f"Results: {quiz.title}"
+    })
+

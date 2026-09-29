@@ -10,4 +10,6 @@ urlpatterns = [
     path('fees/', views.fee_financial_report_view, name='fee_report'),
     path('exams/', views.exam_gazette_report_view, name='exam_report'),
     path('teachers/', views.teacher_workload_report_view, name='teacher_report'),
+    path('executive/', views.executive_analytics_view, name='executive_analytics'),
 ]
+

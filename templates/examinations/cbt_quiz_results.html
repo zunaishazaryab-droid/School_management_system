@@ -1,0 +1,98 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <a href="{% url 'examinations:cbt_list' %}" style="color: var(--text-muted); text-decoration: none; font-size: 13px;">← Back to Assessments</a>
+            <span style="color: var(--text-muted);">/</span>
+            <span style="font-size: 13px; color: var(--text-muted);">{{ quiz.class_room.name }}</span>
+        </div>
+        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin: 0;">📊 Assessment Cohort Results: {{ quiz.title }}</h1>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'examinations:cbt_take' quiz.id %}" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px;">
+            <span>✍️</span> Take Test
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <div class="stat-card" style="background: var(--card-bg); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--card-border); display: flex; align-items: center; gap: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 130, 246, 0.12); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 22px;">👥</div>
+        <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Total Submissions</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--text-main);">{{ attempts.count }}</div>
+        </div>
+    </div>
+    <div class="stat-card" style="background: var(--card-bg); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--card-border); display: flex; align-items: center; gap: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 22px;">📈</div>
+        <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Average Class Score</div>
+            <div style="font-size: 24px; font-weight: 800; color: #10b981;">{{ avg_score }}%</div>
+        </div>
+    </div>
+    <div class="stat-card" style="background: var(--card-bg); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--card-border); display: flex; align-items: center; gap: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 22px;">🏆</div>
+        <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Pass Clearance Rate</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--text-main);">{{ pass_rate }}%</div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Ranking Table -->
+<div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 20px;">
+    <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>🏅</span> Student Score Rankings & Auto-Graded Records
+    </h3>
+    <div style="overflow-x: auto;">
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-main); text-align: left; font-size: 12px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--card-border);">
+                    <th style="padding: 12px 14px;">Rank</th>
+                    <th style="padding: 12px 14px;">Student Name</th>
+                    <th style="padding: 12px 14px;">Class & Roll</th>
+                    <th style="padding: 12px 14px;">Score Obtained</th>
+                    <th style="padding: 12px 14px;">Percentage</th>
+                    <th style="padding: 12px 14px;">Status</th>
+                    <th style="padding: 12px 14px; text-align: right;">Submitted At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in attempts %}
+                <tr style="border-bottom: 1px solid var(--card-border); font-size: 13.5px;">
+                    <td style="padding: 14px; font-weight: 800; color: {% if forloop.counter == 1 %}#f59e0b{% elif forloop.counter == 2 %}#94a3b8{% elif forloop.counter == 3 %}#b45309{% else %}var(--text-muted){% endif %};">
+                        #{{ forloop.counter }}
+                    </td>
+                    <td style="padding: 14px; font-weight: 700; color: var(--text-main);">{{ a.student.get_full_name }}</td>
+                    <td style="padding: 14px; color: var(--text-muted);">{{ a.student.current_class.name }} (Roll #{{ a.student.roll_number }})</td>
+                    <td style="padding: 14px; font-weight: 700; color: #10b981;">{{ a.score_obtained }} / {{ quiz.total_marks }}</td>
+                    <td style="padding: 14px; font-weight: 800; color: var(--text-main);">{{ a.percentage }}%</td>
+                    <td style="padding: 14px;">
+                        {% if a.is_passed %}
+                            <span class="badge" style="background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">✓ PASSED</span>
+                        {% else %}
+                            <span class="badge" style="background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">✕ FAILED</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px; text-align: right; color: var(--text-muted); font-size: 12px;">
+                        {{ a.submitted_at|date:"M d, Y H:i" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="padding: 30px; text-align: center; color: var(--text-muted);">
+                        No students have taken this assessment yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

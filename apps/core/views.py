@@ -376,3 +376,109 @@ def database_download_view(request):
         response = HttpResponse(data, content_type='application/json')
         response['Content-Disposition'] = f'attachment; filename="school_data_dump_{timestamp}.json"'
         return response
+
+
+from .models import Branch
+
+
+@login_required
+@admin_required
+def campus_list_view(request):
+    """Multi-campus and branch management hub."""
+    branches = Branch.objects.all()
+    if not branches.exists():
+        Branch.objects.create(
+            name="Main Campus (Johar Town)",
+            code="GXV-MC01",
+            campus_type=Branch.CampusType.MAIN,
+            address="Plot 14-B, Main Boulevard, Johar Town",
+            city="Lahore",
+            phone="+92 42 35291001",
+            email="main@genxvision.edu.pk",
+            principal_name="Prof. Dr. Tariq Mahmood",
+            is_main_branch=True,
+            is_active=True
+        )
+        Branch.objects.create(
+            name="Junior & Primary Wing",
+            code="GXV-JW02",
+            campus_type=Branch.CampusType.JUNIOR,
+            address="Street 4, Phase 2, Johar Town",
+            city="Lahore",
+            phone="+92 42 35291002",
+            email="junior@genxvision.edu.pk",
+            principal_name="Mrs. Ayesha Malik",
+            is_main_branch=False,
+            is_active=True
+        )
+        branches = Branch.objects.all()
+
+    if request.method == 'POST' and 'create_branch' in request.POST:
+        name = request.POST.get('name')
+        code = request.POST.get('code')
+        ctype = request.POST.get('campus_type', Branch.CampusType.MAIN)
+        addr = request.POST.get('address', '')
+        city = request.POST.get('city', 'Lahore')
+        phone = request.POST.get('phone', '')
+        email = request.POST.get('email', '')
+        pname = request.POST.get('principal_name', '')
+
+        Branch.objects.create(
+            name=name, code=code, campus_type=ctype, address=addr, city=city,
+            phone=phone, email=email, principal_name=pname, is_active=True
+        )
+        messages.success(request, f"New Campus '{name}' created successfully!")
+        return redirect('core:campus_list')
+
+    active_branch_id = request.session.get('active_branch_id')
+    active_branch = Branch.objects.filter(id=active_branch_id).first() if active_branch_id else branches.filter(is_main_branch=True).first()
+
+    return render(request, 'core/campus_list.html', {
+        'branches': branches,
+        'active_branch': active_branch,
+        'page_title': 'Multi-Campus & Branch Management'
+    })
+
+
+@login_required
+def switch_campus_view(request, branch_id):
+    """Switch active working branch in current session."""
+    branch = get_object_or_404(Branch, id=branch_id)
+    request.session['active_branch_id'] = branch.id
+    request.session['active_branch_name'] = branch.name
+    messages.success(request, f"Switched working campus context to: '{branch.name}'")
+    return redirect(request.META.get('HTTP_REFERER', 'core:dashboard'))
+
+
+def verify_badge_view(request, token):
+    """Public / Gatekeeper verification portal for QR security badges."""
+    # Lookup by admission number or roll number or teacher employee ID
+    student = Student.objects.filter(
+        Q(admission_number__iexact=token) | Q(roll_number__iexact=token)
+    ).select_related('current_class', 'current_section').first()
+
+    teacher = None
+    if not student:
+        teacher = Teacher.objects.filter(
+            Q(employee_id__iexact=token) | Q(user__username__iexact=token)
+        ).select_related('user').first()
+
+    is_verified = (student is not None or teacher is not None)
+
+    return render(request, 'core/verify_badge.html', {
+        'token': token,
+        'is_verified': is_verified,
+        'student': student,
+        'teacher': teacher,
+        'verified_at': timezone.now(),
+        'page_title': f"Identity Badge Verification - {token}"
+    })
+
+
+@login_required
+def badge_scanner_view(request):
+    """Interactive gatekeeper scanner interface for camera / manual barcode scan."""
+    return render(request, 'core/badge_scanner.html', {
+        'page_title': 'Security Gatekeeper QR & Barcode Scanner'
+    })
+

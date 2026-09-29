@@ -1,0 +1,66 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">🪪 Gatekeeper QR & ID Badge Scanner</h1>
+        <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">Scan PVC student identity badges or enter token to instantly verify enrollment status, parent emergency contact, and authorized campus entry.</p>
+    </div>
+</div>
+
+<div class="dashboard-grid" style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px;">
+    <!-- Scanner / Input Card -->
+    <div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 24px;">
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>📷</span> Camera Barcode / Token Scanner
+        </h3>
+        
+        <div style="background: #0f172a; border-radius: 12px; height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; border: 2px dashed #334155; margin-bottom: 20px;">
+            <div style="font-size: 36px; margin-bottom: 6px;">📷</div>
+            <div style="font-size: 13px; font-weight: 600; color: #f8fafc;">Hardware Barcode / Camera Stream Active</div>
+            <div style="font-size: 11px; color: #64748b;">Point scanner gun or camera at badge QR code</div>
+        </div>
+
+        <form id="scanForm" onsubmit="event.preventDefault(); verifyToken();">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label" style="font-weight: 700; font-size: 13px; margin-bottom: 6px; display: block;">Enter Admission # / Token / Scan Code</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="tokenInput" class="form-control" placeholder="e.g. STU-2026-001" required style="flex: 1; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px; font-family: monospace; font-weight: 700;">
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; font-weight: 700;">Verify Badge</button>
+                </div>
+            </div>
+        </form>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+            <span style="font-size: 11.5px; color: var(--text-muted); width: 100%;">Quick Test Badges:</span>
+            <button onclick="testToken('STU-2026-001')" class="btn btn-sm btn-secondary" style="font-size: 11px;">STU-2026-001</button>
+            <button onclick="testToken('STU-2026-002')" class="btn btn-sm btn-secondary" style="font-size: 11px;">STU-2026-002</button>
+            <button onclick="testToken('EMP-2026-001')" class="btn btn-sm btn-secondary" style="font-size: 11px;">EMP-2026-001</button>
+        </div>
+    </div>
+
+    <!-- Live Result Preview Frame -->
+    <div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 24px; min-height: 380px;">
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>🛡️</span> Security Validation Response
+        </h3>
+        <iframe id="verifyFrame" src="/verify-badge/STU-2026-001/" style="width: 100%; height: 420px; border: 1px solid var(--card-border); border-radius: 12px; background: #0f172a;"></iframe>
+    </div>
+</div>
+
+<script>
+function verifyToken() {
+    const token = document.getElementById('tokenInput').value.trim();
+    if(token) {
+        document.getElementById('verifyFrame').src = '/verify-badge/' + encodeURIComponent(token) + '/';
+    }
+}
+function testToken(tok) {
+    document.getElementById('tokenInput').value = tok;
+    verifyToken();
+}
+</script>
+{% endblock %}

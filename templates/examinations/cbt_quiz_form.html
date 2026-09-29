@@ -1,0 +1,56 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 24px;">
+    <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">➕ Create Online CBT Assessment</h1>
+    <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">Configure assessment parameters, select target class and subject, and define test duration.</p>
+</div>
+
+<div class="card" style="background: var(--card-bg); max-width: 680px; margin: 0 auto; border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 28px; box-shadow: var(--shadow-sm);">
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Assessment Title</label>
+            <input type="text" name="title" required class="form-control" placeholder="e.g. Mathematics Chapter 3 Quadratic Equations CBT Test" style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Target Class</label>
+                <select name="class_room" required class="form-control" style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;">
+                    {% for c in classes %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Subject</label>
+                <select name="subject" required class="form-control" style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;">
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}">{{ s.name }} ({{ s.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Duration (Minutes)</label>
+                <input type="number" name="duration_minutes" required value="30" min="5" max="180" class="form-control" style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;">
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; display: block;">Passing Percentage (%)</label>
+                <input type="number" name="passing_percentage" required value="40.00" min="10" max="100" class="form-control" style="width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: var(--radius-sm); font-size: 14px;">
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <a href="{% url 'examinations:cbt_list' %}" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 700;">Create & Add Questions →</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
