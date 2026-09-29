@@ -26,20 +26,44 @@ def class_list_view(request):
             if class_form.is_valid():
                 c = class_form.save()
                 ActivityLog.log_activity(request.user, 'CREATE', 'Academics', f"Added Class {c.name}", request.META.get('REMOTE_ADDR'))
-                messages.success(request, f"Class {c.name} added successfully!")
+                messages.success(request, f"Class '{c.name}' added successfully!")
                 return redirect('academics:class_list')
             else:
-                messages.error(request, "Failed to create class. Check errors below.")
+                messages.error(request, "Failed to create class. Please check the entered data.")
+
+        elif action == 'edit_class':
+            class_id = request.POST.get('class_id')
+            class_obj = get_object_or_404(ClassRoom, pk=class_id)
+            edit_form = ClassRoomForm(request.POST, instance=class_obj)
+            if edit_form.is_valid():
+                c = edit_form.save()
+                ActivityLog.log_activity(request.user, 'UPDATE', 'Academics', f"Updated Class {c.name}", request.META.get('REMOTE_ADDR'))
+                messages.success(request, f"Class '{c.name}' updated successfully!")
+                return redirect('academics:class_list')
+            else:
+                messages.error(request, "Failed to update class. Please check the entered data.")
 
         elif action == 'add_section':
             section_form = SectionForm(request.POST)
             if section_form.is_valid():
                 s = section_form.save()
                 ActivityLog.log_activity(request.user, 'CREATE', 'Academics', f"Added Section {s}", request.META.get('REMOTE_ADDR'))
-                messages.success(request, f"Section {s} added successfully!")
+                messages.success(request, f"Section '{s.name}' added to {s.class_room.name} successfully!")
                 return redirect('academics:class_list')
             else:
-                messages.error(request, "Failed to create section. Check errors below.")
+                messages.error(request, "Failed to create section. Please check the entered data.")
+
+        elif action == 'edit_section':
+            section_id = request.POST.get('section_id')
+            section_obj = get_object_or_404(Section, pk=section_id)
+            edit_sec_form = SectionForm(request.POST, instance=section_obj)
+            if edit_sec_form.is_valid():
+                s = edit_sec_form.save()
+                ActivityLog.log_activity(request.user, 'UPDATE', 'Academics', f"Updated Section {s}", request.META.get('REMOTE_ADDR'))
+                messages.success(request, f"Section '{s.name}' updated successfully!")
+                return redirect('academics:class_list')
+            else:
+                messages.error(request, "Failed to update section. Please check the entered data.")
 
         elif action == 'add_year':
             year_form = AcademicYearForm(request.POST)
@@ -66,12 +90,29 @@ def class_delete_view(request, pk):
     class_obj = get_object_or_404(ClassRoom, pk=pk)
     if request.method == 'POST':
         if class_obj.students.exists():
-            messages.error(request, f"Cannot delete {class_obj.name} because students are currently enrolled.")
+            messages.error(request, f"Cannot delete '{class_obj.name}' because students are currently enrolled in it.")
+        elif class_obj.sections.filter(students__isnull=False).exists():
+            messages.error(request, f"Cannot delete '{class_obj.name}' because one of its sections has enrolled students.")
         else:
             name = class_obj.name
             class_obj.delete()
             ActivityLog.log_activity(request.user, 'DELETE', 'Academics', f"Deleted Class {name}", request.META.get('REMOTE_ADDR'))
-            messages.success(request, f"Class {name} deleted successfully.")
+            messages.success(request, f"Class '{name}' deleted successfully.")
+    return redirect('academics:class_list')
+
+
+@login_required
+@coordinator_required
+def section_delete_view(request, pk):
+    section_obj = get_object_or_404(Section, pk=pk)
+    if request.method == 'POST':
+        if section_obj.students.exists():
+            messages.error(request, f"Cannot delete Section '{section_obj.name}' because students are currently enrolled in it.")
+        else:
+            sec_name = f"{section_obj.class_room.name} - Section {section_obj.name}"
+            section_obj.delete()
+            ActivityLog.log_activity(request.user, 'DELETE', 'Academics', f"Deleted Section {sec_name}", request.META.get('REMOTE_ADDR'))
+            messages.success(request, f"Section '{sec_name}' deleted successfully.")
     return redirect('academics:class_list')
 
 

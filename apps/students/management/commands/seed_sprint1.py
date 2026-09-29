@@ -33,7 +33,12 @@ class Command(BaseCommand):
             {'name': 'Prep', 'code': 'PREP', 'level': 2, 'sections': ['A', 'B']},
             {'name': 'Class 1', 'code': 'C1', 'level': 3, 'sections': ['A', 'B']},
             {'name': 'Class 2', 'code': 'C2', 'level': 4, 'sections': ['A', 'B']},
+            {'name': 'Class 3', 'code': 'C3', 'level': 5, 'sections': ['A', 'B']},
+            {'name': 'Class 4', 'code': 'C4', 'level': 6, 'sections': ['A', 'B']},
             {'name': 'Class 5', 'code': 'C5', 'level': 7, 'sections': ['A', 'B']},
+            {'name': 'Class 6', 'code': 'C6', 'level': 8, 'sections': ['A', 'B']},
+            {'name': 'Class 7', 'code': 'C7', 'level': 9, 'sections': ['A', 'B']},
+            {'name': 'Class 8', 'code': 'C8', 'level': 10, 'sections': ['A', 'B']},
             {'name': 'Class 9 (Metric)', 'code': 'C9', 'level': 11, 'sections': ['Science-A', 'Computer-B']},
             {'name': 'Class 10 (Metric)', 'code': 'C10', 'level': 12, 'sections': ['Science-A', 'Computer-B']},
         ]

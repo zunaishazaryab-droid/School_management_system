@@ -6,10 +6,10 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Classes & Sections Management</h1>
-        <p class="page-subtitle">Configure academic levels, sections, classroom capacities, and assign class teachers.</p>
+        <p class="page-subtitle">Configure academic levels, sections, student capacities, and assign class teachers.</p>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <button type="button" class="btn btn-outline" onclick="document.getElementById('addSectionModal').style.display='block'">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline" onclick="openAddSectionModal()">
             ➕ Add Section
         </button>
         <button type="button" class="btn btn-primary" onclick="document.getElementById('addClassModal').style.display='block'">
@@ -19,47 +19,84 @@
 </div>
 
 <!-- Classes Grid -->
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-bottom: 30px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; margin-bottom: 30px;">
     {% for cls in classes %}
-    <div class="card" style="margin-bottom: 0;">
-        <div class="card-header" style="background: #f8fafc;">
-            <div>
-                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main);">{{ cls.name }}</h3>
-                <span style="font-size: 12px; color: var(--text-muted);">Code: {{ cls.code }} • Level: {{ cls.numeric_level }}</span>
+    <div class="card" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid var(--primary);">
+        <div>
+            <div class="card-header" style="background: #f8fafc; padding: 14px 18px; border-bottom: 1px solid var(--card-border);">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h3 style="font-size: 17px; font-weight: 700; color: var(--text-main); margin: 0;">{{ cls.name }}</h3>
+                        <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 11px; border-radius: 4px;"
+                                onclick="openEditClassModal('{{ cls.id }}', '{{ cls.name|escapejs }}', '{{ cls.code|escapejs }}', '{{ cls.numeric_level }}', '{{ cls.description|escapejs }}')">
+                            ✏️ Edit
+                        </button>
+                    </div>
+                    <span style="font-size: 12px; color: var(--text-muted);">Code: <strong style="color: var(--text-main);">{{ cls.code }}</strong> • Level: <strong>{{ cls.numeric_level }}</strong></span>
+                </div>
+                <span class="role-badge" style="background: var(--primary-light); color: var(--primary-dark); font-weight: 700;">
+                    👨‍🎓 {{ cls.total_students_count }} Students
+                </span>
             </div>
-            <span class="role-badge" style="background: var(--primary-light);">
-                👨‍🎓 {{ cls.total_students_count }} Students
-            </span>
-        </div>
-        <div class="card-body">
-            <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-light); margin-bottom: 10px;">Sections</h4>
-            {% if cls.sections.all %}
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    {% for sec in cls.sections.all %}
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--card-border);">
-                        <div>
-                            <strong>Section {{ sec.name }}</strong>
-                            <div style="font-size: 11.5px; color: var(--text-muted);">
-                                Teacher: {{ sec.class_teacher.get_full_name|default:"Unassigned" }}
+
+            <div class="card-body" style="padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-light); margin: 0; letter-spacing: 0.5px;">Sections ({{ cls.sections.count }})</h4>
+                    <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 11px;" onclick="openAddSectionForClass('{{ cls.id }}')">
+                        + Add Section
+                    </button>
+                </div>
+
+                {% if cls.sections.all %}
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        {% for sec in cls.sections.all %}
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--card-border);">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <strong style="font-size: 13.5px;">Section {{ sec.name }}</strong>
+                                    <span style="font-size: 11px; padding: 1px 6px; background: #e2e8f0; border-radius: 10px; color: #334155;">
+                                        Cap: {{ sec.capacity }}
+                                    </span>
+                                </div>
+                                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                                    Teacher: <strong>{{ sec.class_teacher.get_full_name|default:"Unassigned" }}</strong>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="font-size: 12px; font-weight: 700; color: var(--primary); margin-right: 4px;">
+                                    {{ sec.enrolled_students_count }} / {{ sec.capacity }}
+                                </span>
+                                <button type="button" title="Edit Section" class="btn btn-outline btn-sm" style="padding: 3px 6px; font-size: 11px;"
+                                        onclick="openEditSectionModal('{{ sec.id }}', '{{ sec.class_room.id }}', '{{ sec.name|escapejs }}', '{{ sec.capacity }}', '{{ sec.class_teacher.id|default:'' }}')">
+                                    ✏️
+                                </button>
+                                <form method="POST" action="{% url 'academics:section_delete' sec.id %}" onsubmit="return confirm('Delete Section {{ sec.name }}?');" style="display: inline; margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" title="Delete Section" class="btn btn-outline btn-sm" style="padding: 3px 6px; font-size: 11px; color: var(--danger); border-color: #fecaca;">
+                                        🗑️
+                                    </button>
+                                </form>
                             </div>
                         </div>
-                        <div style="text-align: right;">
-                            <span style="font-size: 12px; font-weight: 600; color: var(--primary);">
-                                {{ sec.enrolled_students_count }} / {{ sec.capacity }}
-                            </span>
-                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p style="font-size: 12.5px; color: var(--text-light); font-style: italic;">No sections created yet.</p>
-            {% endif %}
+                {% else %}
+                    <div style="padding: 16px; text-align: center; background: #fdf2f8; border-radius: var(--radius-sm); border: 1px dashed #fbcfe8;">
+                        <p style="font-size: 12.5px; color: #9d174d; margin: 0;">No sections created yet for this class.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; pt-2; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-                <a href="{% url 'students:student_list' %}?class_id={{ cls.id }}" class="btn btn-outline btn-sm">
-                    View Students ➔
-                </a>
-                <form method="POST" action="{% url 'academics:class_delete' cls.id %}" onsubmit="return confirm('Are you sure you want to delete this class?');">
+        <div class="card-footer" style="padding: 12px 16px; background: #ffffff; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{% url 'students:student_list' %}?class_id={{ cls.id }}" class="btn btn-outline btn-sm">
+                View Students ➔
+            </a>
+            <div style="display: flex; gap: 6px;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="openEditClassModal('{{ cls.id }}', '{{ cls.name|escapejs }}', '{{ cls.code|escapejs }}', '{{ cls.numeric_level }}', '{{ cls.description|escapejs }}')">
+                    Edit Class
+                </button>
+                <form method="POST" action="{% url 'academics:class_delete' cls.id %}" onsubmit="return confirm('Are you sure you want to delete {{ cls.name }}?');" style="display: inline; margin: 0;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: #fecaca;">Delete</button>
                 </form>
@@ -74,34 +111,34 @@
 </div>
 
 <!-- Modal: Add Class -->
-<div id="addClassModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
-    <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
-            <h3 style="font-size: 18px; font-weight: 700;">Add New Class Level</h3>
-            <button type="button" onclick="document.getElementById('addClassModal').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+<div id="addClassModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(2px); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <h3 style="font-size: 18px; font-weight: 700; margin: 0;">🏫 Add New Class Level</h3>
+            <button type="button" onclick="document.getElementById('addClassModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;">✕</button>
         </div>
         <form method="POST">
             {% csrf_token %}
             <input type="hidden" name="action" value="add_class">
-            <div class="form-group">
-                <label class="form-label">Class Name</label>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label" style="font-weight: 600;">Class Name (e.g. Class 3, Class 6)</label>
                 {{ class_form.name }}
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
                 <div class="form-group">
-                    <label class="form-label">Class Code</label>
+                    <label class="form-label" style="font-weight: 600;">Class Code (e.g. C3, C6)</label>
                     {{ class_form.code }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Numeric Level</label>
+                    <label class="form-label" style="font-weight: 600;">Numeric Level (Order)</label>
                     {{ class_form.numeric_level }}
                 </div>
             </div>
-            <div class="form-group">
-                <label class="form-label">Description</label>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" style="font-weight: 600;">Description</label>
                 {{ class_form.description }}
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
                 <button type="button" class="btn btn-outline" onclick="document.getElementById('addClassModal').style.display='none'">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save Class</button>
             </div>
@@ -109,39 +146,164 @@
     </div>
 </div>
 
+<!-- Modal: Edit Class -->
+<div id="editClassModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(2px); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <h3 style="font-size: 18px; font-weight: 700; margin: 0;">✏️ Edit Class Level</h3>
+            <button type="button" onclick="document.getElementById('editClassModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;">✕</button>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit_class">
+            <input type="hidden" name="class_id" id="edit_class_id">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label" style="font-weight: 600;">Class Name</label>
+                <input type="text" name="name" id="edit_class_name" class="form-control" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600;">Class Code</label>
+                    <input type="text" name="code" id="edit_class_code" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600;">Numeric Level</label>
+                    <input type="number" name="numeric_level" id="edit_class_numeric_level" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" style="font-weight: 600;">Description</label>
+                <textarea name="description" id="edit_class_description" class="form-control" rows="3"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('editClassModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Class</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal: Add Section -->
-<div id="addSectionModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
-    <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
-            <h3 style="font-size: 18px; font-weight: 700;">Add New Section</h3>
-            <button type="button" onclick="document.getElementById('addSectionModal').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+<div id="addSectionModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(2px); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <h3 style="font-size: 18px; font-weight: 700; margin: 0;">➕ Add New Section</h3>
+            <button type="button" onclick="document.getElementById('addSectionModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;">✕</button>
         </div>
         <form method="POST">
             {% csrf_token %}
             <input type="hidden" name="action" value="add_section">
-            <div class="form-group">
-                <label class="form-label">Select Class</label>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label" style="font-weight: 600;">Select Class</label>
                 {{ section_form.class_room }}
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
                 <div class="form-group">
-                    <label class="form-label">Section Name</label>
+                    <label class="form-label" style="font-weight: 600;">Section Name (e.g. A, B, Blue)</label>
                     {{ section_form.name }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Capacity</label>
+                    <label class="form-label" style="font-weight: 600;">Capacity</label>
                     {{ section_form.capacity }}
                 </div>
             </div>
-            <div class="form-group">
-                <label class="form-label">Assign Class Teacher</label>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" style="font-weight: 600;">Assign Class Teacher</label>
                 {{ section_form.class_teacher }}
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
                 <button type="button" class="btn btn-outline" onclick="document.getElementById('addSectionModal').style.display='none'">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save Section</button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Modal: Edit Section -->
+<div id="editSectionModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(2px); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <h3 style="font-size: 18px; font-weight: 700; margin: 0;">✏️ Edit Section</h3>
+            <button type="button" onclick="document.getElementById('editSectionModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;">✕</button>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit_section">
+            <input type="hidden" name="section_id" id="edit_section_id">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label" style="font-weight: 600;">Class Level</label>
+                <select name="class_room" id="edit_section_class_room" class="form-control" required>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600;">Section Name</label>
+                    <input type="text" name="name" id="edit_section_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600;">Capacity</label>
+                    <input type="number" name="capacity" id="edit_section_capacity" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" style="font-weight: 600;">Assign Class Teacher</label>
+                <select name="class_teacher" id="edit_section_teacher" class="form-control">
+                    <option value="">---------</option>
+                    {% for t in section_form.fields.class_teacher.queryset %}
+                    <option value="{{ t.id }}">{{ t.get_full_name|default:t.username }} ({{ t.get_role_display }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('editSectionModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Section</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddSectionModal() {
+    document.getElementById('addSectionModal').style.display = 'block';
+}
+
+function openAddSectionForClass(classId) {
+    var sel = document.querySelector('#addSectionModal select[name="class_room"]');
+    if (sel) {
+        sel.value = classId;
+    }
+    document.getElementById('addSectionModal').style.display = 'block';
+}
+
+function openEditClassModal(id, name, code, level, description) {
+    document.getElementById('edit_class_id').value = id;
+    document.getElementById('edit_class_name').value = name;
+    document.getElementById('edit_class_code').value = code;
+    document.getElementById('edit_class_numeric_level').value = level;
+    document.getElementById('edit_class_description').value = description;
+    document.getElementById('editClassModal').style.display = 'block';
+}
+
+function openEditSectionModal(id, classId, name, capacity, teacherId) {
+    document.getElementById('edit_section_id').value = id;
+    document.getElementById('edit_section_class_room').value = classId;
+    document.getElementById('edit_section_name').value = name;
+    document.getElementById('edit_section_capacity').value = capacity;
+    document.getElementById('edit_section_teacher').value = teacherId || '';
+    document.getElementById('editSectionModal').style.display = 'block';
+}
+
+// Close modals on backdrop click
+window.addEventListener('click', function(e) {
+    ['addClassModal', 'editClassModal', 'addSectionModal', 'editSectionModal'].forEach(function(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal && e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+});
+</script>
 {% endblock %}
