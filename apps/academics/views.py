@@ -134,6 +134,18 @@ def subject_list_view(request):
                 ActivityLog.log_activity(request.user, 'CREATE', 'Academics', f"Created Subject {s.name}", request.META.get('REMOTE_ADDR'))
                 messages.success(request, f"Subject {s.name} created successfully!")
                 return redirect('academics:subject_list')
+        elif action == 'edit_subject':
+            subject_id = request.POST.get('subject_id')
+            subject_obj = get_object_or_404(Subject, pk=subject_id)
+            edit_form = SubjectForm(request.POST, instance=subject_obj)
+            if edit_form.is_valid():
+                s = edit_form.save()
+                ActivityLog.log_activity(request.user, 'UPDATE', 'Academics', f"Updated Subject {s.name}", request.META.get('REMOTE_ADDR'))
+                messages.success(request, f"Subject '{s.name}' updated successfully!")
+                return redirect('academics:subject_list')
+            else:
+                messages.error(request, "Failed to update subject. Check entered details.")
+
         elif action == 'assign_subject':
             assign_form = ClassSubjectForm(request.POST)
             if assign_form.is_valid():
@@ -142,6 +154,13 @@ def subject_list_view(request):
                 messages.success(request, f"Subject assigned to {cs.class_room.name} successfully!")
                 return redirect('academics:subject_list')
 
+        elif action == 'delete_assignment':
+            asg_id = request.POST.get('assignment_id')
+            asg_obj = get_object_or_404(ClassSubject, pk=asg_id)
+            asg_obj.delete()
+            messages.success(request, "Subject assignment removed.")
+            return redirect('academics:subject_list')
+
     return render(request, 'academics/subject_list.html', {
         'subjects': subjects,
         'assignments': assignments,
@@ -149,6 +168,18 @@ def subject_list_view(request):
         'assign_form': assign_form,
         'page_title': 'Subjects & Curriculum'
     })
+
+
+@login_required
+@coordinator_required
+def subject_delete_view(request, pk):
+    subject_obj = get_object_or_404(Subject, pk=pk)
+    if request.method == 'POST':
+        name = subject_obj.name
+        subject_obj.delete()
+        ActivityLog.log_activity(request.user, 'DELETE', 'Academics', f"Deleted Subject {name}", request.META.get('REMOTE_ADDR'))
+        messages.success(request, f"Subject '{name}' deleted successfully.")
+    return redirect('academics:subject_list')
 
 
 @login_required

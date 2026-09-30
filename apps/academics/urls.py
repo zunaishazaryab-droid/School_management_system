@@ -8,6 +8,7 @@ urlpatterns = [
     path('classes/<int:pk>/delete/', views.class_delete_view, name='class_delete'),
     path('sections/<int:pk>/delete/', views.section_delete_view, name='section_delete'),
     path('subjects/', views.subject_list_view, name='subject_list'),
+    path('subjects/<int:pk>/delete/', views.subject_delete_view, name='subject_delete'),
     path('timetable/', views.timetable_view, name='timetable'),
     path('timetable/slot/<int:pk>/delete/', views.timetable_entry_delete_view, name='timetable_delete_slot'),
     path('timetable/period/<int:pk>/delete/', views.period_delete_view, name='period_delete'),
