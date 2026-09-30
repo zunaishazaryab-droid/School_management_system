@@ -10,5 +10,6 @@ urlpatterns = [
     path('subjects/', views.subject_list_view, name='subject_list'),
     path('timetable/', views.timetable_view, name='timetable'),
     path('timetable/slot/<int:pk>/delete/', views.timetable_entry_delete_view, name='timetable_delete_slot'),
+    path('timetable/period/<int:pk>/delete/', views.period_delete_view, name='period_delete'),
     path('api/sections/<int:class_id>/', views.api_get_sections, name='api_sections'),
 ]

@@ -255,8 +255,32 @@ def timetable_view(request):
         period_form = PeriodForm(request.POST)
         if period_form.is_valid():
             p = period_form.save()
+            ActivityLog.log_activity(request.user, 'CREATE', 'Academics', f"Created Period {p.name}", request.META.get('REMOTE_ADDR'))
             messages.success(request, f"Period '{p.name}' created.")
             return redirect(request.get_full_path())
+        else:
+            messages.error(request, "Failed to create period. Check entered details.")
+
+    elif request.method == 'POST' and 'edit_period' in request.POST:
+        period_id = request.POST.get('period_id')
+        p_obj = get_object_or_404(Period, pk=period_id)
+        period_form = PeriodForm(request.POST, instance=p_obj)
+        if period_form.is_valid():
+            p = period_form.save()
+            ActivityLog.log_activity(request.user, 'UPDATE', 'Academics', f"Updated Period {p.name}", request.META.get('REMOTE_ADDR'))
+            messages.success(request, f"Period '{p.name}' updated successfully.")
+            return redirect(request.get_full_path())
+        else:
+            messages.error(request, "Failed to update period. Check entered details.")
+
+    elif request.method == 'POST' and 'delete_period' in request.POST:
+        period_id = request.POST.get('period_id')
+        p_obj = get_object_or_404(Period, pk=period_id)
+        p_name = p_obj.name
+        p_obj.delete()
+        ActivityLog.log_activity(request.user, 'DELETE', 'Academics', f"Deleted Period {p_name}", request.META.get('REMOTE_ADDR'))
+        messages.success(request, f"Period '{p_name}' deleted.")
+        return redirect(request.get_full_path())
 
     # Build weekly grid matrix [Day][Period] -> Entry
     grid_matrix = []
@@ -314,4 +338,19 @@ def timetable_entry_delete_view(request, pk):
         entry.delete()
         messages.success(request, "Timetable slot cleared.")
     return redirect(f"/academics/timetable/?mode=class&class_room={cl_id}&section={sec_id}")
+
+
+@login_required
+@coordinator_required
+def period_delete_view(request, pk):
+    """Delete a period"""
+    from .models import Period
+    period_obj = get_object_or_404(Period, pk=pk)
+    if request.method == 'POST':
+        name = period_obj.name
+        period_obj.delete()
+        ActivityLog.log_activity(request.user, 'DELETE', 'Academics', f"Deleted Period {name}", request.META.get('REMOTE_ADDR'))
+        messages.success(request, f"Period '{name}' deleted successfully.")
+    return redirect('academics:timetable')
+
 

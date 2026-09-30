@@ -3,20 +3,20 @@
 {% block title %}Class & Teacher Timetable - School ERP{% endblock %}
 
 {% block content %}
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
     <div>
         <h1 class="page-title">⏰ Class & Teacher Timetable Scheduler</h1>
-        <p class="page-subtitle">Manage class schedules, periods, subject allocations and teacher workloads with conflict validation</p>
+        <p class="page-subtitle">Configure custom period timings, subject allocations, teacher assignments, and weekly class schedules.</p>
     </div>
-    <div style="display: flex; gap: 10px;">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button onclick="window.print()" class="btn btn-outline">
             🖨️ Print Timetable
         </button>
-        <button type="button" class="btn btn-outline" onclick="document.getElementById('addPeriodModal').style.display='block'">
-            ⚙️ Period Setup
+        <button type="button" class="btn btn-outline" onclick="openPeriodManagerModal()">
+            ⚙️ Manage Periods & Timings
         </button>
-        <button type="button" class="btn btn-primary" onclick="document.getElementById('addSlotModal').style.display='block'">
-            + Assign Slot
+        <button type="button" class="btn btn-primary" onclick="openAddSlotModal('', '')">
+            + Assign Timetable Slot
         </button>
     </div>
 </div>
@@ -38,7 +38,7 @@
             </div>
 
             <!-- Filters -->
-            <form method="GET" style="display: flex; gap: 10px; align-items: center;">
+            <form method="GET" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <input type="hidden" name="mode" value="{{ view_mode }}">
                 
                 {% if view_mode == 'class' %}
@@ -51,7 +51,7 @@
 
                 {% if selected_class %}
                 <label style="font-size: 13px; font-weight: 600;">Section:</label>
-                <select name="section" class="form-control" style="width: 140px;" onchange="this.form.submit()">
+                <select name="section" class="form-control" style="width: 150px;" onchange="this.form.submit()">
                     {% for sec in selected_class.sections.all %}
                     <option value="{{ sec.id }}" {% if selected_section and selected_section.id == sec.id %}selected{% endif %}>Section {{ sec.name }}</option>
                     {% endfor %}
@@ -75,8 +75,8 @@
 
 <!-- Timetable Grid Card -->
 <div class="card">
-    <div class="card-header" style="background: #f8fafc; border-bottom: 1px solid var(--card-border);">
-        <div class="card-title" style="font-size: 15px;">
+    <div class="card-header" style="background: #f8fafc; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-title" style="font-size: 15px; margin: 0;">
             {% if view_mode == 'class' and selected_class %}
             <span>📅 Weekly Schedule for <strong>{{ selected_class.name }}</strong> (Section {{ selected_section.name }})</span>
             {% elif view_mode == 'teacher' and selected_teacher %}
@@ -85,6 +85,9 @@
             <span>Weekly Timetable Schedule</span>
             {% endif %}
         </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="openPeriodManagerModal()" style="font-size: 12px;">
+            ⚙️ Edit Period Timings
+        </button>
     </div>
     <div class="card-body" style="padding: 0;">
         <div class="table-container">
@@ -94,8 +97,14 @@
                         <th style="padding: 12px 14px; text-align: left; width: 110px;">Day</th>
                         {% for p in periods %}
                         <th style="padding: 10px 12px; text-align: center; border-left: 1px solid rgba(255,255,255,0.1);">
-                            <div style="font-weight: 700;">{{ p.name }}</div>
-                            <div style="font-size: 11px; opacity: 0.8;">{{ p.start_time|time:"g:i A" }} - {{ p.end_time|time:"g:i A" }}</div>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <span style="font-weight: 700;">{{ p.name }}</span>
+                                <button type="button" title="Edit Period" onclick="openEditPeriodModal('{{ p.id }}', '{{ p.name|escapejs }}', '{{ p.period_number }}', '{{ p.start_time|time:'H:i' }}', '{{ p.end_time|time:'H:i' }}', {% if p.is_break %}true{% else %}false{% endif %})" 
+                                        style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:11px; padding:0 2px;">
+                                    ✏️
+                                </button>
+                            </div>
+                            <div style="font-size: 11px; opacity: 0.85; margin-top: 2px;">{{ p.start_time|time:"g:i A" }} - {{ p.end_time|time:"g:i A" }}</div>
                         </th>
                         {% endfor %}
                     </tr>
@@ -109,11 +118,11 @@
                         {% for cell in day.periods %}
                         <td style="padding: 8px 10px; text-align: center; border-left: 1px solid var(--card-border); vertical-align: top; {% if cell.is_break %}background: #fffbeb;{% endif %}">
                             {% if cell.is_break %}
-                            <div style="font-weight: 700; color: #b45309; font-size: 11.5px; padding: 10px 0;">
+                            <div style="font-weight: 700; color: #b45309; font-size: 11.5px; padding: 12px 0;">
                                 ☕ RECESS / BREAK
                             </div>
                             {% elif cell.entry %}
-                            <div style="background: #eff6ff; border: 1px solid var(--primary-border); border-radius: 6px; padding: 8px 6px;">
+                            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 6px; text-align: left;">
                                 <div style="font-weight: 800; color: var(--primary); font-size: 12.5px;">
                                     {{ cell.entry.subject.name }}
                                 </div>
@@ -128,18 +137,27 @@
                                 {% endif %}
 
                                 {% if cell.entry.room_number %}
-                                <div style="font-size: 10.5px; color: #64748b;">📍 {{ cell.entry.room_number }}</div>
+                                <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;">📍 {{ cell.entry.room_number }}</div>
                                 {% endif %}
 
-                                {% if view_mode == 'class' %}
-                                <form action="{% url 'academics:timetable_delete_slot' cell.entry.pk %}" method="POST" style="margin-top: 4px;" onsubmit="return confirm('Remove slot?');">
-                                    {% csrf_token %}
-                                    <button type="submit" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10.5px;">✕ Remove</button>
-                                </form>
-                                {% endif %}
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 4px; border-top: 1px dashed #dbeafe;">
+                                    <button type="button" class="btn btn-outline btn-sm" style="padding: 1px 6px; font-size: 10px;"
+                                            onclick="openEditSlotModal('{{ day.day_code }}', '{{ cell.period.id }}', '{{ cell.entry.subject.id }}', '{{ cell.entry.teacher.id|default:'' }}', '{{ cell.entry.room_number|escapejs }}')">
+                                        ✏️ Edit
+                                    </button>
+                                    <form action="{% url 'academics:timetable_delete_slot' cell.entry.pk %}" method="POST" style="margin: 0;" onsubmit="return confirm('Clear this slot?');">
+                                        {% csrf_token %}
+                                        <button type="submit" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:10.5px; font-weight: 600;">✕ Clear</button>
+                                    </form>
+                                </div>
                             </div>
                             {% else %}
-                            <div style="color: #cbd5e1; font-size: 12px; padding: 12px 0;">-- Free --</div>
+                            <div style="padding: 12px 0;">
+                                <button type="button" class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 11px; color: #94a3b8; border-color: #e2e8f0; width: 100%;"
+                                        onclick="openAddSlotModal('{{ day.day_code }}', '{{ cell.period.id }}')">
+                                    + Assign
+                                </button>
+                            </div>
                             {% endif %}
                         </td>
                         {% endfor %}
@@ -151,12 +169,12 @@
     </div>
 </div>
 
-<!-- Add Timetable Slot Modal -->
-<div id="addSlotModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
-    <div style="background: #ffffff; width: 100%; max-width: 560px; border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-lg); margin: 60px auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h2 style="font-size: 17px; font-weight: 700; margin: 0;">+ Assign Timetable Slot</h2>
-            <button type="button" onclick="document.getElementById('addSlotModal').style.display='none'" style="background:none; border:none; font-size:18px; cursor:pointer;">✕</button>
+<!-- Modal: Assign / Edit Timetable Slot -->
+<div id="addSlotModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(2px); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="background: #ffffff; width: 100%; max-width: 540px; border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); margin: 20px auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <h2 id="slotModalTitle" style="font-size: 18px; font-weight: 700; margin: 0;">+ Assign Timetable Slot</h2>
+            <button type="button" onclick="document.getElementById('addSlotModal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#64748b;">✕</button>
         </div>
 
         <form method="POST">
@@ -214,24 +232,79 @@
     </div>
 </div>
 
-<!-- Add Period Modal -->
-<div id="addPeriodModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
-    <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-lg); margin: 60px auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h2 style="font-size: 17px; font-weight: 700; margin: 0;">⚙️ Period Slot Setup</h2>
-            <button type="button" onclick="document.getElementById('addPeriodModal').style.display='none'" style="background:none; border:none; font-size:18px; cursor:pointer;">✕</button>
+<!-- Modal: Period Timings Management (List, Add, Edit, Delete) -->
+<div id="managePeriodsModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(2px); z-index: 1000; overflow-y: auto; padding: 40px 16px;">
+    <div style="background: #ffffff; width: 100%; max-width: 680px; border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); margin: 20px auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <div>
+                <h2 style="font-size: 18px; font-weight: 700; margin: 0;">⚙️ Custom Timetable Periods Setup</h2>
+                <p style="font-size: 12.5px; color: var(--text-muted); margin: 2px 0 0 0;">Customize period names, order, start times, and end times to match your school bell timings.</p>
+            </div>
+            <button type="button" onclick="document.getElementById('managePeriodsModal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#64748b;">✕</button>
         </div>
 
-        <form method="POST">
+        <!-- Current Periods Table -->
+        <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #1e293b;">Active Period Timings:</h3>
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 24px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #475569;">
+                        <th style="padding: 8px 12px; text-align: center; width: 50px;">#</th>
+                        <th style="padding: 8px 12px; text-align: left;">Period Name</th>
+                        <th style="padding: 8px 12px; text-align: center;">Start Time</th>
+                        <th style="padding: 8px 12px; text-align: center;">End Time</th>
+                        <th style="padding: 8px 12px; text-align: center;">Type</th>
+                        <th style="padding: 8px 12px; text-align: right; width: 110px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in periods %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 12px; text-align: center; font-weight: 700;">{{ p.period_number }}</td>
+                        <td style="padding: 8px 12px; font-weight: 600; color: var(--text-main);">{{ p.name }}</td>
+                        <td style="padding: 8px 12px; text-align: center;">{{ p.start_time|time:"g:i A" }}</td>
+                        <td style="padding: 8px 12px; text-align: center;">{{ p.end_time|time:"g:i A" }}</td>
+                        <td style="padding: 8px 12px; text-align: center;">
+                            {% if p.is_break %}
+                            <span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">Break</span>
+                            {% else %}
+                            <span style="background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">Lesson</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 8px 12px; text-align: right;">
+                            <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 6px; font-size: 11px;"
+                                    onclick="openEditPeriodModal('{{ p.id }}', '{{ p.name|escapejs }}', '{{ p.period_number }}', '{{ p.start_time|time:'H:i' }}', '{{ p.end_time|time:'H:i' }}', {% if p.is_break %}true{% else %}false{% endif %})">
+                                ✏️ Edit
+                            </button>
+                            <form method="POST" action="{% url 'academics:period_delete' p.id %}" onsubmit="return confirm('Delete period {{ p.name }}?');" style="display: inline; margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline btn-sm" style="padding: 2px 6px; font-size: 11px; color: var(--danger); border-color: #fecaca;">
+                                    🗑️
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding: 16px; text-align: center; color: var(--text-muted);">No periods configured. Add your first period below.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add New Period Form Inside Hub -->
+        <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #1e293b;">➕ Add New Period:</h3>
+        <form method="POST" style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
             {% csrf_token %}
             <input type="hidden" name="add_period" value="1">
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px;">
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block;">Period Name *</label>
+                    <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block;">Period Name (e.g. Period 1, Zero Period, Assembly)</label>
                     {{ period_form.name }}
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block;">Order # *</label>
+                    <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block;">Order #</label>
                     {{ period_form.period_number }}
                 </div>
             </div>
@@ -247,17 +320,114 @@
                 </div>
             </div>
 
-            <div style="margin-bottom: 18px;">
-                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; margin: 0;">
                     {{ period_form.is_break }} Is Recess / Lunch Break
                 </label>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-outline" onclick="document.getElementById('addPeriodModal').style.display='none'">Cancel</button>
-                <button type="submit" class="btn btn-primary">Create Period</button>
+                <button type="submit" class="btn btn-primary btn-sm" style="padding: 8px 18px;">+ Save New Period</button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Modal: Edit Specific Period -->
+<div id="editPeriodModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(2px); z-index: 1010; overflow-y: auto; padding: 40px 16px;">
+    <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); margin: 40px auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <h2 style="font-size: 18px; font-weight: 700; margin: 0;">✏️ Edit Period Timing</h2>
+            <button type="button" onclick="document.getElementById('editPeriodModal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#64748b;">✕</button>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="edit_period" value="1">
+            <input type="hidden" name="period_id" id="edit_p_id">
+            
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block;">Period Name *</label>
+                    <input type="text" name="name" id="edit_p_name" class="form-control" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block;">Order # *</label>
+                    <input type="number" name="period_number" id="edit_p_number" class="form-control" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block;">Start Time *</label>
+                    <input type="time" name="start_time" id="edit_p_start" class="form-control" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block;">End Time *</label>
+                    <input type="time" name="end_time" id="edit_p_end" class="form-control" required>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 18px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                    <input type="checkbox" name="is_break" id="edit_p_break"> Is Recess / Lunch Break
+                </label>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('editPeriodModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Period</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openPeriodManagerModal() {
+    document.getElementById('managePeriodsModal').style.display = 'block';
+}
+
+function openEditPeriodModal(id, name, num, start, end, isBreak) {
+    document.getElementById('edit_p_id').value = id;
+    document.getElementById('edit_p_name').value = name;
+    document.getElementById('edit_p_number').value = num;
+    document.getElementById('edit_p_start').value = start;
+    document.getElementById('edit_p_end').value = end;
+    document.getElementById('edit_p_break').checked = isBreak;
+    document.getElementById('editPeriodModal').style.display = 'block';
+}
+
+function openAddSlotModal(day, periodId) {
+    document.getElementById('slotModalTitle').innerText = '+ Assign Timetable Slot';
+    var daySelect = document.querySelector('#addSlotModal select[name="day_of_week"]');
+    var periodSelect = document.querySelector('#addSlotModal select[name="period"]');
+    if (day && daySelect) daySelect.value = day;
+    if (periodId && periodSelect) periodSelect.value = periodId;
+    document.getElementById('addSlotModal').style.display = 'block';
+}
+
+function openEditSlotModal(day, periodId, subjectId, teacherId, room) {
+    document.getElementById('slotModalTitle').innerText = '✏️ Edit Timetable Slot';
+    var daySelect = document.querySelector('#addSlotModal select[name="day_of_week"]');
+    var periodSelect = document.querySelector('#addSlotModal select[name="period"]');
+    var subjectSelect = document.querySelector('#addSlotModal select[name="subject"]');
+    var teacherSelect = document.querySelector('#addSlotModal select[name="teacher"]');
+    var roomInput = document.querySelector('#addSlotModal input[name="room_number"]');
+
+    if (day && daySelect) daySelect.value = day;
+    if (periodId && periodSelect) periodSelect.value = periodId;
+    if (subjectId && subjectSelect) subjectSelect.value = subjectId;
+    if (teacherId && teacherSelect) teacherSelect.value = teacherId;
+    if (roomInput) roomInput.value = room || '';
+
+    document.getElementById('addSlotModal').style.display = 'block';
+}
+
+// Close modals on background backdrop click
+window.addEventListener('click', function(e) {
+    ['addSlotModal', 'managePeriodsModal', 'editPeriodModal'].forEach(function(mId) {
+        var el = document.getElementById(mId);
+        if (el && e.target === el) {
+            el.style.display = 'none';
+        }
+    });
+});
+</script>
 {% endblock %}
