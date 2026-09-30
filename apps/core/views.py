@@ -31,7 +31,9 @@ def dashboard_view(request):
     today = timezone.now().date()
     
     live_student_count = Student.objects.filter(status='ACTIVE').count()
-    live_teacher_count = Teacher.objects.filter(status='ACTIVE').count() or 14
+    teaching_count = Teacher.objects.filter(status='ACTIVE', staff_type=Teacher.StaffType.TEACHING).count()
+    non_teaching_count = Teacher.objects.filter(status='ACTIVE', staff_type=Teacher.StaffType.NON_TEACHING).count()
+    total_staff_count = Teacher.objects.filter(status='ACTIVE').count()
 
     # Monthly fee collections
     month_fees = FeePayment.objects.filter(
@@ -54,7 +56,10 @@ def dashboard_view(request):
     # KPI stats
     stats = {
         'total_students': live_student_count,
-        'total_teachers': live_teacher_count,
+        'total_teachers': teaching_count,
+        'teaching_staff': teaching_count,
+        'non_teaching_staff': non_teaching_count,
+        'total_staff': total_staff_count,
         'today_attendance_rate': 94.5,
         'present_students': live_student_count,
         'absent_students': 0,

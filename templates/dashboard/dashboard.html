@@ -32,16 +32,28 @@
     </div>
 
     <!-- Teaching Faculty -->
-    <div class="kpi-card">
+    <a href="{% url 'teachers:teacher_list' %}?staff_type=TEACHING" class="kpi-card" style="text-decoration: none; color: inherit;">
         <div class="kpi-info">
-            <span class="kpi-label">Teaching Staff</span>
-            <span class="kpi-value">{{ stats.total_teachers }}</span>
-            <span class="kpi-subtext">Qualified faculty members</span>
+            <span class="kpi-label">Teaching Faculty</span>
+            <span class="kpi-value">{{ stats.teaching_staff }}</span>
+            <span class="kpi-subtext">Qualified academic teachers</span>
         </div>
         <div class="kpi-icon-box kpi-icon-cyan">
             👩‍🏫
         </div>
-    </div>
+    </a>
+
+    <!-- Non-Teaching Staff -->
+    <a href="{% url 'teachers:teacher_list' %}?staff_type=NON_TEACHING" class="kpi-card" style="text-decoration: none; color: inherit;">
+        <div class="kpi-info">
+            <span class="kpi-label">Non-Teaching Staff</span>
+            <span class="kpi-value">{{ stats.non_teaching_staff }}</span>
+            <span class="kpi-subtext">Admin, Accounts & Operations</span>
+        </div>
+        <div class="kpi-icon-box kpi-icon-purple">
+            💼
+        </div>
+    </a>
 
     <!-- Today's Attendance -->
     <div class="kpi-card">
