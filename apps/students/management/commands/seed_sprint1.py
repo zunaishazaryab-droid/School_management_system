@@ -72,9 +72,11 @@ class Command(BaseCommand):
 
         # 4. Create Subjects
         subjects_data = [
-            {'name': 'English Literature & Grammar', 'code': 'ENG-101', 'total': 100, 'pass_m': 33, 'elective': False},
+            {'name': 'English A', 'code': 'ENG-A', 'total': 100, 'pass_m': 33, 'elective': False},
+            {'name': 'English B', 'code': 'ENG-B', 'total': 100, 'pass_m': 33, 'elective': False},
+            {'name': 'Urdu A', 'code': 'URD-A', 'total': 100, 'pass_m': 33, 'elective': False},
+            {'name': 'Urdu B', 'code': 'URD-B', 'total': 100, 'pass_m': 33, 'elective': False},
             {'name': 'Mathematics', 'code': 'MATH-101', 'total': 100, 'pass_m': 33, 'elective': False},
-            {'name': 'Urdu Language', 'code': 'URD-101', 'total': 100, 'pass_m': 33, 'elective': False},
             {'name': 'General Science', 'code': 'SCI-101', 'total': 100, 'pass_m': 33, 'elective': False},
             {'name': 'Islamiyat / Ethics', 'code': 'ISL-101', 'total': 50, 'pass_m': 17, 'elective': False},
             {'name': 'Computer Science', 'code': 'CS-101', 'total': 100, 'pass_m': 33, 'elective': True},
