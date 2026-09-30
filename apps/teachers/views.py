@@ -12,7 +12,17 @@ from .forms import TeacherForm, SalaryPaymentForm, StaffLeaveForm
 @login_required
 @coordinator_required
 def teacher_list_view(request):
-    teachers = Teacher.objects.select_related('user').all()
+    all_qs = Teacher.objects.select_related('user').all()
+    
+    total_count = all_qs.count()
+    teaching_count = all_qs.filter(staff_type=Teacher.StaffType.TEACHING).count()
+    non_teaching_count = all_qs.filter(staff_type=Teacher.StaffType.NON_TEACHING).count()
+
+    teachers = all_qs
+    
+    staff_type = request.GET.get('staff_type', '').strip()
+    if staff_type in [Teacher.StaffType.TEACHING, Teacher.StaffType.NON_TEACHING]:
+        teachers = teachers.filter(staff_type=staff_type)
 
     search = request.GET.get('search', '').strip()
     if search:
@@ -21,6 +31,7 @@ def teacher_list_view(request):
             Q(user__last_name__icontains=search) |
             Q(employee_id__icontains=search) |
             Q(department__icontains=search) |
+            Q(designation__icontains=search) |
             Q(phone_number__icontains=search)
         )
 
@@ -36,6 +47,10 @@ def teacher_list_view(request):
         'teachers': teachers,
         'search_query': search,
         'selected_status': status,
+        'selected_staff_type': staff_type,
+        'total_count': total_count,
+        'teaching_count': teaching_count,
+        'non_teaching_count': non_teaching_count,
         'page_title': 'Faculty & Staff Directory'
     })
 
@@ -55,30 +70,35 @@ def teacher_create_view(request):
             user, created = User.objects.get_or_create(username=username, defaults={'email': email})
             user.first_name = first_name
             user.last_name = last_name
-            user.role = User.Role.TEACHER
-            user.set_password('teacher123')
+            
+            teacher = form.save(commit=False)
+            if teacher.staff_type == Teacher.StaffType.NON_TEACHING:
+                user.role = User.Role.ADMIN if form.cleaned_data.get('designation') == Teacher.Designation.ACCOUNTANT else User.Role.COORDINATOR
+            else:
+                user.role = User.Role.TEACHER
+            user.set_password('staff123')
             user.save()
 
-            teacher = form.save(commit=False)
             teacher.user = user
             teacher.save()
 
             ActivityLog.log_activity(
                 request.user, 'CREATE', 'Teachers',
-                f"Added faculty member {teacher.get_full_name()} (ID: {teacher.employee_id})",
+                f"Added staff member {teacher.get_full_name()} (ID: {teacher.employee_id}, {teacher.get_staff_type_display()})",
                 request.META.get('REMOTE_ADDR')
             )
-            messages.success(request, f"Teacher {teacher.get_full_name()} added successfully!")
+            messages.success(request, f"{teacher.get_staff_type_display()} member {teacher.get_full_name()} added successfully!")
             return redirect('teachers:teacher_detail', pk=teacher.pk)
         else:
             messages.error(request, "Please correct the errors in the form.")
     else:
-        form = TeacherForm()
+        initial_type = request.GET.get('type', Teacher.StaffType.TEACHING)
+        form = TeacherForm(initial={'staff_type': initial_type})
 
     return render(request, 'teachers/teacher_form.html', {
         'form': form,
         'is_edit': False,
-        'page_title': 'Add New Faculty Member'
+        'page_title': 'Add New Staff Member'
     })
 
 

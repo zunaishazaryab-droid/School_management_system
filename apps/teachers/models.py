@@ -4,14 +4,29 @@ from decimal import Decimal
 
 
 class Teacher(models.Model):
+    class StaffType(models.TextChoices):
+        TEACHING = 'TEACHING', 'Teaching Faculty'
+        NON_TEACHING = 'NON_TEACHING', 'Non-Teaching Staff'
+
     class Designation(models.TextChoices):
+        # Teaching Designations
         SENIOR_TEACHER = 'SENIOR_TEACHER', 'Senior Teacher'
         JUNIOR_TEACHER = 'JUNIOR_TEACHER', 'Junior Teacher'
         SUBJECT_SPECIALIST = 'SUBJECT_SPECIALIST', 'Subject Specialist'
         PRIMARY_TEACHER = 'PRIMARY_TEACHER', 'Primary School Teacher'
         SPORTS_INSTRUCTOR = 'SPORTS_INSTRUCTOR', 'Sports / Physical Instructor'
+        LAB_INSTRUCTOR = 'LAB_INSTRUCTOR', 'Lab Incharge / Science Instructor'
+
+        # Non-Teaching Designations
+        ACCOUNTANT = 'ACCOUNTANT', 'Accountant / Finance Officer'
+        ADMIN_OFFICER = 'ADMIN_OFFICER', 'Administrative Officer / Clerk'
         LIBRARIAN = 'LIBRARIAN', 'Librarian'
-        ADMIN_STAFF = 'ADMIN_STAFF', 'Administrative Staff'
+        IT_SUPPORT = 'IT_SUPPORT', 'IT Support / Computer Operator'
+        RECEPTIONIST = 'RECEPTIONIST', 'Receptionist / Front Desk'
+        SECURITY_GUARD = 'SECURITY_GUARD', 'Security Guard'
+        DRIVER = 'DRIVER', 'Transport Driver'
+        SUPPORT_STAFF = 'SUPPORT_STAFF', 'Aayah / Peon / Support Staff'
+        MAINTENANCE = 'MAINTENANCE', 'Electrician / Maintenance Staff'
 
     class Status(models.TextChoices):
         ACTIVE = 'ACTIVE', 'Active'
@@ -23,9 +38,15 @@ class Teacher(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='teacher_profile',
-        help_text="Login user account for this teacher"
+        help_text="Login user account for this teacher/staff"
     )
     employee_id = models.CharField(max_length=50, unique=True, help_text="e.g. EMP-2026-001")
+    staff_type = models.CharField(
+        max_length=20,
+        choices=StaffType.choices,
+        default=StaffType.TEACHING,
+        help_text="Classification: Teaching Faculty or Non-Teaching Staff"
+    )
     designation = models.CharField(max_length=50, choices=Designation.choices, default=Designation.SUBJECT_SPECIALIST)
     department = models.CharField(max_length=100, default='Academics', blank=True)
     qualification = models.CharField(max_length=150, help_text="e.g. M.Sc Mathematics, B.Ed, M.Phil")

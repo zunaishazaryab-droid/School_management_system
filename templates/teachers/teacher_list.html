@@ -3,27 +3,49 @@
 {% block title %}Faculty & Staff Directory | {{ school_settings.school_name }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
     <div>
         <h1 class="page-title">Faculty & Staff Directory</h1>
-        <p class="page-subtitle">Manage teaching faculty, designations, subject allocations, salaries, and performance.</p>
+        <p class="page-subtitle">Manage teaching faculty, administrative and non-teaching staff, payroll, and designations.</p>
     </div>
-    <div style="display: flex; gap: 10px;">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <a href="{% url 'teachers:salary_list' %}" class="btn btn-outline">
             💰 Payroll & Salaries
         </a>
-        <a href="{% url 'teachers:teacher_add' %}" class="btn btn-primary">
-            ➕ Add Faculty Member
+        <a href="{% url 'teachers:teacher_add' %}?type=NON_TEACHING" class="btn btn-outline" style="border-color: #cbd5e1;">
+            🏢 + Add Non-Teaching Staff
+        </a>
+        <a href="{% url 'teachers:teacher_add' %}?type=TEACHING" class="btn btn-primary">
+            👩‍🏫 + Add Teaching Faculty
         </a>
     </div>
+</div>
+
+<!-- Tabs for All / Teaching / Non-Teaching -->
+<div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; flex-wrap: wrap;">
+    <a href="{% url 'teachers:teacher_list' %}" 
+       class="btn btn-sm {% if not selected_staff_type %}btn-primary{% else %}btn-outline{% endif %}" style="font-size: 13px; font-weight: 600;">
+        👥 All Staff Members ({{ total_count }})
+    </a>
+    <a href="{% url 'teachers:teacher_list' %}?staff_type=TEACHING" 
+       class="btn btn-sm {% if selected_staff_type == 'TEACHING' %}btn-primary{% else %}btn-outline{% endif %}" style="font-size: 13px; font-weight: 600;">
+        👩‍🏫 Teaching Faculty ({{ teaching_count }})
+    </a>
+    <a href="{% url 'teachers:teacher_list' %}?staff_type=NON_TEACHING" 
+       class="btn btn-sm {% if selected_staff_type == 'NON_TEACHING' %}btn-primary{% else %}btn-outline{% endif %}" style="font-size: 13px; font-weight: 600;">
+        🏢 Non-Teaching Staff ({{ non_teaching_count }})
+    </a>
 </div>
 
 <!-- Filters Bar -->
 <div class="card" style="margin-bottom: 20px;">
     <div class="card-body" style="padding: 16px 20px;">
         <form method="GET" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between;">
+            {% if selected_staff_type %}
+            <input type="hidden" name="staff_type" value="{{ selected_staff_type }}">
+            {% endif %}
             <div style="flex: 1; min-width: 240px;">
-                <input type="text" name="search" class="form-control" placeholder="Search teacher name, employee ID, phone..." value="{{ search_query }}">
+                <input type="text" name="search" class="form-control" placeholder="Search by name, designation, emp ID, phone..." value="{{ search_query }}">
             </div>
             <div style="min-width: 150px;">
                 <select name="status" class="form-control" onchange="this.form.submit()">
@@ -34,7 +56,7 @@
                 </select>
             </div>
             <button type="submit" class="btn btn-outline btn-sm">Filter</button>
-            <a href="{% url 'teachers:teacher_list' %}" class="btn btn-outline btn-sm" style="color: var(--text-muted);">Reset</a>
+            <a href="{% url 'teachers:teacher_list' %}{% if selected_staff_type %}?staff_type={{ selected_staff_type }}{% endif %}" class="btn btn-outline btn-sm" style="color: var(--text-muted);">Reset</a>
         </form>
     </div>
 </div>
@@ -45,7 +67,8 @@
         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
             <thead>
                 <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
-                    <th style="padding: 12px 18px;">Faculty Member</th>
+                    <th style="padding: 12px 18px;">Staff Member</th>
+                    <th style="padding: 12px 18px;">Category</th>
                     <th style="padding: 12px 18px;">Emp ID</th>
                     <th style="padding: 12px 18px;">Designation & Dept</th>
                     <th style="padding: 12px 18px;">WhatsApp / Phone</th>
@@ -65,14 +88,21 @@
                                 <div class="user-avatar-sm">{{ t.user.first_name|first|upper }}</div>
                             {% endif %}
                             <div>
-                                <a href="{% url 'teachers:teacher_detail' t.id %}" style="font-weight: 600; color: var(--text-main);">
+                                <a href="{% url 'teachers:teacher_detail' t.id %}" style="font-weight: 700; color: var(--text-main);">
                                     {{ t.get_full_name }}
                                 </a>
                                 <div style="font-size: 11.5px; color: var(--text-muted);">{{ t.qualification }}</div>
                             </div>
                         </div>
                     </td>
-                    <td style="padding: 12px 18px; font-weight: 600; color: var(--primary);">
+                    <td style="padding: 12px 18px;">
+                        {% if t.staff_type == 'NON_TEACHING' %}
+                        <span class="role-badge" style="background: #f1f5f9; color: #475569; font-weight: 600; border: 1px solid #cbd5e1;">🏢 Non-Teaching</span>
+                        {% else %}
+                        <span class="role-badge" style="background: var(--primary-light); color: var(--primary); font-weight: 600;">👩‍🏫 Teaching</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 18px; font-weight: 700; color: var(--primary);">
                         {{ t.employee_id }}
                     </td>
                     <td style="padding: 12px 18px;">
@@ -82,7 +112,7 @@
                     <td style="padding: 12px 18px;">
                         📱 {{ t.phone_number }}
                     </td>
-                    <td style="padding: 12px 18px; font-weight: 600;">
+                    <td style="padding: 12px 18px; font-weight: 700; color: var(--text-main);">
                         {{ school_settings.currency_symbol }} {{ t.basic_salary }}
                     </td>
                     <td style="padding: 12px 18px;">
@@ -100,8 +130,8 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
-                        No faculty members found.
+                    <td colspan="8" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                        No staff members found matching your filter criteria.
                     </td>
                 </tr>
                 {% endfor %}

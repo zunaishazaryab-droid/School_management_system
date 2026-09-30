@@ -13,12 +13,13 @@ class TeacherForm(forms.ModelForm):
     class Meta:
         model = Teacher
         fields = [
-            'employee_id', 'designation', 'department', 'qualification', 'experience_years',
+            'employee_id', 'staff_type', 'designation', 'department', 'qualification', 'experience_years',
             'joining_date', 'basic_salary', 'cnic', 'phone_number', 'emergency_contact',
             'residential_address', 'status', 'photo'
         ]
         widgets = {
             'employee_id': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. EMP-2026-001'}),
+            'staff_type': forms.Select(attrs={'class': 'form-control'}),
             'designation': forms.Select(attrs={'class': 'form-control'}),
             'department': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Science / Mathematics'}),
             'qualification': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. M.Sc Mathematics, B.Ed'}),
