@@ -39,8 +39,10 @@ class Command(BaseCommand):
             {'name': 'Class 6', 'code': 'C6', 'level': 8, 'sections': ['A', 'B']},
             {'name': 'Class 7', 'code': 'C7', 'level': 9, 'sections': ['A', 'B']},
             {'name': 'Class 8', 'code': 'C8', 'level': 10, 'sections': ['A', 'B']},
-            {'name': 'Class 9 (Metric)', 'code': 'C9', 'level': 11, 'sections': ['Science-A', 'Computer-B']},
-            {'name': 'Class 10 (Metric)', 'code': 'C10', 'level': 12, 'sections': ['Science-A', 'Computer-B']},
+            {'name': 'Class 9 (Boys)', 'code': '9-BOYS', 'level': 11, 'sections': ['Science-A', 'Computer-B']},
+            {'name': 'Class 9 (Girls)', 'code': '9-GIRLS', 'level': 12, 'sections': ['Science-A', 'Computer-B']},
+            {'name': 'Class 10 (Boys)', 'code': '10-BOYS', 'level': 13, 'sections': ['Science-A', 'Computer-B']},
+            {'name': 'Class 10 (Girls)', 'code': '10-GIRLS', 'level': 14, 'sections': ['Science-A', 'Computer-B']},
         ]
 
         class_instances = {}
@@ -101,8 +103,10 @@ class Command(BaseCommand):
         c1 = class_instances['C1']
         c1_sec_a = section_instances['C1_A']
         c1_sec_b = section_instances['C1_B']
-        c9 = class_instances['C9']
-        c9_sec_sci = section_instances['C9_Science-A']
+        c9_boys = class_instances['9-BOYS']
+        c9_boys_sec = section_instances['9-BOYS_Science-A']
+        c9_girls = class_instances['9-GIRLS']
+        c9_girls_sec = section_instances['9-GIRLS_Science-A']
 
         sample_students = [
             {
@@ -164,8 +168,8 @@ class Command(BaseCommand):
                 'gender': Student.Gender.FEMALE,
                 'date_of_birth': date(2010, 11, 4),
                 'blood_group': 'AB+',
-                'current_class': c9,
-                'current_section': c9_sec_sci,
+                'current_class': c9_girls,
+                'current_section': c9_girls_sec,
                 'guardian_name': 'Tariq Mehmood',
                 'guardian_phone': '+92 304 8889900',
                 'guardian_cnic': '61101-4455667-4',
@@ -181,8 +185,8 @@ class Command(BaseCommand):
                 'gender': Student.Gender.MALE,
                 'date_of_birth': date(2010, 3, 19),
                 'blood_group': 'O-',
-                'current_class': c9,
-                'current_section': c9_sec_sci,
+                'current_class': c9_boys,
+                'current_section': c9_boys_sec,
                 'guardian_name': 'Abdul Rehman',
                 'guardian_phone': '+92 305 7771122',
                 'guardian_cnic': '61101-5566778-5',
