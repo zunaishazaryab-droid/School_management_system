@@ -27,6 +27,9 @@ from .forms import SchoolSettingForm, SystemUserForm
 @login_required
 def dashboard_view(request):
     user = request.user
+    if getattr(user, 'is_student', False) or getattr(user, 'is_parent', False):
+        return redirect('students:student_dashboard')
+
     role = getattr(user, 'role', 'TEACHER')
     today = timezone.now().date()
     

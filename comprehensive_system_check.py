@@ -71,11 +71,13 @@ test_page('/security/scanner/', 200, "Security QR Scanner")
 print("\n--- 2. Students & Academics ---")
 test_page('/students/', 200, "Student Directory")
 test_page('/students/add/', 200, "Student Admission Form")
+test_page('/students/dashboard/', 200, "Dedicated Student Dashboard")
 test_page('/students/portal/', 200, "Parent Portal")
 test_page('/students/batch-id-cards/', 200, "Batch ID Cards")
 test_page('/students/promotion/', 200, "Student Promotion")
 if student:
     test_page(f'/students/{student.id}/', 200, f"Student Detail ({student.admission_number})")
+    test_page(f'/students/{student.id}/dashboard/', 200, f"Student Specific Dashboard ({student.admission_number})")
     test_page(f'/students/{student.id}/edit/', 200, f"Student Edit ({student.admission_number})")
     test_page(f'/students/{student.id}/id-card/', 200, f"Student ID Card Single ({student.admission_number})")
 

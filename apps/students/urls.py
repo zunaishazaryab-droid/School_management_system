@@ -5,6 +5,8 @@ app_name = 'students'
 
 urlpatterns = [
     path('', views.student_list_view, name='student_list'),
+    path('dashboard/', views.student_dashboard_view, name='student_dashboard'),
+    path('<int:pk>/dashboard/', views.student_dashboard_view, name='student_specific_dashboard'),
     path('add/', views.student_create_view, name='student_add'),
     path('portal/', views.parent_portal_view, name='parent_portal'),
     path('batch-id-cards/', views.student_batch_id_cards_view, name='batch_id_cards'),

@@ -1,0 +1,651 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ page_title }} | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<!-- Student Dashboard Welcome & Header Card -->
+<div class="card" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%); color: #ffffff; border-radius: 16px; padding: 26px 30px; margin-bottom: 24px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2); position: relative; overflow: hidden;">
+    <!-- Background Watermark Glow -->
+    <div style="position: absolute; right: -20px; bottom: -20px; font-size: 140px; opacity: 0.08; user-select: none;">🎓</div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; position: relative; z-index: 1;">
+        <div style="display: flex; align-items: center; gap: 22px;">
+            <div style="width: 86px; height: 86px; border-radius: 50%; border: 3.5px solid rgba(255,255,255,0.85); background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 800; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                {% if student.photo %}
+                    <img src="{{ student.photo.url }}" alt="{{ student.get_full_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    {{ student.first_name|first|upper }}
+                {% endif %}
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h1 style="font-size: 24px; font-weight: 800; margin: 0; color: #ffffff; letter-spacing: -0.5px;">
+                        {{ student.get_full_name }}
+                    </h1>
+                    <span style="background: rgba(255,255,255,0.25); color: #ffffff; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid rgba(255,255,255,0.4);">
+                        Active Student
+                    </span>
+                </div>
+                <div style="font-size: 14px; opacity: 0.95; margin-top: 5px; display: flex; flex-wrap: wrap; gap: 12px;">
+                    <span>Admission No: <strong style="color: #fef08a;">{{ student.admission_number }}</strong></span>
+                    <span>•</span>
+                    <span>Class: <strong>{{ student.current_class.name }}</strong> (Sec {{ student.current_section.name }})</span>
+                    <span>•</span>
+                    <span>Roll No: <strong>{{ student.roll_number|default:"N/A" }}</strong></span>
+                    <span>•</span>
+                    <span>Session: <strong>{{ student.academic_year.name }}</strong></span>
+                </div>
+                <div style="font-size: 12.5px; opacity: 0.85; margin-top: 4px;">
+                    Guardian: <strong>{{ student.guardian_name }}</strong> ({{ student.guardian_relationship }}) • Phone: {{ student.guardian_phone }}
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            {% if all_students %}
+            <!-- Student Selector for Staff/Admins -->
+            <form method="GET" style="display: inline-block; margin-right: 6px;">
+                <select name="student_id" class="form-control" onchange="this.form.submit()" style="background: #ffffff; color: #1e3a8a; font-weight: 700; border-radius: 8px; font-size: 13px; height: 38px;">
+                    {% for s in all_students %}
+                    <option value="{{ s.id }}" {% if student.id == s.id %}selected{% endif %}>
+                        Switch Student: {{ s.admission_number }} - {{ s.get_full_name }} ({{ s.current_class.name }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% endif %}
+
+            <a href="{% url 'students:student_card' student.pk %}" target="_blank" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: #ffffff; border: 1px solid rgba(255,255,255,0.4); font-weight: 700; border-radius: 8px; padding: 8px 14px;">
+                🪪 Student ID Card
+            </a>
+            <a href="{% url 'students:student_certificate' student.pk %}" target="_blank" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: #ffffff; border: 1px solid rgba(255,255,255,0.4); font-weight: 700; border-radius: 8px; padding: 8px 14px;">
+                📜 Certificate
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Top KPI Summary Cards -->
+<div class="kpi-grid" style="margin-bottom: 24px;">
+    <!-- Attendance Metric -->
+    <div class="kpi-card">
+        <div class="kpi-info">
+            <span class="kpi-label">Attendance Rate</span>
+            <span class="kpi-value" style="color: {% if attendance_rate >= 80 %}var(--success){% else %}var(--warning){% endif %};">
+                {{ attendance_rate }}%
+            </span>
+            <span class="kpi-subtext">{{ present_days }} Present • {{ late_days }} Late • {{ absent_days }} Absent</span>
+        </div>
+        <div class="kpi-icon-box kpi-icon-green">
+            📊
+        </div>
+    </div>
+
+    <!-- Fee Outstanding Balance -->
+    <div class="kpi-card">
+        <div class="kpi-info">
+            <span class="kpi-label">Fee Balance Dues</span>
+            <span class="kpi-value" style="color: {% if total_balance > 0 %}var(--danger){% else %}var(--success){% endif %};">
+                {{ school_settings.currency_symbol }} {{ total_balance|intcomma }}
+            </span>
+            <span class="kpi-subtext">
+                {% if total_balance > 0 %}
+                    Payment Pending
+                {% else %}
+                    All Dues Fully Cleared ✨
+                {% endif %}
+            </span>
+        </div>
+        <div class="kpi-icon-box {% if total_balance > 0 %}kpi-icon-red{% else %}kpi-icon-green{% endif %}">
+            💳
+        </div>
+    </div>
+
+    <!-- Today's Schedule -->
+    <div class="kpi-card">
+        <div class="kpi-info">
+            <span class="kpi-label">Today's Classes ({{ today_name }})</span>
+            <span class="kpi-value">{{ today_periods|length }}</span>
+            <span class="kpi-subtext">Periods scheduled today</span>
+        </div>
+        <div class="kpi-icon-box kpi-icon-cyan">
+            🕒
+        </div>
+    </div>
+
+    <!-- Active Homework Tasks -->
+    <div class="kpi-card">
+        <div class="kpi-info">
+            <span class="kpi-label">Active Homework</span>
+            <span class="kpi-value">{{ homework_list|length }}</span>
+            <span class="kpi-subtext">Assignments in diary</span>
+        </div>
+        <div class="kpi-icon-box kpi-icon-amber">
+            📝
+        </div>
+    </div>
+</div>
+
+<!-- Tabs Navigation -->
+<div class="card" style="margin-bottom: 24px;">
+    <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); padding: 12px 18px; background: var(--bg-surface); border-radius: 12px 12px 0 0; overflow-x: auto;">
+        <button type="button" class="tab-btn active" onclick="switchTab('tab-timetable')" id="btn-tab-timetable" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--primary); background: var(--primary-light);">
+            📅 Schedule & Timetable
+        </button>
+        <button type="button" class="tab-btn" onclick="switchTab('tab-homework')" id="btn-tab-homework" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--text-muted);">
+            📝 Homework & Diary ({{ homework_list|length }})
+        </button>
+        <button type="button" class="tab-btn" onclick="switchTab('tab-attendance')" id="btn-tab-attendance" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--text-muted);">
+            📊 Attendance Register
+        </button>
+        <button type="button" class="tab-btn" onclick="switchTab('tab-fees')" id="btn-tab-fees" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--text-muted);">
+            💳 Fees & Bank Challans
+        </button>
+        <button type="button" class="tab-btn" onclick="switchTab('tab-exams')" id="btn-tab-exams" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--text-muted);">
+            🏆 Exams, CBT & Results
+        </button>
+        <button type="button" class="tab-btn" onclick="switchTab('tab-lectures')" id="btn-tab-lectures" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--text-muted);">
+            📖 Daily Lectures & Syllabus
+        </button>
+    </div>
+
+    <!-- TAB 1: SCHEDULE & TIMETABLE -->
+    <div id="tab-timetable" class="tab-content-panel" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">
+                📅 Today's Period Schedule ({{ today_name }}, {{ today_date|date:"d M Y" }})
+            </h3>
+            <span class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700;">
+                Class {{ student.current_class.name }} - Section {{ student.current_section.name }}
+            </span>
+        </div>
+
+        {% if today_periods %}
+        <div class="table-responsive" style="margin-bottom: 24px;">
+            <table class="table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">Period</th>
+                        <th>Timing</th>
+                        <th>Subject</th>
+                        <th>Teacher / Faculty</th>
+                        <th>Room / Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in today_periods %}
+                    <tr>
+                        <td>
+                            <span class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 800;">
+                                {{ p.period.name|default:"Period" }}
+                            </span>
+                        </td>
+                        <td style="font-weight: 600; color: var(--text-main);">
+                            {{ p.period.start_time|time:"h:i A" }} - {{ p.period.end_time|time:"h:i A" }}
+                        </td>
+                        <td>
+                            <strong style="color: var(--primary);">{{ p.subject.name }}</strong>
+                            <span style="font-size: 11.5px; color: var(--text-muted);">({{ p.subject.code }})</span>
+                        </td>
+                        <td>
+                            {% if p.teacher %}
+                                👨‍🏫 {{ p.teacher.get_full_name }}
+                            {% else %}
+                                <span style="color: var(--text-muted);">Faculty Assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge" style="background: #f1f5f9; color: #475569;">
+                                {{ p.room_number|default:"Classroom" }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: 30px; text-align: center; background: var(--bg-surface); border-radius: 10px; margin-bottom: 24px;">
+            <div style="font-size: 36px; margin-bottom: 8px;">🌴</div>
+            <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">No Scheduled Periods For Today</h4>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Today might be a weekend or scheduled holiday break.</p>
+        </div>
+        {% endif %}
+
+        <!-- Full Weekly Timetable Grid -->
+        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">
+            🗓️ Complete Weekly Section Timetable
+        </h4>
+        {% if timetable_qs %}
+        <div class="table-responsive">
+            <table class="table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Period</th>
+                        <th>Timing</th>
+                        <th>Subject</th>
+                        <th>Teacher</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in timetable_qs %}
+                    <tr {% if p.day_of_week == today_upper %}style="background: rgba(37, 99, 235, 0.04); font-weight: 600;"{% endif %}>
+                        <td><strong>{{ p.get_day_of_week_display }}</strong></td>
+                        <td><span class="badge" style="background: #e2e8f0; color: #334155;">{{ p.period.name }}</span></td>
+                        <td>{{ p.period.start_time|time:"h:i A" }} - {{ p.period.end_time|time:"h:i A" }}</td>
+                        <td><strong style="color: var(--primary);">{{ p.subject.name }}</strong></td>
+                        <td>{{ p.teacher.get_full_name|default:"TBA" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-muted); font-size: 13px;">No weekly timetable periods configured for this class section yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- TAB 2: HOMEWORK & DAILY DIARY -->
+    <div id="tab-homework" class="tab-content-panel" style="padding: 20px; display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">
+                📝 Daily Homework Diary & Tasks
+            </h3>
+        </div>
+
+        {% if homework_list %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+            {% for hw in homework_list %}
+            <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; background: var(--bg-card); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <span class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700; font-size: 11.5px;">
+                        {{ hw.subject.name }}
+                    </span>
+                    <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 700; font-size: 11px;">
+                        Due: {{ hw.due_date|date:"d M Y" }}
+                    </span>
+                </div>
+                <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin: 0 0 6px 0;">
+                    {{ hw.title }}
+                </h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 12px 0; line-height: 1.5;">
+                    {{ hw.description|truncatewords:30 }}
+                </p>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                    <span>Assigned: {{ hw.assigned_date|date:"d M Y" }}</span>
+                    <span>Teacher: {{ hw.teacher.get_full_name|default:"Subject Teacher" }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="padding: 35px; text-align: center; background: var(--bg-surface); border-radius: 10px;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
+            <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main);">No Pending Homework Assigned</h4>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0;">You are completely caught up with your daily assignments!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- TAB 3: ATTENDANCE REGISTER -->
+    <div id="tab-attendance" class="tab-content-panel" style="padding: 20px; display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">
+                📊 Student Attendance Register & Breakdown
+            </h3>
+            <span class="badge" style="background: #dcfce7; color: #15803d; font-weight: 800; font-size: 13px; padding: 6px 12px;">
+                Overall Rate: {{ attendance_rate }}%
+            </span>
+        </div>
+
+        {% if recent_attendance %}
+        <div class="table-responsive">
+            <table class="table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Status</th>
+                        <th>Remarks / Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for att in recent_attendance %}
+                    <tr>
+                        <td style="font-weight: 700; color: var(--text-main);">{{ att.date|date:"d M Y" }}</td>
+                        <td>{{ att.date|date:"l" }}</td>
+                        <td>
+                            {% if att.status == 'PRESENT' %}
+                                <span class="badge" style="background: #dcfce7; color: #166534; font-weight: 800;">✔ PRESENT</span>
+                            {% elif att.status == 'LATE' %}
+                                <span class="badge" style="background: #fef3c7; color: #92400e; font-weight: 800;">⏱ LATE</span>
+                            {% elif att.status == 'ABSENT' %}
+                                <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 800;">✖ ABSENT</span>
+                            {% else %}
+                                <span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 800;">{{ att.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="color: var(--text-muted); font-size: 13px;">{{ att.remarks|default:"Regular School Attendance" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: 30px; text-align: center; background: var(--bg-surface); border-radius: 10px;">
+            <p style="color: var(--text-muted); margin: 0;">Attendance records will appear here as daily rolls are marked.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- TAB 4: FEES & BANK CHALLANS -->
+    <div id="tab-fees" class="tab-content-panel" style="padding: 20px; display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">
+                    💳 Fee Invoices, Payments & Bank Challans
+                </h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">
+                    Print official 3-part bank deposit challans or verify live payment clearance.
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; text-align: right;">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">TOTAL BILLED</div>
+                    <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">{{ school_settings.currency_symbol }} {{ total_billed|intcomma }}</div>
+                </div>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 8px 14px; border-radius: 8px; text-align: right;">
+                    <div style="font-size: 11px; color: #166534; font-weight: 700;">TOTAL PAID</div>
+                    <div style="font-size: 15px; font-weight: 800; color: #166534;">{{ school_settings.currency_symbol }} {{ total_paid|intcomma }}</div>
+                </div>
+                <div style="background: {% if total_balance > 0 %}#fef2f2{% else %}#f0fdf4{% endif %}; border: 1px solid {% if total_balance > 0 %}#fecaca{% else %}#bbf7d0{% endif %}; padding: 8px 14px; border-radius: 8px; text-align: right;">
+                    <div style="font-size: 11px; color: {% if total_balance > 0 %}#991b1b{% else %}#166534{% endif %}; font-weight: 700;">OUTSTANDING BALANCE</div>
+                    <div style="font-size: 15px; font-weight: 800; color: {% if total_balance > 0 %}#dc2626{% else %}#166534{% endif %};">{{ school_settings.currency_symbol }} {{ total_balance|intcomma }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if student_invoices %}
+        <div class="table-responsive">
+            <table class="table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Month / Session</th>
+                        <th>Due Date</th>
+                        <th>Total Amount</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in student_invoices %}
+                    <tr>
+                        <td>
+                            <strong style="color: var(--primary);">{{ inv.invoice_number }}</strong>
+                        </td>
+                        <td>{{ inv.fee_month }}</td>
+                        <td>{{ inv.due_date|date:"d M Y" }}</td>
+                        <td style="font-weight: 700;">{{ school_settings.currency_symbol }} {{ inv.payable_amount|intcomma }}</td>
+                        <td style="color: var(--success); font-weight: 700;">{{ school_settings.currency_symbol }} {{ inv.paid_amount|intcomma }}</td>
+                        <td style="color: {% if inv.balance_amount > 0 %}var(--danger){% else %}var(--success){% endif %}; font-weight: 700;">
+                            {{ school_settings.currency_symbol }} {{ inv.balance_amount|intcomma }}
+                        </td>
+                        <td>
+                            {% if inv.status == 'PAID' %}
+                                <span class="badge" style="background: #dcfce7; color: #166534; font-weight: 800;">PAID</span>
+                            {% elif inv.status == 'PARTIAL' %}
+                                <span class="badge" style="background: #fef3c7; color: #92400e; font-weight: 800;">PARTIAL</span>
+                            {% elif inv.status == 'OVERDUE' %}
+                                <span class="badge" style="background: #fee2e2; color: #991b1b; font-weight: 800;">OVERDUE</span>
+                            {% else %}
+                                <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 800;">UNPAID</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'fees:challan_print' inv.pk %}" target="_blank" class="btn btn-sm" style="background: var(--primary); color: #ffffff; font-weight: 700; border-radius: 6px; padding: 4px 10px; font-size: 12px;">
+                                📄 Bank Challan
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding: 30px; text-align: center; background: var(--bg-surface); border-radius: 10px;">
+            <p style="color: var(--text-muted); margin: 0;">No fee invoices generated yet for this student.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- TAB 5: EXAMS, CBT & RESULTS -->
+    <div id="tab-exams" class="tab-content-panel" style="padding: 20px; display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">
+                    🏆 Examination Results, Official Report Cards & CBT Tests
+                </h3>
+            </div>
+            {% if latest_exam %}
+            <a href="{% url 'examinations:student_report_card' latest_exam.id student.id %}" target="_blank" class="btn btn-sm btn-primary" style="font-weight: 700;">
+                🖨️ Printable Official Report Card
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Online CBT Tests Section -->
+        {% if cbt_exams %}
+        <div style="margin-bottom: 24px;">
+            <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">
+                💻 Active CBT Online Quizzes & Tests
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+                {% for cbt in cbt_exams %}
+                <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; background: var(--bg-surface); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: var(--primary); font-size: 14px;">{{ cbt.title }}</strong>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                            {{ cbt.subject.name }} • Duration: {{ cbt.duration_minutes }} Mins • Total Marks: {{ cbt.total_marks }}
+                        </div>
+                    </div>
+                    <a href="{% url 'examinations:cbt_take' cbt.pk %}" class="btn btn-sm btn-success" style="font-weight: 700; border-radius: 6px;">
+                        Start Test 🚀
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Subject Wise Exam Scores Table -->
+        <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">
+            📋 Subject-Wise Exam Scorecard
+        </h4>
+        {% if exam_marks_list %}
+        <div class="table-responsive">
+            <table class="table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Examination</th>
+                        <th>Subject</th>
+                        <th>Max Marks</th>
+                        <th>Obtained Marks</th>
+                        <th>Percentage</th>
+                        <th>Status</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mk in exam_marks_list %}
+                    <tr>
+                        <td><strong>{{ mk.exam_schedule.exam.title }}</strong></td>
+                        <td style="color: var(--primary); font-weight: 700;">{{ mk.exam_schedule.subject.name }}</td>
+                        <td>{{ mk.exam_schedule.total_marks }}</td>
+                        <td style="font-weight: 800; color: var(--text-main);">
+                            {% if mk.is_absent %}
+                                <span style="color: var(--danger);">ABSENT</span>
+                            {% else %}
+                                {{ mk.marks_obtained }}
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 700;">{{ mk.percentage }}%</td>
+                        <td>
+                            {% if mk.is_absent %}
+                                <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 800;">ABSENT</span>
+                            {% elif mk.percentage >= 50 %}
+                                <span class="badge" style="background: #dcfce7; color: #166534; font-weight: 800;">PASS</span>
+                            {% else %}
+                                <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 800;">FAIL</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 12.5px; color: var(--text-muted);">{{ mk.remarks|default:"Completed" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% elif exam_results %}
+        <div class="table-responsive">
+            <table class="table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Examination</th>
+                        <th>Class & Section</th>
+                        <th>Total Marks</th>
+                        <th>Obtained</th>
+                        <th>Percentage</th>
+                        <th>Grade</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in exam_results %}
+                    <tr>
+                        <td><strong>{{ res.exam.title }}</strong></td>
+                        <td>{{ res.class_room.name }}-{{ res.section.name }}</td>
+                        <td>{{ res.total_marks }}</td>
+                        <td style="font-weight: 800;">{{ res.obtained_marks }}</td>
+                        <td style="font-weight: 700;">{{ res.percentage }}%</td>
+                        <td><span class="badge" style="background: #dcfce7; color: #166534; font-weight: 800;">{{ res.grade }}</span></td>
+                        <td>{{ res.grade_remarks }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- TAB 6: LECTURES & SYLLABUS -->
+    <div id="tab-lectures" class="tab-content-panel" style="padding: 20px; display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+            <!-- Recent Daily Lectures -->
+            <div>
+                <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">
+                    📖 Recent Class Lectures & Topics Covered
+                </h3>
+                {% if recent_lectures %}
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    {% for lec in recent_lectures %}
+                    <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; background: var(--bg-surface);">
+                        <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); margin-bottom: 4px;">
+                            <span style="font-weight: 700; color: var(--primary);">{{ lec.subject.name }}</span>
+                            <span>{{ lec.date|date:"d M Y" }}</span>
+                        </div>
+                        <h5 style="font-size: 14px; font-weight: 700; margin: 0 0 4px 0; color: var(--text-main);">{{ lec.topic }}</h5>
+                        <p style="font-size: 12.5px; color: var(--text-muted); margin: 0;">{{ lec.description|truncatewords:20 }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: var(--text-muted); font-size: 13px;">No lecture diary logs recorded for this week.</p>
+                {% endif %}
+            </div>
+
+            <!-- Subject Syllabus Completion -->
+            <div>
+                <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">
+                    📊 Syllabus Completion Tracker
+                </h3>
+                {% if syllabus_items %}
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    {% for syl in syllabus_items %}
+                    <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; background: var(--bg-surface);">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px;">
+                            <span>{{ syl.subject.name }}: Ch {{ syl.chapter_number }}</span>
+                            <span style="color: var(--primary);">{{ syl.progress_pct }}%</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 4px;">{{ syl.title }}</div>
+                        <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 6px;">
+                            <div style="height: 100%; width: {{ syl.progress_pct }}%; background: var(--primary); border-radius: 4px;"></div>
+                        </div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">
+                            Covered Topics: {{ syl.completed_topics_count }}/{{ syl.total_topics_count }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: var(--text-muted); font-size: 13px;">Syllabus tracker items will be displayed here.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Official Announcements Board -->
+{% if announcements %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <span>📢 Official School Circulars & Announcements</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+            {% for a in announcements %}
+            <div style="border-left: 4px solid var(--primary); padding: 12px 16px; background: var(--bg-surface); border-radius: 0 8px 8px 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); margin-bottom: 4px;">
+                    <span>{{ a.publish_date|date:"d M Y" }}</span>
+                    <span class="badge" style="background: var(--primary-light); color: var(--primary); font-size: 10.5px;">{{ a.get_audience_display|default:"Notice" }}</span>
+                </div>
+                <h4 style="font-size: 14.5px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-main);">{{ a.title }}</h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.4;">{{ a.content|truncatewords:25 }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function switchTab(tabId) {
+    // Hide all panels
+    document.querySelectorAll('.tab-content-panel').forEach(function(el) {
+        el.style.display = 'none';
+    });
+    // Remove active styles from buttons
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.style.color = 'var(--text-muted)';
+        btn.style.background = 'none';
+    });
+    // Show selected panel
+    var target = document.getElementById(tabId);
+    if (target) {
+        target.style.display = 'block';
+    }
+    // Highlight button
+    var activeBtn = document.getElementById('btn-' + tabId);
+    if (activeBtn) {
+        activeBtn.style.color = 'var(--primary)';
+        activeBtn.style.background = 'var(--primary-light)';
+    }
+}
+</script>
+{% endblock %}

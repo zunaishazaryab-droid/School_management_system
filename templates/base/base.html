@@ -40,9 +40,14 @@
 
                 <div class="sidebar-section-title">Academic & Records</div>
 
-                <a href="{% url 'students:student_list' %}" class="nav-item {% if 'students' in request.path %}active{% endif %}">
+                <a href="{% url 'students:student_dashboard' %}" class="nav-item {% if 'students/dashboard' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🎓</span>
+                    <span>Student Dashboard</span>
+                </a>
+
+                <a href="{% url 'students:student_list' %}" class="nav-item {% if request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_add' or request.resolver_match.url_name == 'student_detail' %}active{% endif %}">
                     <span class="nav-icon">👨‍🎓</span>
-                    <span>Students</span>
+                    <span>Students Directory</span>
                 </a>
 
                 <a href="{% url 'students:parent_portal' %}" class="nav-item {% if 'portal' in request.path %}active{% endif %}">

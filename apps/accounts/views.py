@@ -36,6 +36,8 @@ def login_view(request):
             next_url = request.GET.get('next')
             if next_url:
                 return redirect(next_url)
+            if getattr(user, 'is_student', False) or getattr(user, 'is_parent', False):
+                return redirect('students:student_dashboard')
             return redirect('core:dashboard')
         else:
             messages.error(request, "Invalid username or password. Please try again.")

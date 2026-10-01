@@ -8,7 +8,8 @@ class User(AbstractUser):
         PRINCIPAL = 'PRINCIPAL', 'Principal'
         COORDINATOR = 'COORDINATOR', 'Coordinator'
         TEACHER = 'TEACHER', 'Teacher'
-        PARENT = 'PARENT', 'Parent / Student'
+        STUDENT = 'STUDENT', 'Student'
+        PARENT = 'PARENT', 'Parent'
 
     role = models.CharField(
         max_length=20,
@@ -38,6 +39,10 @@ class User(AbstractUser):
     @property
     def is_teacher(self):
         return self.role == self.Role.TEACHER
+
+    @property
+    def is_student(self):
+        return self.role == self.Role.STUDENT
 
     @property
     def is_parent(self):

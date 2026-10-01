@@ -16,6 +16,16 @@ class Student(models.Model):
         TRANSFERRED = 'TRANSFERRED', 'Transferred'
         EXPELLED = 'EXPELLED', 'Expelled'
 
+    # User Account for Student Portal
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='student_profile',
+        help_text="Linked user login account for dedicated Student Portal"
+    )
+
     # Academic & ID Information
     admission_number = models.CharField(max_length=50, unique=True, help_text="Unique Student / Admission ID (e.g. STU-2026-001)")
     roll_number = models.CharField(max_length=30, blank=True, null=True, help_text="Class Roll Number")
