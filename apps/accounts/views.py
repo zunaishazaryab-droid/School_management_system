@@ -8,6 +8,8 @@ from apps.core.models import ActivityLog
 
 def login_view(request):
     if request.user.is_authenticated:
+        if getattr(request.user, 'is_student', False) or getattr(request.user, 'is_parent', False):
+            return redirect('students:student_dashboard')
         return redirect('core:dashboard')
 
     if request.method == 'POST':

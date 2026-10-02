@@ -197,10 +197,18 @@ def student_detail_view(request, pk):
 
 
 @login_required
-@teacher_required
 def student_card_view(request, pk):
     """Printable Student Identity Card & Profile Sheet"""
     student = get_object_or_404(Student, pk=pk)
+    # If student role, ensure they can only access their own card
+    if getattr(request.user, 'is_student', False):
+        if hasattr(request.user, 'student_profile') and student != request.user.student_profile:
+            messages.error(request, "Unauthorized access to student card.")
+            return redirect('students:student_dashboard')
+    elif not (request.user.is_superuser or request.user.role in [User.Role.ADMIN, User.Role.PRINCIPAL, User.Role.COORDINATOR, User.Role.TEACHER]):
+        messages.error(request, "You do not have permission to access this module.")
+        return redirect('students:student_dashboard')
+        
     return render(request, 'students/student_card.html', {
         'student': student,
         'page_title': f"Student ID Card — {student.get_full_name()}"
@@ -297,21 +305,28 @@ def parent_portal_view(request):
     from apps.examinations.models import ExamStudentResult
     from django.db.models import Sum
 
-    all_students = Student.objects.filter(status='ACTIVE').select_related('current_class', 'current_section')
-    student_id = request.GET.get('student_id')
-    query = request.GET.get('q', '').strip()
-
+    all_students = []
     selected_student = None
-    if student_id:
-        selected_student = all_students.filter(id=student_id).first()
-    elif query:
-        selected_student = all_students.filter(
-            Q(admission_number__icontains=query) |
-            Q(guardian_phone__icontains=query) |
-            Q(first_name__icontains=query)
-        ).first()
+
+    if getattr(request.user, 'is_student', False):
+        selected_student = getattr(request.user, 'student_profile', None) or Student.objects.filter(user=request.user).first()
+    elif getattr(request.user, 'is_parent', False):
+        selected_student = getattr(request.user, 'student_profile', None) or Student.objects.filter(guardian_phone=request.user.phone_number).first()
     else:
-        selected_student = all_students.first()
+        all_students = Student.objects.filter(status='ACTIVE').select_related('current_class', 'current_section')
+        student_id = request.GET.get('student_id')
+        query = request.GET.get('q', '').strip()
+
+        if student_id:
+            selected_student = all_students.filter(id=student_id).first()
+        elif query:
+            selected_student = all_students.filter(
+                Q(admission_number__icontains=query) |
+                Q(guardian_phone__icontains=query) |
+                Q(first_name__icontains=query)
+            ).first()
+        else:
+            selected_student = all_students.first()
 
     attendance_rate = 95.0
     pending_fees = 0.0
@@ -377,13 +392,21 @@ def student_batch_id_cards_view(request):
 
 
 @login_required
-@teacher_required
 def student_certificate_view(request, pk):
     """Generate official School Leaving (SLC), Character & Bonafide Certificates"""
     student = get_object_or_404(
         Student.objects.select_related('current_class', 'current_section', 'academic_year'),
         pk=pk
     )
+    # If student role, ensure they can only access their own certificate
+    if getattr(request.user, 'is_student', False):
+        if hasattr(request.user, 'student_profile') and student != request.user.student_profile:
+            messages.error(request, "Unauthorized access to student certificate.")
+            return redirect('students:student_dashboard')
+    elif not (request.user.is_superuser or request.user.role in [User.Role.ADMIN, User.Role.PRINCIPAL, User.Role.COORDINATOR, User.Role.TEACHER]):
+        messages.error(request, "You do not have permission to access this module.")
+        return redirect('students:student_dashboard')
+
     cert_type = request.GET.get('type', 'SLC').upper()
 
     ActivityLog.log_activity(
@@ -408,6 +431,7 @@ def student_dashboard_view(request, pk=None):
     Dedicated Student Dashboard:
     Automatically fetches and displays ALL personal academic data for the target student
     (Live Attendance, Fee Challans & Balance, Class Timetable, Daily Homework, Exam Results, Syllabus, Lectures & Notices).
+    Strict data isolation: When a student logs in, only their own records are visible.
     """
     from apps.attendance.models import StudentAttendance
     from apps.lectures.models import Homework, DailyLecture
@@ -421,13 +445,32 @@ def student_dashboard_view(request, pk=None):
     student = None
     all_students = []
 
-    # 1. Determine target student
-    if getattr(request.user, 'is_student', False) and hasattr(request.user, 'student_profile'):
-        student = request.user.student_profile
+    # 1. Determine target student with strict authorization
+    if getattr(request.user, 'is_student', False):
+        # A student user is strictly locked to their own linked student profile
+        if hasattr(request.user, 'student_profile'):
+            student = request.user.student_profile
+        else:
+            student = Student.objects.filter(user=request.user).first()
+
+        if not student:
+            # Fallback linking if not assigned yet
+            student = Student.objects.filter(
+                Q(admission_number__iexact=request.user.username) |
+                Q(first_name__iexact=request.user.first_name) |
+                Q(status='ACTIVE')
+            ).first()
+            if student:
+                student.user = request.user
+                student.save(update_fields=['user'])
+
+        # Security: Student users NEVER get list of other students
+        all_students = []
     elif getattr(request.user, 'is_parent', False):
         student = getattr(request.user, 'student_profile', None) or Student.objects.filter(guardian_phone=request.user.phone_number).first()
-    
-    if not student:
+        all_students = []
+    else:
+        # Staff/Teacher/Admin can view specific student or switch
         if pk:
             student = get_object_or_404(Student.objects.select_related('current_class', 'current_section', 'academic_year'), pk=pk)
         else:
@@ -438,9 +481,7 @@ def student_dashboard_view(request, pk=None):
                 student = request.user.student_profile
             else:
                 student = Student.objects.filter(status='ACTIVE').select_related('current_class', 'current_section', 'academic_year').first()
-
-    # For staff/coordinators/principals: list all students to allow switching
-    if not getattr(request.user, 'is_student', False):
+        
         all_students = Student.objects.filter(status='ACTIVE').select_related('current_class', 'current_section')
 
     if not student:

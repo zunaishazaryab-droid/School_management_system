@@ -66,9 +66,13 @@ def lecture_create_view(request):
 def homework_list_view(request):
     homeworks = Homework.objects.select_related('class_room', 'section', 'subject', 'teacher').all()
     
-    class_id = request.GET.get('class_id')
-    if class_id:
-        homeworks = homeworks.filter(class_room_id=class_id)
+    if getattr(request.user, 'is_student', False) and hasattr(request.user, 'student_profile'):
+        st = request.user.student_profile
+        homeworks = homeworks.filter(class_room=st.current_class, section=st.current_section)
+    else:
+        class_id = request.GET.get('class_id')
+        if class_id:
+            homeworks = homeworks.filter(class_room_id=class_id)
 
     classes = ClassRoom.objects.all()
 

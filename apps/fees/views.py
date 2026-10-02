@@ -30,6 +30,9 @@ def generate_receipt_number():
 @login_required
 def fee_dashboard_view(request):
     """Financial and Fee Collection Dashboard"""
+    if getattr(request.user, 'is_student', False) or getattr(request.user, 'is_parent', False):
+        return redirect('students:student_dashboard')
+
     today = timezone.now().date()
     current_year = today.year
     current_month_str = today.strftime('%B')
@@ -78,25 +81,32 @@ def invoice_list_view(request):
     """List and filter student fee invoices / challans"""
     invoices = FeeInvoice.objects.select_related('student', 'class_room', 'section', 'academic_year')
 
-    status_filter = request.GET.get('status', '')
-    class_filter = request.GET.get('class_room', '')
-    month_filter = request.GET.get('fee_month', '')
-    query = request.GET.get('q', '').strip()
+    if getattr(request.user, 'is_student', False):
+        student_obj = getattr(request.user, 'student_profile', None)
+        if student_obj:
+            invoices = invoices.filter(student=student_obj)
+        else:
+            invoices = invoices.none()
+    else:
+        status_filter = request.GET.get('status', '')
+        class_filter = request.GET.get('class_room', '')
+        month_filter = request.GET.get('fee_month', '')
+        query = request.GET.get('q', '').strip()
 
-    if status_filter:
-        invoices = invoices.filter(status=status_filter)
-    if class_filter:
-        invoices = invoices.filter(class_room_id=class_filter)
-    if month_filter:
-        invoices = invoices.filter(fee_month__icontains=month_filter)
-    if query:
-        invoices = invoices.filter(
-            Q(invoice_number__icontains=query) |
-            Q(student__first_name__icontains=query) |
-            Q(student__last_name__icontains=query) |
-            Q(student__admission_number__icontains=query) |
-            Q(student__guardian_phone__icontains=query)
-        )
+        if status_filter:
+            invoices = invoices.filter(status=status_filter)
+        if class_filter:
+            invoices = invoices.filter(class_room_id=class_filter)
+        if month_filter:
+            invoices = invoices.filter(fee_month__icontains=month_filter)
+        if query:
+            invoices = invoices.filter(
+                Q(invoice_number__icontains=query) |
+                Q(student__first_name__icontains=query) |
+                Q(student__last_name__icontains=query) |
+                Q(student__admission_number__icontains=query) |
+                Q(student__guardian_phone__icontains=query)
+            )
 
     paginator = Paginator(invoices, 25)
     page_number = request.GET.get('page')
@@ -108,10 +118,10 @@ def invoice_list_view(request):
         'page_title': 'Fee Invoices & Challans',
         'page_obj': page_obj,
         'classes': classes,
-        'status_filter': status_filter,
-        'class_filter': class_filter,
-        'month_filter': month_filter,
-        'query': query,
+        'status_filter': request.GET.get('status', ''),
+        'class_filter': request.GET.get('class_room', ''),
+        'month_filter': request.GET.get('fee_month', ''),
+        'query': request.GET.get('q', '').strip(),
     }
     return render(request, 'fees/invoice_list.html', context)
 
@@ -120,6 +130,11 @@ def invoice_list_view(request):
 def invoice_detail_view(request, pk):
     """View details of a single fee invoice"""
     invoice = get_object_or_404(FeeInvoice.objects.select_related('student', 'class_room', 'section', 'academic_year'), pk=pk)
+    if getattr(request.user, 'is_student', False):
+        if hasattr(request.user, 'student_profile') and invoice.student != request.user.student_profile:
+            messages.error(request, "Unauthorized access to fee invoice.")
+            return redirect('students:student_dashboard')
+
     items = invoice.items.select_related('fee_category')
     payments = invoice.payments.select_related('received_by').all()
 
@@ -416,6 +431,11 @@ def payment_receipt_view(request, pk):
 def student_ledger_view(request, student_id):
     """Complete financial ledger and 12-month Jan-Dec payment matrix for a student"""
     student = get_object_or_404(Student.objects.select_related('current_class', 'current_section', 'academic_year'), pk=student_id)
+    if getattr(request.user, 'is_student', False):
+        if hasattr(request.user, 'student_profile') and student != request.user.student_profile:
+            messages.error(request, "Unauthorized access to student fee ledger.")
+            return redirect('students:student_dashboard')
+
     invoices = student.fee_invoices.all().order_by('issue_date')
     payments = student.fee_payments.all().order_by('payment_date')
 
@@ -567,6 +587,11 @@ def student_discounts_view(request):
 def fee_challan_3part_view(request, pk):
     """Render authentic 3-part (Bank, School, Student) printable Fee Challan voucher."""
     invoice = get_object_or_404(FeeInvoice.objects.select_related('student', 'student__current_class', 'student__current_section', 'academic_year'), pk=pk)
+    if getattr(request.user, 'is_student', False):
+        if hasattr(request.user, 'student_profile') and invoice.student != request.user.student_profile:
+            messages.error(request, "Unauthorized access to fee challan.")
+            return redirect('students:student_dashboard')
+
     items = invoice.items.all()
     
     copies = [

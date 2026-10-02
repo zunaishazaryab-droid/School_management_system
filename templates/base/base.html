@@ -21,7 +21,7 @@
         <!-- Left Sidebar Navigation -->
         <aside class="sidebar" id="appSidebar">
             <div class="sidebar-header">
-                <a href="{% url 'core:dashboard' %}" class="brand-link" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+                <a href="{% if request.user.is_student %}{% url 'students:student_dashboard' %}{% else %}{% url 'core:dashboard' %}{% endif %}" class="brand-link" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
                     <img src="{% static 'images/logo.png' %}" alt="Logo" style="width: 38px; height: 46px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12)); flex-shrink: 0;">
                     <div style="display: flex; flex-direction: column; line-height: 1.2;">
                         <span style="font-weight: 800; font-size: 14px; color: #ffffff; letter-spacing: 0.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.35);">GEN'X VISION</span>
@@ -31,6 +31,69 @@
             </div>
 
             <div class="sidebar-body">
+                {% if request.user.is_student %}
+                <!-- DEDICATED STUDENT PORTAL SIDEBAR -->
+                <div class="sidebar-section-title">Student Portal</div>
+                
+                <a href="{% url 'students:student_dashboard' %}" class="nav-item {% if 'students/dashboard' in request.path or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <span class="nav-icon">🎓</span>
+                    <span>My Dashboard</span>
+                </a>
+
+                <a href="{% url 'academics:timetable' %}" class="nav-item {% if 'timetable' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🕒</span>
+                    <span>My Timetable</span>
+                </a>
+
+                <a href="{% url 'lectures:homework_list' %}" class="nav-item {% if 'lectures' in request.path %}active{% endif %}">
+                    <span class="nav-icon">📖</span>
+                    <span>Homework & Diary</span>
+                </a>
+
+                <a href="{% url 'examinations:cbt_list' %}" class="nav-item {% if 'cbt' in request.path %}active{% endif %}">
+                    <span class="nav-icon">💻</span>
+                    <span>Online CBT Quizzes</span>
+                </a>
+
+                <a href="{% url 'examinations:exam_list' %}" class="nav-item {% if request.resolver_match.app_name == 'examinations' and 'cbt' not in request.path %}active{% endif %}">
+                    <span class="nav-icon">📝</span>
+                    <span>Exams & Results</span>
+                </a>
+
+                <a href="{% url 'syllabus:tracker' %}" class="nav-item {% if 'syllabus' in request.path %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Syllabus Tracker</span>
+                </a>
+
+                <a href="{% url 'attendance:leave_list' %}" class="nav-item {% if 'attendance/leaves' in request.path %}active{% endif %}">
+                    <span class="nav-icon">📝</span>
+                    <span>Leave Requests</span>
+                </a>
+
+                <div class="sidebar-section-title">Communication & Info</div>
+
+                <a href="{% url 'communication:announcement_list' %}" class="nav-item {% if 'communication/announcements' in request.path or request.resolver_match.url_name == 'announcement_list' %}active{% endif %}">
+                    <span class="nav-icon">📢</span>
+                    <span>Notice Board</span>
+                </a>
+
+                <div class="sidebar-section-title">User Account</div>
+
+                <a href="{% url 'core:notifications' %}" class="nav-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                    <span class="nav-icon">🔔</span>
+                    <span>Notifications</span>
+                    {% if unread_notifications_count > 0 %}
+                    <span class="nav-badge" style="background: var(--danger);">{{ unread_notifications_count }}</span>
+                    {% endif %}
+                </a>
+
+                <a href="{% url 'accounts:profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <span class="nav-icon">👤</span>
+                    <span>My Profile</span>
+                </a>
+
+                {% else %}
+                <!-- FULL STAFF & ADMIN NAVIGATION -->
                 <div class="sidebar-section-title">Main Navigation</div>
                 
                 <a href="{% url 'core:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
@@ -65,7 +128,6 @@
                     <span class="nav-icon">🏫</span>
                     <span>Classes & Sections</span>
                 </a>
-
 
                 <a href="{% url 'academics:subject_list' %}" class="nav-item {% if 'academics/subjects' in request.path %}active{% endif %}">
                     <span class="nav-icon">📚</span>
@@ -249,6 +311,7 @@
                     <span class="nav-icon">👤</span>
                     <span>My Profile</span>
                 </a>
+                {% endif %}
             </div>
 
             <div class="sidebar-footer">
@@ -275,10 +338,17 @@
                     <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
                         ☰
                     </button>
+                    {% if request.user.is_student %}
+                    <div style="font-size: 13.5px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px;">
+                        <span>🎓</span>
+                        <span>Student Portal — Welcome, {{ request.user.first_name|default:request.user.username }}!</span>
+                    </div>
+                    {% else %}
                     <form action="{% url 'core:global_search' %}" method="GET" class="global-search-form">
                         <span class="search-icon">🔍</span>
                         <input type="text" name="q" class="search-input" placeholder="Search student, teacher, receipt..." value="{{ request.GET.q|default:'' }}">
                     </form>
+                    {% endif %}
                 </div>
 
                 <div class="topbar-right">

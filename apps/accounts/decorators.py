@@ -19,6 +19,8 @@ def role_required(*allowed_roles):
                 return view_func(request, *args, **kwargs)
             
             messages.error(request, "You do not have permission to access this module.")
+            if getattr(request.user, 'is_student', False) or getattr(request.user, 'is_parent', False):
+                return redirect('students:student_dashboard')
             return redirect('core:dashboard')
         return _wrapped_view
     return decorator

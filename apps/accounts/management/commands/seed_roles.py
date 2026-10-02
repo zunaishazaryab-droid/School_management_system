@@ -70,6 +70,18 @@ class Command(BaseCommand):
                 'is_superuser': False,
                 'phone_number': '+92 300 4445566',
                 'bio': 'Senior Science & Mathematics Teacher for Classes 8, 9 and 10.'
+            },
+            {
+                'username': 'student',
+                'email': 'student@beaconheights.edu.pk',
+                'password': 'student123',
+                'first_name': 'Ali',
+                'last_name': 'Hassan',
+                'role': User.Role.STUDENT,
+                'is_staff': False,
+                'is_superuser': False,
+                'phone_number': '+92 300 5556677',
+                'bio': 'Active enrolled student account for dedicated Student Portal.'
             }
         ]
 
@@ -87,6 +99,15 @@ class Command(BaseCommand):
             user.save()
             action = "Created" if created else "Updated"
             self.stdout.write(self.style.SUCCESS(f"[OK] {action} user: {user.username} ({user.get_role_display()})"))
+
+        # Link student user to first active student record
+        from apps.students.models import Student
+        first_student = Student.objects.filter(status='ACTIVE').first() or Student.objects.first()
+        student_user = User.objects.filter(username='student').first()
+        if first_student and student_user:
+            first_student.user = student_user
+            first_student.save(update_fields=['user'])
+            self.stdout.write(self.style.SUCCESS(f"[OK] Linked student user '{student_user.username}' to student record '{first_student.get_full_name()}' ({first_student.admission_number})."))
 
         # 3. Seed Sample Notifications
         Notification.objects.all().delete()

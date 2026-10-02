@@ -358,6 +358,11 @@ def student_report_card_view(request, exam_id, student_id):
     exam = get_object_or_404(Exam, pk=exam_id)
     student = get_object_or_404(Student.objects.select_related('current_class', 'current_section', 'academic_year'), pk=student_id)
     
+    if getattr(request.user, 'is_student', False):
+        if hasattr(request.user, 'student_profile') and student != request.user.student_profile:
+            messages.error(request, "Unauthorized access to report card.")
+            return redirect('students:student_dashboard')
+
     result = ExamStudentResult.objects.filter(exam=exam, student=student).first()
     schedules = exam.schedules.filter(class_room=student.current_class).select_related('subject')
 

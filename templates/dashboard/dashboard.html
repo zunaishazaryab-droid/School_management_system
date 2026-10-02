@@ -20,16 +20,16 @@
 <!-- KPI Cards Grid -->
 <div class="kpi-grid">
     <!-- Total Students -->
-    <div class="kpi-card">
+    <a href="{% url 'students:student_dashboard' %}" class="kpi-card" style="text-decoration: none; color: inherit;">
         <div class="kpi-info">
             <span class="kpi-label">Enrolled Students</span>
             <span class="kpi-value">{{ stats.total_students }}</span>
-            <span class="kpi-subtext">Active across all classes</span>
+            <span class="kpi-subtext">Open Student Dashboard 🎓</span>
         </div>
         <div class="kpi-icon-box kpi-icon-blue">
             👨‍🎓
         </div>
-    </div>
+    </a>
 
     <!-- Teaching Faculty -->
     <a href="{% url 'teachers:teacher_list' %}?staff_type=TEACHING" class="kpi-card" style="text-decoration: none; color: inherit;">
@@ -103,6 +103,11 @@
     </div>
     <div class="card-body">
         <div class="quick-actions-grid">
+            <a href="{% url 'students:student_dashboard' %}" class="quick-action-card" style="border-color: var(--primary);">
+                <span class="quick-action-icon">🎓</span>
+                <span style="font-weight: 700; color: var(--primary);">Student Dashboard</span>
+                <span style="font-size: 10.5px; color: var(--primary); font-weight: 600;">Live Portal</span>
+            </a>
             <a href="{% url 'students:student_add' %}" class="quick-action-card">
                 <span class="quick-action-icon">➕</span>
                 <span>Add Student</span>
