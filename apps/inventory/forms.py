@@ -47,3 +47,14 @@ class SupplierForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'supplier@example.com'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Business location address'}),
         }
+
+
+class ItemCategoryForm(forms.ModelForm):
+    class Meta:
+        model = ItemCategory
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Stationery, Uniform, Lab Equipment'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Category description...'}),
+        }
+

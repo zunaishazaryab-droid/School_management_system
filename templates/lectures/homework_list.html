@@ -8,6 +8,7 @@
         <h1 class="page-title">Homework & Class Diary</h1>
         <p class="page-subtitle">View daily homework assignments by class and section, due dates, and student task tracking.</p>
     </div>
+    {% if not request.user.is_student %}
     <div style="display: flex; gap: 10px;">
         <a href="{% url 'lectures:lecture_list' %}" class="btn btn-outline">
             📖 Lecture Logs
@@ -16,8 +17,10 @@
             ➕ Assign New Homework
         </a>
     </div>
+    {% endif %}
 </div>
 
+{% if not request.user.is_student %}
 <div class="card" style="margin-bottom: 20px;">
     <div class="card-body" style="padding: 16px 20px;">
         <form method="GET" style="display: flex; gap: 14px; align-items: flex-end;">
@@ -34,6 +37,7 @@
         </form>
     </div>
 </div>
+{% endif %}
 
 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
     {% for hw in homeworks %}

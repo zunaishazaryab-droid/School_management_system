@@ -68,7 +68,7 @@
 </div>
 
 <!-- Top KPI Summary Cards -->
-<div class="kpi-grid" style="margin-bottom: 24px;">
+<div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-bottom: 24px;">
     <!-- Attendance Metric -->
     <div class="kpi-card">
         <div class="kpi-info">
@@ -103,18 +103,6 @@
         </div>
     </div>
 
-    <!-- Today's Schedule -->
-    <div class="kpi-card">
-        <div class="kpi-info">
-            <span class="kpi-label">Today's Classes ({{ today_name }})</span>
-            <span class="kpi-value">{{ today_periods|length }}</span>
-            <span class="kpi-subtext">Periods scheduled today</span>
-        </div>
-        <div class="kpi-icon-box kpi-icon-cyan">
-            🕒
-        </div>
-    </div>
-
     <!-- Active Homework Tasks -->
     <div class="kpi-card">
         <div class="kpi-info">
@@ -131,10 +119,7 @@
 <!-- Tabs Navigation -->
 <div class="card" style="margin-bottom: 24px;">
     <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); padding: 12px 18px; background: var(--bg-surface); border-radius: 12px 12px 0 0; overflow-x: auto;">
-        <button type="button" class="tab-btn active" onclick="switchTab('tab-timetable')" id="btn-tab-timetable" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--primary); background: var(--primary-light);">
-            📅 Schedule & Timetable
-        </button>
-        <button type="button" class="tab-btn" onclick="switchTab('tab-homework')" id="btn-tab-homework" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--text-muted);">
+        <button type="button" class="tab-btn active" onclick="switchTab('tab-homework')" id="btn-tab-homework" style="background: var(--primary-light); border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--primary);">
             📝 Homework & Diary ({{ homework_list|length }})
         </button>
         <button type="button" class="tab-btn" onclick="switchTab('tab-attendance')" id="btn-tab-attendance" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--text-muted);">
@@ -144,112 +129,15 @@
             💳 Fees & Bank Challans
         </button>
         <button type="button" class="tab-btn" onclick="switchTab('tab-exams')" id="btn-tab-exams" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--text-muted);">
-            🏆 Exams, CBT & Results
+            🏆 Exams & Results
         </button>
         <button type="button" class="tab-btn" onclick="switchTab('tab-lectures')" id="btn-tab-lectures" style="background: none; border: none; padding: 8px 16px; font-weight: 700; font-size: 13.5px; border-radius: 8px; cursor: pointer; color: var(--text-muted);">
-            📖 Daily Lectures & Syllabus
+            📖 Daily Class Lectures
         </button>
     </div>
 
-    <!-- TAB 1: SCHEDULE & TIMETABLE -->
-    <div id="tab-timetable" class="tab-content-panel" style="padding: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">
-                📅 Today's Period Schedule ({{ today_name }}, {{ today_date|date:"d M Y" }})
-            </h3>
-            <span class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700;">
-                Class {{ student.current_class.name }} - Section {{ student.current_section.name }}
-            </span>
-        </div>
-
-        {% if today_periods %}
-        <div class="table-responsive" style="margin-bottom: 24px;">
-            <table class="table" style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th style="width: 100px;">Period</th>
-                        <th>Timing</th>
-                        <th>Subject</th>
-                        <th>Teacher / Faculty</th>
-                        <th>Room / Location</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in today_periods %}
-                    <tr>
-                        <td>
-                            <span class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 800;">
-                                {{ p.period.name|default:"Period" }}
-                            </span>
-                        </td>
-                        <td style="font-weight: 600; color: var(--text-main);">
-                            {{ p.period.start_time|time:"h:i A" }} - {{ p.period.end_time|time:"h:i A" }}
-                        </td>
-                        <td>
-                            <strong style="color: var(--primary);">{{ p.subject.name }}</strong>
-                            <span style="font-size: 11.5px; color: var(--text-muted);">({{ p.subject.code }})</span>
-                        </td>
-                        <td>
-                            {% if p.teacher %}
-                                👨‍🏫 {{ p.teacher.get_full_name }}
-                            {% else %}
-                                <span style="color: var(--text-muted);">Faculty Assigned</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="badge" style="background: #f1f5f9; color: #475569;">
-                                {{ p.room_number|default:"Classroom" }}
-                            </span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div style="padding: 30px; text-align: center; background: var(--bg-surface); border-radius: 10px; margin-bottom: 24px;">
-            <div style="font-size: 36px; margin-bottom: 8px;">🌴</div>
-            <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">No Scheduled Periods For Today</h4>
-            <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Today might be a weekend or scheduled holiday break.</p>
-        </div>
-        {% endif %}
-
-        <!-- Full Weekly Timetable Grid -->
-        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">
-            🗓️ Complete Weekly Section Timetable
-        </h4>
-        {% if timetable_qs %}
-        <div class="table-responsive">
-            <table class="table" style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Day</th>
-                        <th>Period</th>
-                        <th>Timing</th>
-                        <th>Subject</th>
-                        <th>Teacher</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in timetable_qs %}
-                    <tr {% if p.day_of_week == today_upper %}style="background: rgba(37, 99, 235, 0.04); font-weight: 600;"{% endif %}>
-                        <td><strong>{{ p.get_day_of_week_display }}</strong></td>
-                        <td><span class="badge" style="background: #e2e8f0; color: #334155;">{{ p.period.name }}</span></td>
-                        <td>{{ p.period.start_time|time:"h:i A" }} - {{ p.period.end_time|time:"h:i A" }}</td>
-                        <td><strong style="color: var(--primary);">{{ p.subject.name }}</strong></td>
-                        <td>{{ p.teacher.get_full_name|default:"TBA" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <p style="color: var(--text-muted); font-size: 13px;">No weekly timetable periods configured for this class section yet.</p>
-        {% endif %}
-    </div>
-
-    <!-- TAB 2: HOMEWORK & DAILY DIARY -->
-    <div id="tab-homework" class="tab-content-panel" style="padding: 20px; display: none;">
+    <!-- TAB 1: HOMEWORK & DAILY DIARY -->
+    <div id="tab-homework" class="tab-content-panel" style="padding: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">
                 📝 Daily Homework Diary & Tasks
@@ -408,7 +296,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{% url 'fees:challan_print' inv.pk %}" target="_blank" class="btn btn-sm" style="background: var(--primary); color: #ffffff; font-weight: 700; border-radius: 6px; padding: 4px 10px; font-size: 12px;">
+                            <a href="{% url 'fees:fee_challan_3part' inv.pk %}" target="_blank" class="btn btn-sm" style="background: var(--primary); color: #ffffff; font-weight: 700; border-radius: 6px; padding: 4px 10px; font-size: 12px;">
                                 📄 Bank Challan
                             </a>
                         </td>
@@ -424,12 +312,12 @@
         {% endif %}
     </div>
 
-    <!-- TAB 5: EXAMS, CBT & RESULTS -->
+    <!-- TAB 4: EXAMS & RESULTS -->
     <div id="tab-exams" class="tab-content-panel" style="padding: 20px; display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
             <div>
                 <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">
-                    🏆 Examination Results, Official Report Cards & CBT Tests
+                    🏆 Examination Results & Official Report Cards
                 </h3>
             </div>
             {% if latest_exam %}
@@ -438,30 +326,6 @@
             </a>
             {% endif %}
         </div>
-
-        <!-- Online CBT Tests Section -->
-        {% if cbt_exams %}
-        <div style="margin-bottom: 24px;">
-            <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">
-                💻 Active CBT Online Quizzes & Tests
-            </h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
-                {% for cbt in cbt_exams %}
-                <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; background: var(--bg-surface); display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong style="color: var(--primary); font-size: 14px;">{{ cbt.title }}</strong>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-                            {{ cbt.subject.name }} • Duration: {{ cbt.duration_minutes }} Mins • Total Marks: {{ cbt.total_marks }}
-                        </div>
-                    </div>
-                    <a href="{% url 'examinations:cbt_take' cbt.pk %}" class="btn btn-sm btn-success" style="font-weight: 700; border-radius: 6px;">
-                        Start Test 🚀
-                    </a>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
 
         <!-- Subject Wise Exam Scores Table -->
         <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">
@@ -542,59 +406,28 @@
         {% endif %}
     </div>
 
-    <!-- TAB 6: LECTURES & SYLLABUS -->
+    <!-- TAB 5: DAILY CLASS LECTURES -->
     <div id="tab-lectures" class="tab-content-panel" style="padding: 20px; display: none;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
-            <!-- Recent Daily Lectures -->
-            <div>
-                <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">
-                    📖 Recent Class Lectures & Topics Covered
-                </h3>
-                {% if recent_lectures %}
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    {% for lec in recent_lectures %}
-                    <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; background: var(--bg-surface);">
-                        <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); margin-bottom: 4px;">
-                            <span style="font-weight: 700; color: var(--primary);">{{ lec.subject.name }}</span>
-                            <span>{{ lec.date|date:"d M Y" }}</span>
-                        </div>
-                        <h5 style="font-size: 14px; font-weight: 700; margin: 0 0 4px 0; color: var(--text-main);">{{ lec.topic }}</h5>
-                        <p style="font-size: 12.5px; color: var(--text-muted); margin: 0;">{{ lec.description|truncatewords:20 }}</p>
+        <div>
+            <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 14px;">
+                📖 Recent Class Lectures & Daily Diary Logs
+            </h3>
+            {% if recent_lectures %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px;">
+                {% for lec in recent_lectures %}
+                <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; background: var(--bg-surface);">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">
+                        <span style="font-weight: 700; color: var(--primary);">{{ lec.subject.name }}</span>
+                        <span>{{ lec.date|date:"d M Y" }}</span>
                     </div>
-                    {% endfor %}
+                    <h5 style="font-size: 14.5px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-main);">{{ lec.topic }}</h5>
+                    <p style="font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.5;">{{ lec.description }}</p>
                 </div>
-                {% else %}
-                <p style="color: var(--text-muted); font-size: 13px;">No lecture diary logs recorded for this week.</p>
-                {% endif %}
+                {% endfor %}
             </div>
-
-            <!-- Subject Syllabus Completion -->
-            <div>
-                <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">
-                    📊 Syllabus Completion Tracker
-                </h3>
-                {% if syllabus_items %}
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    {% for syl in syllabus_items %}
-                    <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; background: var(--bg-surface);">
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px;">
-                            <span>{{ syl.subject.name }}: Ch {{ syl.chapter_number }}</span>
-                            <span style="color: var(--primary);">{{ syl.progress_pct }}%</span>
-                        </div>
-                        <div style="font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 4px;">{{ syl.title }}</div>
-                        <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 6px;">
-                            <div style="height: 100%; width: {{ syl.progress_pct }}%; background: var(--primary); border-radius: 4px;"></div>
-                        </div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">
-                            Covered Topics: {{ syl.completed_topics_count }}/{{ syl.total_topics_count }}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p style="color: var(--text-muted); font-size: 13px;">Syllabus tracker items will be displayed here.</p>
-                {% endif %}
-            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 13px;">No lecture diary logs recorded for this week.</p>
+            {% endif %}
         </div>
     </div>
 </div>

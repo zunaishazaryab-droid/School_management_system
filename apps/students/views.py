@@ -9,7 +9,7 @@ from apps.accounts.decorators import teacher_required, coordinator_required
 from apps.core.models import ActivityLog
 from apps.academics.models import ClassRoom, Section, AcademicYear
 from .models import Student, StudentDocument, StudentPromotionHistory
-from .forms import StudentForm, StudentDocumentForm, StudentPromotionForm
+from .forms import StudentForm, StudentDocumentForm, StudentPromotionForm, SingleStudentPromoteDemoteForm
 
 
 def get_or_create_student_user(student):
@@ -169,6 +169,15 @@ def student_detail_view(request, pk):
     documents = student.documents.all()
     promotion_records = student.promotion_history.select_related('from_class', 'to_class', 'academic_year', 'promoted_by').all()
     doc_form = StudentDocumentForm()
+    
+    promote_demote_form = SingleStudentPromoteDemoteForm(initial={
+        'to_class': student.current_class,
+        'to_section': student.current_section,
+        'target_academic_year': student.academic_year,
+        'roll_number': student.roll_number,
+    })
+    classes = ClassRoom.objects.all()
+    sections = Section.objects.all()
 
     # Document upload submission
     if request.method == 'POST' and 'upload_document' in request.POST:
@@ -192,8 +201,67 @@ def student_detail_view(request, pk):
         'documents': documents,
         'promotion_records': promotion_records,
         'doc_form': doc_form,
+        'promote_demote_form': promote_demote_form,
+        'classes': classes,
+        'sections': sections,
         'page_title': f"Student Profile: {student.get_full_name()}"
     })
+
+
+@login_required
+@coordinator_required
+def student_single_promote_demote_view(request, pk):
+    """Execute individual student promotion or demotion with placement update and history log."""
+    student = get_object_or_404(Student, pk=pk)
+    if request.method == 'POST':
+        form = SingleStudentPromoteDemoteForm(request.POST)
+        if form.is_valid():
+            action_type = form.cleaned_data['action_type']
+            to_class = form.cleaned_data['to_class']
+            to_section = form.cleaned_data['to_section']
+            target_year = form.cleaned_data['target_academic_year']
+            roll_number = form.cleaned_data.get('roll_number')
+            remarks = form.cleaned_data.get('remarks', '')
+
+            old_class = student.current_class
+            old_section = student.current_section
+
+            # Save promotion/demotion history
+            StudentPromotionHistory.objects.create(
+                student=student,
+                from_class=old_class,
+                from_section=old_section,
+                to_class=to_class,
+                to_section=to_section,
+                academic_year=target_year,
+                promoted_by=request.user,
+                remarks=f"[{action_type}] {remarks}".strip()
+            )
+
+            # Update student placement
+            student.current_class = to_class
+            student.current_section = to_section
+            student.academic_year = target_year
+            if roll_number:
+                student.roll_number = roll_number
+            student.save()
+
+            action_verb = "promoted" if action_type == 'PROMOTE' else "demoted"
+            ActivityLog.log_activity(
+                user=request.user,
+                action='UPDATE',
+                module='Students',
+                description=f"{action_type.title()}d student {student.get_full_name()} ({student.admission_number}) from {old_class.name if old_class else 'N/A'} to {to_class.name}.",
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+            messages.success(
+                request,
+                f"Student {student.get_full_name()} has been successfully {action_verb} to {to_class.name} (Section {to_section.name})!"
+            )
+            return redirect('students:student_detail', pk=student.pk)
+        else:
+            messages.error(request, "Please check the entered promotion/demotion data.")
+    return redirect('students:student_detail', pk=student.pk)
 
 
 @login_required
@@ -224,6 +292,7 @@ def student_promotion_view(request):
     if request.method == 'POST':
         form = StudentPromotionForm(request.POST)
         if form.is_valid():
+            action_type = form.cleaned_data.get('action_type', 'PROMOTE')
             from_class = form.cleaned_data['from_class']
             from_section = form.cleaned_data['from_section']
             to_class = form.cleaned_data['to_class']
@@ -232,12 +301,15 @@ def student_promotion_view(request):
             remarks = form.cleaned_data['remarks']
             selected_student_ids = request.POST.getlist('selected_students')
 
+            action_verb = "promoted" if action_type == 'PROMOTE' else "demoted"
+            action_title = "Promote" if action_type == 'PROMOTE' else "Demote"
+
             if not selected_student_ids:
-                messages.warning(request, "Please select at least one student to promote.")
+                messages.warning(request, f"Please select at least one student to {action_title.lower()}.")
             else:
-                students_to_promote = Student.objects.filter(id__in=selected_student_ids)
+                students_to_process = Student.objects.filter(id__in=selected_student_ids)
                 count = 0
-                for st in students_to_promote:
+                for st in students_to_process:
                     # Save promotion history
                     StudentPromotionHistory.objects.create(
                         student=st,
@@ -247,7 +319,7 @@ def student_promotion_view(request):
                         to_section=to_section,
                         academic_year=target_year,
                         promoted_by=request.user,
-                        remarks=remarks
+                        remarks=f"[{action_type}] {remarks}".strip()
                     )
                     # Update student placement
                     st.current_class = to_class
@@ -260,10 +332,10 @@ def student_promotion_view(request):
                     user=request.user,
                     action='UPDATE',
                     module='Students',
-                    description=f"Promoted {count} students from {from_class.name} to {to_class.name}.",
+                    description=f"{action_title}d {count} students from {from_class.name} to {to_class.name}.",
                     ip_address=request.META.get('REMOTE_ADDR')
                 )
-                messages.success(request, f"Successfully promoted {count} students to {to_class.name} - Section {to_section.name}!")
+                messages.success(request, f"Successfully {action_verb} {count} students to {to_class.name} - Section {to_section.name}!")
                 return redirect('students:student_list')
     else:
         form = StudentPromotionForm()
@@ -272,7 +344,7 @@ def student_promotion_view(request):
         'form': form,
         'classes': classes,
         'academic_years': academic_years,
-        'page_title': 'Student Promotion Workflow'
+        'page_title': 'Student Promotion & Demotion Workflow'
     })
 
 
@@ -553,12 +625,7 @@ def student_dashboard_view(request, pk=None):
         status=OnlineAssessment.Status.PUBLISHED
     ).order_by('-created_at')[:4]
 
-    # 8. Syllabus Progress
-    syllabus_items = SyllabusChapter.objects.filter(
-        class_room=student.current_class
-    ).select_related('subject')[:6]
-
-    # 9. School Announcements
+    # 8. School Announcements
     announcements = Announcement.objects.filter(
         is_published=True,
         publish_date__lte=today
@@ -596,7 +663,6 @@ def student_dashboard_view(request, pk=None):
         'exam_marks_list': exam_marks_list,
         'latest_exam': latest_exam,
         'cbt_exams': cbt_exams,
-        'syllabus_items': syllabus_items,
         'announcements': announcements,
         
         'page_title': f"Student Dashboard — {student.get_full_name()} ({student.admission_number})"

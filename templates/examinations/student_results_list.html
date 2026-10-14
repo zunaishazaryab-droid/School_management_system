@@ -1,0 +1,136 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ page_title }} | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header" style="margin-bottom: 24px;">
+    <div>
+        <h1 class="page-title">🏆 My Examinations & Results</h1>
+        <p class="page-subtitle">View your published term results, subject scores, overall grades, and download official report cards.</p>
+    </div>
+</div>
+
+<!-- Student Results KPI Cards -->
+<div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 24px;">
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--primary-light); color: var(--primary);">📝</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Examinations Attempted</span>
+            <span class="kpi-value">{{ total_results_count }}</span>
+            <span class="kpi-subtext">Recorded Term Assessments</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: var(--success-light); color: var(--success);">🎯</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Average Score</span>
+            <span class="kpi-value">{{ avg_pct }}%</span>
+            <span class="kpi-subtext">Cumulative Performance</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background: #e0e7ff; color: #4338ca;">🏆</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Passed Terms</span>
+            <span class="kpi-value">{{ passed_results_count }}</span>
+            <span class="kpi-subtext">Qualified Examinations</span>
+        </div>
+    </div>
+</div>
+
+<!-- Official Term Report Cards Table -->
+<div class="card" style="border-radius: var(--radius-md); box-shadow: var(--shadow-sm); overflow: hidden;">
+    <div class="card-header" style="background: var(--bg-surface); padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <span>📜</span> Term Results & Academic Transcripts
+        </h3>
+        <span class="role-badge" style="background: var(--primary-light); color: var(--primary);">
+            {{ student.get_full_name }} • Class {{ student.current_class.name }} (Sec {{ student.current_section.name }})
+        </span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;">
+                        <th style="padding: 14px 20px; text-align: left;">Examination Title</th>
+                        <th style="padding: 14px 20px; text-align: left;">Academic Session</th>
+                        <th style="padding: 14px 20px; text-align: center;">Total Marks</th>
+                        <th style="padding: 14px 20px; text-align: center;">Marks Obtained</th>
+                        <th style="padding: 14px 20px; text-align: center;">Percentage</th>
+                        <th style="padding: 14px 20px; text-align: center;">Grade</th>
+                        <th style="padding: 14px 20px; text-align: center;">Class Position</th>
+                        <th style="padding: 14px 20px; text-align: center;">Status</th>
+                        <th style="padding: 14px 20px; text-align: right;">Official Report Card</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in results %}
+                    <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 16px 20px; font-weight: 700; color: var(--text-main);">
+                            {{ res.exam.title }}
+                            <div style="font-size: 11.5px; font-weight: 500; color: var(--text-muted); margin-top: 2px;">
+                                {{ res.exam.get_exam_type_display }}
+                            </div>
+                        </td>
+                        <td style="padding: 16px 20px; color: var(--text-muted);">
+                            {{ res.exam.academic_year.name }}
+                        </td>
+                        <td style="padding: 16px 20px; text-align: center; font-weight: 600;">
+                            {{ res.total_marks }}
+                        </td>
+                        <td style="padding: 16px 20px; text-align: center; font-weight: 700; color: var(--primary);">
+                            {{ res.obtained_marks }}
+                        </td>
+                        <td style="padding: 16px 20px; text-align: center; font-weight: 700; color: {% if res.percentage >= 60 %}var(--success){% else %}var(--warning){% endif %};">
+                            {{ res.percentage }}%
+                        </td>
+                        <td style="padding: 16px 20px; text-align: center;">
+                            <span class="role-badge" style="background: {% if res.grade == 'A+' or res.grade == 'A' %}#dcfce7; color: #166534;{% elif res.grade == 'F' %}#fee2e2; color: #991b1b;{% else %}#fef9c3; color: #854d0e;{% endif %} font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px;">
+                                {{ res.grade|default:"N/A" }}
+                            </span>
+                        </td>
+                        <td style="padding: 16px 20px; text-align: center; font-weight: 700;">
+                            {% if res.position_in_class %}
+                                <span style="display: inline-flex; align-items: center; gap: 4px; color: #b45309;">
+                                    {% if res.position_in_class == 1 %}🥇 1st{% elif res.position_in_class == 2 %}🥈 2nd{% elif res.position_in_class == 3 %}🥉 3rd{% else %}#{{ res.position_in_class }}{% endif %}
+                                </span>
+                            {% else %}
+                                <span style="color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 16px 20px; text-align: center;">
+                            {% if res.is_passed %}
+                                <span class="badge" style="background: #dcfce7; color: #15803d; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 11.5px;">✓ Passed</span>
+                            {% else %}
+                                <span class="badge" style="background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 11.5px;">✕ Needs Improvement</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 16px 20px; text-align: right;">
+                            <a href="{% url 'examinations:student_report_card' res.exam.pk student.pk %}" target="_blank" class="btn btn-sm btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-weight: 600; font-size: 12.5px; border-radius: 8px;">
+                                <span>📄</span> View Report Card
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                            <div style="font-size: 40px; margin-bottom: 12px;">📊</div>
+                            <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">No Published Exam Results Yet</h4>
+                            <p style="font-size: 13px; color: var(--text-muted); max-width: 480px; margin: 0 auto;">
+                                Your examination results and grade sheets will appear here automatically once term papers are evaluated and finalized by your teachers.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -10,6 +10,7 @@ import uuid
 
 from .models import FeeCategory, FeeStructure, StudentDiscount, FeeInvoice, FeeInvoiceItem, FeePayment
 from .forms import FeeCategoryForm, FeeStructureForm, StudentDiscountForm, GenerateBulkInvoicesForm, SingleInvoiceForm, FeePaymentForm
+from apps.accounts.decorators import accountant_required
 from apps.students.models import Student
 from apps.academics.models import AcademicYear, ClassRoom, Section
 from apps.core.models import ActivityLog
@@ -148,6 +149,7 @@ def invoice_detail_view(request, pk):
 
 
 @login_required
+@accountant_required
 def generate_bulk_invoices_view(request):
     """Bulk generate monthly fee challans for a class or entire school"""
     if request.method == 'POST':
@@ -271,6 +273,7 @@ def generate_bulk_invoices_view(request):
 
 
 @login_required
+@accountant_required
 def create_single_invoice_view(request):
     """Create a single customized fee invoice"""
     if request.method == 'POST':
@@ -358,6 +361,7 @@ def create_single_invoice_view(request):
 
 
 @login_required
+@accountant_required
 def collect_payment_view(request, invoice_id=None):
     """Collect payment against a fee invoice"""
     invoice = None
@@ -501,6 +505,7 @@ def student_ledger_view(request, student_id):
 
 
 @login_required
+@accountant_required
 def fee_defaulters_view(request):
     """List of students with overdue or pending fees"""
     today = timezone.now().date()
@@ -529,6 +534,7 @@ def fee_defaulters_view(request):
 
 
 @login_required
+@accountant_required
 def fee_structures_view(request):
     """Manage class-wise fee structures and categories"""
     categories = FeeCategory.objects.all()
@@ -562,6 +568,7 @@ def fee_structures_view(request):
 
 
 @login_required
+@accountant_required
 def student_discounts_view(request):
     """Manage student fee concessions and scholarships"""
     discounts = StudentDiscount.objects.select_related('student', 'fee_category')

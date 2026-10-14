@@ -31,7 +31,10 @@
             </div>
         </div>
 
-        <div style="display: flex; gap: 8px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('promoteDemoteModal').style.display='flex'" style="background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; font-weight: 700;">
+                🚀 Promote / Demote
+            </button>
             <a href="{% url 'students:student_card' student.id %}" target="_blank" class="btn btn-outline" title="Print Student ID Card">
                 🪪 Print ID Card
             </a>
@@ -48,12 +51,74 @@
     </div>
 </div>
 
+<!-- Promote / Demote Modal -->
+<div id="promoteDemoteModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div class="card" style="width: 100%; max-width: 520px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; margin: 0; background: #ffffff;">
+        <div class="card-header" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #ffffff; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #ffffff;">
+                🚀 Promote / Demote Student
+            </h3>
+            <button type="button" onclick="document.getElementById('promoteDemoteModal').style.display='none'" style="background: none; border: none; color: #ffffff; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'students:student_single_promote_demote' student.pk %}">
+            {% csrf_token %}
+            <div class="card-body" style="padding: 24px;">
+                <div style="background: #f8fafc; border: 1px solid var(--card-border); border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 13.5px;">
+                    <div>Student: <strong>{{ student.get_full_name }}</strong> ({{ student.admission_number }})</div>
+                    <div style="color: var(--text-muted); font-size: 12.5px; margin-top: 3px;">
+                        Current: <strong>{{ student.current_class.name }}</strong> (Section {{ student.current_section.name }}) • Roll #{{ student.roll_number|default:"N/A" }}
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label class="form-label" style="font-weight: 700;">Action Type *</label>
+                    {{ promote_demote_form.action_type }}
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label" style="font-weight: 700;">Target Class *</label>
+                        {{ promote_demote_form.to_class }}
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label" style="font-weight: 700;">Target Section *</label>
+                        {{ promote_demote_form.to_section }}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label" style="font-weight: 700;">Academic Session *</label>
+                        {{ promote_demote_form.target_academic_year }}
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label" style="font-weight: 700;">New Roll No</label>
+                        {{ promote_demote_form.roll_number }}
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label" style="font-weight: 700;">Remarks / Reason</label>
+                    {{ promote_demote_form.remarks }}
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('promoteDemoteModal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="font-weight: 700;" onclick="return confirm('Confirm updating this student academic placement?');">
+                        Save & Apply Action
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Multi-Tab Navigation Bar -->
 <div style="display: flex; gap: 8px; border-bottom: 2px solid var(--card-border); margin-bottom: 20px; overflow-x: auto;">
     <button class="tab-btn active" onclick="switchTab(event, 'tab-overview')">👤 Biodata Overview</button>
     <button class="tab-btn" onclick="switchTab(event, 'tab-academic')">🏫 Academic Placement</button>
     <button class="tab-btn" onclick="switchTab(event, 'tab-documents')">📁 Documents ({{ documents.count }})</button>
-    <button class="tab-btn" onclick="switchTab(event, 'tab-history')">📜 Promotion History</button>
+    <button class="tab-btn" onclick="switchTab(event, 'tab-history')">📜 Promotion & Demotion Log</button>
     <button class="tab-btn" onclick="switchTab(event, 'tab-attendance')">📅 Attendance Log</button>
     <button class="tab-btn" onclick="switchTab(event, 'tab-fees')">💳 Fee Ledger</button>
     <button class="tab-btn" onclick="switchTab(event, 'tab-results')">📝 Exam Results</button>
@@ -213,26 +278,33 @@
     </div>
 </div>
 
-<!-- Tab 4: Promotion History -->
+<!-- Tab 4: Promotion & Demotion History -->
 <div id="tab-history" class="tab-content" style="display: none;">
     <div class="card">
-        <div class="card-header"><div class="card-title"><span>📜 Academic Progression & Promotion Log</span></div></div>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="card-title"><span>📜 Academic Progression, Promotion & Demotion Log</span></div>
+            <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('promoteDemoteModal').style.display='flex'">
+                🚀 Promote / Demote Student
+            </button>
+        </div>
         <div class="card-body">
             {% if promotion_records %}
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     {% for promo in promotion_records %}
-                    <div style="padding: 14px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--card-border);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <strong>{{ promo.from_class.name }} ➔ {{ promo.to_class.name }}</strong>
-                            <span class="role-badge" style="background: var(--success-light); color: var(--success);">{{ promo.promotion_date }}</span>
+                    <div style="padding: 16px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--card-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="font-size: 14.5px; color: var(--text-main);">
+                                {{ promo.from_class.name }} (Sec {{ promo.from_section.name|default:"A" }}) ➔ {{ promo.to_class.name }} (Sec {{ promo.to_section.name|default:"A" }})
+                            </strong>
+                            <span class="role-badge" style="background: var(--primary-light); color: var(--primary);">{{ promo.promotion_date }}</span>
                         </div>
-                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">{{ promo.remarks|default:"Promoted to next class level." }}</p>
-                        <span style="font-size: 11.5px; color: var(--text-light);">Authorized by: {{ promo.promoted_by.get_full_name|default:"Administrator" }}</span>
+                        <p style="font-size: 13.5px; color: var(--text-main); margin-bottom: 6px;">{{ promo.remarks|default:"Placement change executed." }}</p>
+                        <span style="font-size: 11.5px; color: var(--text-muted);">Session: <strong>{{ promo.academic_year.name }}</strong> • Authorized by: <strong>{{ promo.promoted_by.get_full_name|default:"Administrator" }}</strong></span>
                     </div>
                     {% endfor %}
                 </div>
             {% else %}
-                <p style="color: var(--text-muted); text-align: center; padding: 24px;">No promotion history recorded yet (currently in admission grade).</p>
+                <p style="color: var(--text-muted); text-align: center; padding: 30px;">No promotion or demotion history recorded yet (currently in initial admission class).</p>
             {% endif %}
         </div>
     </div>

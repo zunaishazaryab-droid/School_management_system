@@ -40,29 +40,14 @@
                     <span>My Dashboard</span>
                 </a>
 
-                <a href="{% url 'academics:timetable' %}" class="nav-item {% if 'timetable' in request.path %}active{% endif %}">
-                    <span class="nav-icon">🕒</span>
-                    <span>My Timetable</span>
-                </a>
-
                 <a href="{% url 'lectures:homework_list' %}" class="nav-item {% if 'lectures' in request.path %}active{% endif %}">
                     <span class="nav-icon">📖</span>
                     <span>Homework & Diary</span>
                 </a>
 
-                <a href="{% url 'examinations:cbt_list' %}" class="nav-item {% if 'cbt' in request.path %}active{% endif %}">
-                    <span class="nav-icon">💻</span>
-                    <span>Online CBT Quizzes</span>
-                </a>
-
                 <a href="{% url 'examinations:exam_list' %}" class="nav-item {% if request.resolver_match.app_name == 'examinations' and 'cbt' not in request.path %}active{% endif %}">
                     <span class="nav-icon">📝</span>
                     <span>Exams & Results</span>
-                </a>
-
-                <a href="{% url 'syllabus:tracker' %}" class="nav-item {% if 'syllabus' in request.path %}active{% endif %}">
-                    <span class="nav-icon">📊</span>
-                    <span>Syllabus Tracker</span>
                 </a>
 
                 <a href="{% url 'attendance:leave_list' %}" class="nav-item {% if 'attendance/leaves' in request.path %}active{% endif %}">
@@ -124,6 +109,13 @@
                 </a>
 
                 {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+                <a href="{% url 'students:student_promotion' %}" class="nav-item {% if 'promotion' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🚀</span>
+                    <span>Promote / Demote Students</span>
+                </a>
+                {% endif %}
+
+                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
                 <a href="{% url 'academics:class_list' %}" class="nav-item {% if 'academics/classes' in request.path %}active{% endif %}">
                     <span class="nav-icon">🏫</span>
                     <span>Classes & Sections</span>
@@ -163,11 +155,6 @@
                 <a href="{% url 'lectures:homework_list' %}" class="nav-item {% if 'lectures' in request.path %}active{% endif %}">
                     <span class="nav-icon">📖</span>
                     <span>Homework & Diary</span>
-                </a>
-
-                <a href="{% url 'syllabus:tracker' %}" class="nav-item {% if 'syllabus' in request.path %}active{% endif %}">
-                    <span class="nav-icon">📊</span>
-                    <span>Syllabus Tracker</span>
                 </a>
 
                 {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
@@ -249,10 +236,32 @@
                     <span>Library Catalog</span>
                 </a>
 
-                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
-                <a href="{% url 'inventory:dashboard' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' %}active{% endif %}">
+                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator or request.user.is_accountant or request.user.is_staff_member %}
+                <div class="sidebar-section-title">Stock & Assets (اسٹاک)</div>
+
+                <a href="{% url 'inventory:dashboard' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <span class="nav-icon">📦</span>
-                    <span>Inventory & Assets</span>
+                    <span>Stock Dashboard</span>
+                </a>
+
+                <a href="{% url 'inventory:item_list' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name in 'item_list,item_create,item_edit' %}active{% endif %}">
+                    <span class="nav-icon">📋</span>
+                    <span>Stock Items (اسٹاک آئٹمز)</span>
+                </a>
+
+                <a href="{% url 'inventory:transaction_list' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name in 'transaction_list,transaction_create' %}active{% endif %}">
+                    <span class="nav-icon">🔄</span>
+                    <span>Stock In / Out Ledger</span>
+                </a>
+
+                <a href="{% url 'inventory:category_list' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name == 'category_list' %}active{% endif %}">
+                    <span class="nav-icon">🏷️</span>
+                    <span>Stock Categories</span>
+                </a>
+
+                <a href="{% url 'inventory:supplier_list' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name in 'supplier_list,supplier_create,supplier_edit' %}active{% endif %}">
+                    <span class="nav-icon">🏭</span>
+                    <span>Suppliers & Vendors</span>
                 </a>
                 {% endif %}
 
@@ -318,11 +327,13 @@
                 <div class="user-quick-profile">
                     {% if request.user.avatar %}
                         <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}" class="user-avatar-sm">
+                    {% elif request.user.student_profile and request.user.student_profile.photo %}
+                        <img src="{{ request.user.student_profile.photo.url }}" alt="{{ request.user.student_profile.get_full_name }}" class="user-avatar-sm">
                     {% else %}
-                        <div class="user-avatar-sm">{{ request.user.first_name|first|default:request.user.username|first|upper }}</div>
+                        <div class="user-avatar-sm">{{ request.user.student_profile.first_name|default:request.user.first_name|default:request.user.username|first|upper }}</div>
                     {% endif %}
                     <div class="user-quick-info">
-                        <div class="user-quick-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                        <div class="user-quick-name">{% if request.user.student_profile %}{{ request.user.student_profile.get_full_name }}{% else %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}</div>
                         <div class="user-quick-role">{{ request.user.get_role_display }}</div>
                     </div>
                     <a href="{% url 'accounts:logout' %}" title="Logout" style="color: var(--danger); font-size: 16px; margin-left: 6px;">🚪</a>
@@ -341,7 +352,7 @@
                     {% if request.user.is_student %}
                     <div style="font-size: 13.5px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px;">
                         <span>🎓</span>
-                        <span>Student Portal — Welcome, {{ request.user.first_name|default:request.user.username }}!</span>
+                        <span>Student Portal — Welcome, {% if request.user.student_profile %}{{ request.user.student_profile.first_name }}{% else %}{{ request.user.first_name|default:request.user.username }}{% endif %}!</span>
                     </div>
                     {% else %}
                     <form action="{% url 'core:global_search' %}" method="GET" class="global-search-form">

@@ -7,10 +7,10 @@
 <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
     <div>
         <h1 class="page-title" style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
-            📦 Add Inventory Item
+            📦 {% if action == 'Edit' %}Edit Stock Item{% else %}Add Inventory Item (اسٹاک آئٹم){% endif %}
         </h1>
         <p class="page-subtitle" style="color: var(--text-muted); font-size: 14px;">
-            Register new stationery, lab gear, hardware or school consumable into stock tracking.
+            {% if action == 'Edit' %}Update item specifications, reorder levels, or location.{% else %}Register new stationery, lab gear, hardware or school consumable into stock tracking.{% endif %}
         </p>
     </div>
     <div>

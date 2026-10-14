@@ -108,6 +108,16 @@
                 <span style="font-weight: 700; color: var(--primary);">Student Dashboard</span>
                 <span style="font-size: 10.5px; color: var(--primary); font-weight: 600;">Live Portal</span>
             </a>
+            <a href="{% url 'inventory:dashboard' %}" class="quick-action-card" style="border-color: #0284c7;">
+                <span class="quick-action-icon">📦</span>
+                <span style="font-weight: 700; color: #0284c7;">Stock & Inventory</span>
+                <span style="font-size: 10.5px; color: #0284c7; font-weight: 600;">اسٹاک مینجمنٹ</span>
+            </a>
+            <a href="{% url 'inventory:transaction_create' %}" class="quick-action-card">
+                <span class="quick-action-icon">🔄</span>
+                <span>Stock In / Out</span>
+                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
+            </a>
             <a href="{% url 'students:student_add' %}" class="quick-action-card">
                 <span class="quick-action-icon">➕</span>
                 <span>Add Student</span>
@@ -118,11 +128,11 @@
                 <span>Mark Attendance</span>
                 <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
             </a>
-            <div class="quick-action-card">
+            <a href="{% url 'fees:fee_dashboard' %}" class="quick-action-card">
                 <span class="quick-action-icon">💳</span>
-                <span>Collect Fee</span>
-                <span style="font-size: 10.5px; color: var(--text-light);">Sprint 3</span>
-            </div>
+                <span>Fee Challans</span>
+                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
+            </a>
             <a href="{% url 'lectures:lecture_add' %}" class="quick-action-card">
                 <span class="quick-action-icon">📖</span>
                 <span>Add Lecture Log</span>
@@ -133,11 +143,11 @@
                 <span>Assign Homework</span>
                 <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
             </a>
-            <div class="quick-action-card">
+            <a href="{% url 'examinations:exam_list' %}" class="quick-action-card">
                 <span class="quick-action-icon">🎯</span>
-                <span>Enter Marks</span>
-                <span style="font-size: 10.5px; color: var(--text-light);">Sprint 3</span>
-            </div>
+                <span>Exams & Marks</span>
+                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
+            </a>
         </div>
     </div>
 </div>

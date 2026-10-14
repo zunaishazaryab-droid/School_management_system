@@ -11,11 +11,38 @@ from .forms import ExamForm, ExamScheduleForm, GradeScaleForm
 from apps.academics.models import AcademicYear, ClassRoom, Section, Subject
 from apps.students.models import Student
 from apps.core.models import ActivityLog
+from apps.accounts.decorators import teacher_required, admin_required, principal_required
 
 
 @login_required
 def exam_list_view(request):
-    """List of all examinations & assessments"""
+    """List of all examinations & assessments or student's own exam results"""
+    if getattr(request.user, 'is_student', False):
+        student = getattr(request.user, 'student_profile', None)
+        if not student:
+            student = Student.objects.filter(user=request.user).first()
+
+        results = []
+        if student:
+            results = ExamStudentResult.objects.filter(student=student).select_related(
+                'exam', 'exam__academic_year', 'class_room', 'section'
+            ).order_by('-exam__start_date')
+
+        total_results_count = len(results)
+        passed_results_count = sum(1 for r in results if r.is_passed)
+        avg_pct = round(sum(r.percentage for r in results) / total_results_count, 1) if total_results_count > 0 else 0
+
+        context = {
+            'page_title': 'My Exams & Results',
+            'student': student,
+            'results': results,
+            'total_results_count': total_results_count,
+            'passed_results_count': passed_results_count,
+            'avg_pct': avg_pct,
+            'is_student_view': True,
+        }
+        return render(request, 'examinations/student_results_list.html', context)
+
     exams = Exam.objects.select_related('academic_year').annotate(
         total_papers=Count('schedules', distinct=True),
         total_results=Count('student_results', distinct=True)
@@ -50,6 +77,7 @@ def exam_list_view(request):
 
 
 @login_required
+@principal_required
 def exam_create_view(request):
     """Create a new examination"""
     if request.method == 'POST':
@@ -80,6 +108,7 @@ def exam_create_view(request):
 
 
 @login_required
+@principal_required
 def exam_edit_view(request, pk):
     """Edit examination details"""
     exam = get_object_or_404(Exam, pk=pk)
@@ -102,6 +131,9 @@ def exam_edit_view(request, pk):
 @login_required
 def exam_detail_view(request, pk):
     """Exam Overview, Date Sheet, and Class-wise Marks status"""
+    if getattr(request.user, 'is_student', False):
+        return redirect('examinations:exam_list')
+
     exam = get_object_or_404(Exam.objects.select_related('academic_year'), pk=pk)
     schedules = exam.schedules.select_related('class_room', 'subject').order_by('exam_date', 'start_time')
     classes = ClassRoom.objects.all()
@@ -133,6 +165,7 @@ def exam_detail_view(request, pk):
 
 
 @login_required
+@principal_required
 def exam_schedule_create_view(request, exam_id):
     """Add a paper to the exam date sheet"""
     exam = get_object_or_404(Exam, pk=exam_id)
@@ -149,6 +182,7 @@ def exam_schedule_create_view(request, exam_id):
 
 
 @login_required
+@principal_required
 def exam_schedule_delete_view(request, pk):
     """Delete a paper from date sheet"""
     schedule = get_object_or_404(ExamSchedule, pk=pk)
@@ -160,6 +194,7 @@ def exam_schedule_delete_view(request, pk):
 
 
 @login_required
+@teacher_required
 def exam_marks_entry_view(request, schedule_id):
     """Enter and update subject marks for all students in a class"""
     schedule = get_object_or_404(ExamSchedule.objects.select_related('exam', 'class_room', 'subject'), pk=schedule_id)
@@ -236,6 +271,7 @@ def exam_marks_entry_view(request, schedule_id):
 
 
 @login_required
+@principal_required
 def exam_calculate_results_view(request, exam_id):
     """Compute student overall totals, percentage, grade, and positions"""
     exam = get_object_or_404(Exam, pk=exam_id)
@@ -316,6 +352,7 @@ def exam_calculate_results_view(request, exam_id):
 
 
 @login_required
+@teacher_required
 def exam_class_result_view(request, exam_id, class_id):
     """View class-wise tabulated result gazette"""
     exam = get_object_or_404(Exam, pk=exam_id)
@@ -404,6 +441,7 @@ def student_report_card_view(request, exam_id, student_id):
 
 
 @login_required
+@principal_required
 def grading_scale_list_view(request):
     """View and manage grade thresholds"""
     scales = GradeScale.objects.all()

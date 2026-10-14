@@ -33,13 +33,14 @@
                     <th style="padding: 14px 16px;">Phone</th>
                     <th style="padding: 14px 16px;">Email</th>
                     <th style="padding: 14px 16px;">Address</th>
+                    <th style="padding: 14px 16px; text-align: right;">Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for supp in suppliers %}
                 <tr style="border-bottom: 1px solid var(--border-color); font-size: 13.5px;">
                     <td style="padding: 14px 16px; font-weight: 700; color: var(--text-main);">
-                        {{ supp.name }}
+                        🏭 {{ supp.name }}
                     </td>
                     <td style="padding: 14px 16px; color: var(--text-main);">
                         {{ supp.contact_person|default:"—" }}
@@ -53,10 +54,15 @@
                     <td style="padding: 14px 16px; color: var(--text-muted); font-size: 12.5px;">
                         {{ supp.address|default:"—" }}
                     </td>
+                    <td style="padding: 14px 16px; text-align: right;">
+                        <a href="{% url 'inventory:supplier_edit' supp.id %}" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;">
+                            ✏️ Edit
+                        </a>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
                         No suppliers registered yet.
                     </td>
                 </tr>

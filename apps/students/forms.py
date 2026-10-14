@@ -59,10 +59,21 @@ class StudentDocumentForm(forms.ModelForm):
 
 
 class StudentPromotionForm(forms.Form):
+    ACTION_CHOICES = [
+        ('PROMOTE', '⬆️ Promote to Higher Class'),
+        ('DEMOTE', '⬇️ Demote to Lower / Previous Class'),
+    ]
+    action_type = forms.ChoiceField(
+        choices=ACTION_CHOICES,
+        initial='PROMOTE',
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Action Type"
+    )
     from_class = forms.ModelChoiceField(
         queryset=ClassRoom.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control', 'id': 'promo_from_class'}),
-        label="Promote From Class"
+        label="Source Class"
     )
     from_section = forms.ModelChoiceField(
         queryset=Section.objects.all(),
@@ -73,7 +84,7 @@ class StudentPromotionForm(forms.Form):
     to_class = forms.ModelChoiceField(
         queryset=ClassRoom.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control'}),
-        label="Promote To Target Class"
+        label="Destination Target Class"
     )
     to_section = forms.ModelChoiceField(
         queryset=Section.objects.all(),
@@ -83,9 +94,48 @@ class StudentPromotionForm(forms.Form):
     target_academic_year = forms.ModelChoiceField(
         queryset=AcademicYear.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control'}),
-        label="New Academic Session"
+        label="Target Academic Session"
     )
     remarks = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Annual Promotion Session 2026-2027'}),
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Annual Promotion Session 2026-2027 / Academic Review'}),
         required=False
     )
+
+
+class SingleStudentPromoteDemoteForm(forms.Form):
+    ACTION_CHOICES = [
+        ('PROMOTE', '⬆️ Promote Student (Higher Class)'),
+        ('DEMOTE', '⬇️ Demote Student (Lower / Previous Class)'),
+    ]
+    action_type = forms.ChoiceField(
+        choices=ACTION_CHOICES,
+        initial='PROMOTE',
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'single_action_type'}),
+        label="Action"
+    )
+    to_class = forms.ModelChoiceField(
+        queryset=ClassRoom.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Target Class"
+    )
+    to_section = forms.ModelChoiceField(
+        queryset=Section.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Target Section"
+    )
+    target_academic_year = forms.ModelChoiceField(
+        queryset=AcademicYear.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Academic Session"
+    )
+    roll_number = forms.CharField(
+        max_length=50,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'New Roll Number (optional)'}),
+        label="Roll Number"
+    )
+    remarks = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Promoted after passing Annual Exams / Demoted for foundational support'}),
+        required=False
+    )
+

@@ -7,7 +7,7 @@ from django.db.models import Sum, F, Q
 from apps.accounts.decorators import accountant_required, coordinator_required
 from apps.core.models import ActivityLog
 from .models import InventoryItem, StockTransaction, Supplier, ItemCategory
-from .forms import InventoryItemForm, StockTransactionForm, SupplierForm
+from .forms import InventoryItemForm, StockTransactionForm, SupplierForm, ItemCategoryForm
 
 
 @login_required
@@ -29,7 +29,7 @@ def inventory_dashboard_view(request):
         'low_stock_items': low_stock_items[:5],
         'total_asset_value': total_asset_value,
         'recent_transactions': recent_transactions,
-        'page_title': 'Inventory & Asset Dashboard'
+        'page_title': 'Stock & Inventory Management'
     })
 
 
@@ -77,7 +77,69 @@ def item_create_view(request):
             return redirect('inventory:item_list')
     else:
         form = InventoryItemForm()
-    return render(request, 'inventory/item_form.html', {'form': form, 'page_title': 'Add Inventory Item'})
+    return render(request, 'inventory/item_form.html', {'form': form, 'page_title': 'Add Inventory Item', 'action': 'Add'})
+
+
+@login_required
+@accountant_required
+def item_edit_view(request, pk):
+    item = get_object_or_404(InventoryItem, pk=pk)
+    if request.method == 'POST':
+        form = InventoryItemForm(request.POST, instance=item)
+        if form.is_valid():
+            item = form.save()
+            ActivityLog.log_activity(
+                request.user, 'UPDATE', 'Inventory',
+                f"Updated inventory item '{item.name}' [{item.item_code}]",
+                request.META.get('REMOTE_ADDR')
+            )
+            messages.success(request, f"Item '{item.name}' updated successfully!")
+            return redirect('inventory:item_list')
+    else:
+        form = InventoryItemForm(instance=item)
+    return render(request, 'inventory/item_form.html', {'form': form, 'item': item, 'page_title': f'Edit Item: {item.name}', 'action': 'Edit'})
+
+
+@login_required
+@accountant_required
+def item_delete_view(request, pk):
+    item = get_object_or_404(InventoryItem, pk=pk)
+    if request.method == 'POST':
+        name = item.name
+        item.delete()
+        ActivityLog.log_activity(request.user, 'DELETE', 'Inventory', f"Deleted item '{name}'", request.META.get('REMOTE_ADDR'))
+        messages.success(request, f"Item '{name}' deleted successfully!")
+    return redirect('inventory:item_list')
+
+
+@login_required
+@accountant_required
+def category_list_view(request):
+    categories = ItemCategory.objects.all()
+    if request.method == 'POST':
+        form = ItemCategoryForm(request.POST)
+        if form.is_valid():
+            cat = form.save()
+            messages.success(request, f"Category '{cat.name}' created!")
+            return redirect('inventory:category_list')
+    else:
+        form = ItemCategoryForm()
+    return render(request, 'inventory/category_list.html', {
+        'categories': categories,
+        'form': form,
+        'page_title': 'Stock Categories'
+    })
+
+
+@login_required
+@accountant_required
+def category_delete_view(request, pk):
+    cat = get_object_or_404(ItemCategory, pk=pk)
+    if request.method == 'POST':
+        name = cat.name
+        cat.delete()
+        messages.success(request, f"Category '{name}' deleted!")
+    return redirect('inventory:category_list')
 
 
 @login_required
@@ -137,7 +199,7 @@ def stock_transaction_create_view(request):
 @accountant_required
 def supplier_list_view(request):
     suppliers = Supplier.objects.all()
-    return render(request, 'inventory/supplier_list.html', {'suppliers': suppliers, 'page_title': 'Suppliers Directory'})
+    return render(request, 'inventory/supplier_list.html', {'suppliers': suppliers, 'page_title': 'Suppliers & Vendors Directory'})
 
 
 @login_required
@@ -153,3 +215,19 @@ def supplier_create_view(request):
     else:
         form = SupplierForm()
     return render(request, 'inventory/supplier_form.html', {'form': form, 'page_title': 'Add Supplier'})
+
+
+@login_required
+@accountant_required
+def supplier_edit_view(request, pk):
+    supp = get_object_or_404(Supplier, pk=pk)
+    if request.method == 'POST':
+        form = SupplierForm(request.POST, instance=supp)
+        if form.is_valid():
+            supp = form.save()
+            messages.success(request, f"Supplier '{supp.name}' updated!")
+            return redirect('inventory:supplier_list')
+    else:
+        form = SupplierForm(instance=supp)
+    return render(request, 'inventory/supplier_form.html', {'form': form, 'supp': supp, 'page_title': f'Edit Supplier: {supp.name}'})
+

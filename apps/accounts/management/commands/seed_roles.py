@@ -105,9 +105,12 @@ class Command(BaseCommand):
         first_student = Student.objects.filter(status='ACTIVE').first() or Student.objects.first()
         student_user = User.objects.filter(username='student').first()
         if first_student and student_user:
+            student_user.first_name = first_student.first_name
+            student_user.last_name = first_student.last_name
+            student_user.save(update_fields=['first_name', 'last_name'])
             first_student.user = student_user
             first_student.save(update_fields=['user'])
-            self.stdout.write(self.style.SUCCESS(f"[OK] Linked student user '{student_user.username}' to student record '{first_student.get_full_name()}' ({first_student.admission_number})."))
+            self.stdout.write(self.style.SUCCESS(f"[OK] Linked student user '{student_user.username}' ({student_user.get_full_name()}) to student record '{first_student.get_full_name()}' ({first_student.admission_number})."))
 
         # 3. Seed Sample Notifications
         Notification.objects.all().delete()

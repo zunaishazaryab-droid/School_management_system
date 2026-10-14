@@ -16,6 +16,7 @@ urlpatterns = [
     path('<int:pk>/id-card/', views.student_card_view, name='student_id_card_alias'),
     path('<int:pk>/certificate/', views.student_certificate_view, name='student_certificate'),
     path('<int:pk>/delete/', views.student_delete_view, name='student_delete'),
+    path('<int:pk>/promote-demote/', views.student_single_promote_demote_view, name='student_single_promote_demote'),
     path('promotion/', views.student_promotion_view, name='student_promotion'),
 ]
 
