@@ -1,141 +1,357 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}Examinations & Results - School ERP{% endblock %}
+{% block title %}Examinations & Assessment Plan - School ERP{% endblock %}
 
 {% block content %}
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+<style>
+    /* Clean, Professional & Modern English Design */
+    .exam-header-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 22px 26px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .exam-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+    .stat-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .stat-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .stat-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+    .filter-panel {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 14px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+    .tab-nav {
+        display: flex;
+        background: var(--bg-surface, #f1f5f9);
+        padding: 4px;
+        border-radius: 8px;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+    .tab-link {
+        padding: 7px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--text-muted);
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tab-link:hover {
+        color: var(--text-main);
+    }
+    .tab-link.active {
+        background: #ffffff;
+        color: var(--primary, #1e40af);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .exam-data-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .exam-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+    .exam-table th {
+        background: var(--bg-surface, #f8fafc);
+        padding: 13px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .exam-table td {
+        padding: 15px 18px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13.5px;
+        vertical-align: middle;
+    }
+    .exam-table tr:last-child td {
+        border-bottom: none;
+    }
+    .exam-table tr:hover {
+        background-color: var(--bg-surface, #f8fafc);
+    }
+    .btn-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+</style>
+
+<!-- Page Header -->
+<div class="exam-header-box">
     <div>
-        <h1 class="page-title">📝 Examinations & Results</h1>
-        <p class="page-subtitle">Schedule exam terms, manage date sheets, record subject marks, and generate report cards</p>
+        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0;">
+            📝 Examination & Assessment Management
+        </h1>
+        <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">
+            Yearly academic plan: Weekly Tests, Monthly Assessments, 1st Term, 2nd Term, and Final Annual Exams.
+        </p>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <a href="{% url 'examinations:grade_scales' %}" class="btn btn-outline">
-            📊 Grading Scales & GPA
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="{% url 'examinations:grade_scales' %}" class="btn btn-outline" style="font-size: 13px; padding: 8px 14px;">
+            📊 Grading Scales
         </a>
-        <a href="{% url 'examinations:exam_create' %}" class="btn btn-primary">
-            + Setup New Examination
+        <a href="{% url 'examinations:exam_create' %}" class="btn btn-primary" style="font-size: 13px; font-weight: 700; padding: 8px 18px;">
+            ➕ Create Test / Exam
         </a>
     </div>
 </div>
 
-<!-- KPI Cards -->
-<div class="kpi-grid">
-    <div class="kpi-card">
-        <div class="kpi-icon" style="background: var(--primary-light); color: var(--primary);">📝</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Total Examinations</span>
-            <span class="kpi-value">{{ total_exams_count }}</span>
+<!-- Key Performance Indicators -->
+<div class="exam-stats-grid">
+    <div class="stat-box">
+        <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">
+            📋
+        </div>
+        <div>
+            <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Assessments</div>
+            <div style="font-size: 20px; font-weight: 800; color: var(--text-main);">{{ total_exams_count }}</div>
         </div>
     </div>
 
-    <div class="kpi-card">
-        <div class="kpi-icon" style="background: var(--success-light); color: var(--success);">⚡</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Active / Scheduled</span>
-            <span class="kpi-value">{{ active_exams_count }}</span>
+    <div class="stat-box">
+        <div class="stat-icon" style="background: #dcfce7; color: #166534;">
+            📅
+        </div>
+        <div>
+            <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Weekly Tests</div>
+            <div style="font-size: 20px; font-weight: 800; color: #166534;">{{ weekly_count }}</div>
         </div>
     </div>
 
-    <div class="kpi-card">
-        <div class="kpi-icon" style="background: #e0e7ff; color: #4338ca;">🏆</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Published Report Cards</span>
-            <span class="kpi-value">{{ published_count }}</span>
+    <div class="stat-box">
+        <div class="stat-icon" style="background: #fef3c7; color: #92400e;">
+            🗓️
+        </div>
+        <div>
+            <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Monthly Tests</div>
+            <div style="font-size: 20px; font-weight: 800; color: #92400e;">{{ monthly_count }}</div>
+        </div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-icon" style="background: #f3e8ff; color: #7e22ce;">
+            🏆
+        </div>
+        <div>
+            <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Term Exams</div>
+            <div style="font-size: 20px; font-weight: 800; color: #7e22ce;">{{ term_count }}</div>
         </div>
     </div>
 </div>
 
-<!-- Filter Bar -->
-<div class="card" style="margin-bottom: 20px;">
-    <div class="card-body" style="padding: 16px;">
-        <form method="GET" style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
-            <label style="font-size: 13px; font-weight: 600;">Filter Session:</label>
-            <select name="academic_year" class="form-control" style="max-width: 220px;">
-                <option value="">-- All Sessions --</option>
-                {% for y in academic_years %}
-                <option value="{{ y.id }}" {% if academic_year_id == y.id|stringformat:"i" %}selected{% endif %}>{{ y.name }}</option>
-                {% endfor %}
-            </select>
-
-            <label style="font-size: 13px; font-weight: 600;">Type:</label>
-            <select name="exam_type" class="form-control" style="max-width: 220px;">
-                <option value="">-- All Types --</option>
-                <option value="MID_TERM" {% if exam_type == 'MID_TERM' %}selected{% endif %}>Mid-Term Examination</option>
-                <option value="FINAL_TERM" {% if exam_type == 'FINAL_TERM' %}selected{% endif %}>Final Annual Examination</option>
-                <option value="FIRST_TERM" {% if exam_type == 'FIRST_TERM' %}selected{% endif %}>First Term Examination</option>
-                <option value="MONTHLY_TEST" {% if exam_type == 'MONTHLY_TEST' %}selected{% endif %}>Monthly Assessment</option>
-            </select>
-
-            <button type="submit" class="btn btn-primary" style="height: 38px;">Filter</button>
-            <a href="{% url 'examinations:exam_list' %}" class="btn btn-outline" style="height: 38px;">Reset</a>
-        </form>
+<!-- Segmented Tabs & Filters -->
+<div class="filter-panel">
+    <!-- Clean Category Tabs in English -->
+    <div class="tab-nav">
+        <a href="{% url 'examinations:exam_list' %}{% if academic_year_id %}?academic_year={{ academic_year_id }}{% endif %}" class="tab-link {% if not exam_type %}active{% endif %}">
+            All Assessments
+        </a>
+        <a href="{% url 'examinations:exam_list' %}?exam_type=WEEKLY_TEST{% if academic_year_id %}&academic_year={{ academic_year_id }}{% endif %}" class="tab-link {% if exam_type == 'WEEKLY_TEST' %}active{% endif %}">
+            Weekly Tests
+        </a>
+        <a href="{% url 'examinations:exam_list' %}?exam_type=MONTHLY_TEST{% if academic_year_id %}&academic_year={{ academic_year_id }}{% endif %}" class="tab-link {% if exam_type == 'MONTHLY_TEST' %}active{% endif %}">
+            Monthly Tests
+        </a>
+        <a href="{% url 'examinations:exam_list' %}?exam_type=FIRST_TERM{% if academic_year_id %}&academic_year={{ academic_year_id }}{% endif %}" class="tab-link {% if exam_type == 'FIRST_TERM' %}active{% endif %}">
+            1st Term
+        </a>
+        <a href="{% url 'examinations:exam_list' %}?exam_type=SECOND_TERM{% if academic_year_id %}&academic_year={{ academic_year_id }}{% endif %}" class="tab-link {% if exam_type == 'SECOND_TERM' or exam_type == 'MID_TERM' %}active{% endif %}">
+            2nd Term / Mid-Term
+        </a>
+        <a href="{% url 'examinations:exam_list' %}?exam_type=FINAL_TERM{% if academic_year_id %}&academic_year={{ academic_year_id }}{% endif %}" class="tab-link {% if exam_type == 'FINAL_TERM' %}active{% endif %}">
+            Final Annual Exam
+        </a>
     </div>
+
+    <!-- Academic Session Filter -->
+    <form method="GET" style="display: flex; gap: 8px; align-items: center; margin: 0;">
+        {% if exam_type %}
+        <input type="hidden" name="exam_type" value="{{ exam_type }}">
+        {% endif %}
+        <span style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Session:</span>
+        <select name="academic_year" class="form-control" onchange="this.form.submit()" style="padding: 6px 12px; font-size: 13px; height: auto; border-radius: 6px; min-width: 170px;">
+            <option value="">All Sessions</option>
+            {% for y in academic_years %}
+            <option value="{{ y.id }}" {% if academic_year_id == y.id|stringformat:"i" %}selected{% endif %}>{{ y.name }}</option>
+            {% endfor %}
+        </select>
+        {% if academic_year_id or exam_type %}
+        <a href="{% url 'examinations:exam_list' %}" class="btn btn-sm btn-outline" style="padding: 5px 10px; font-size: 12px;" title="Reset filters">
+            Reset
+        </a>
+        {% endif %}
+    </form>
 </div>
 
-<!-- Examinations List Table -->
-<div class="card">
-    <div class="card-body" style="padding: 0;">
-        <div class="table-container">
-            <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
-                <thead>
-                    <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
-                        <th style="padding: 12px 16px; text-align: left;">Exam Title</th>
-                        <th style="padding: 12px 16px; text-align: left;">Type</th>
-                        <th style="padding: 12px 16px; text-align: left;">Session</th>
-                        <th style="padding: 12px 16px; text-align: left;">Exam Period</th>
-                        <th style="padding: 12px 16px; text-align: center;">Papers</th>
-                        <th style="padding: 12px 16px; text-align: center;">Results Generated</th>
-                        <th style="padding: 12px 16px; text-align: center;">Status</th>
-                        <th style="padding: 12px 16px; text-align: center;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ex in exams %}
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 12px 16px; font-weight: 700;">
-                            <a href="{% url 'examinations:exam_detail' ex.pk %}" style="color: var(--primary);">{{ ex.title }}</a>
-                        </td>
-                        <td style="padding: 12px 16px;">
-                            <span class="role-badge" style="font-size: 11px;">{{ ex.get_exam_type_display }}</span>
-                        </td>
-                        <td style="padding: 12px 16px; font-weight: 600;">{{ ex.academic_year.name }}</td>
-                        <td style="padding: 12px 16px; font-size: 12.5px; color: var(--text-muted);">
-                            {{ ex.start_date }} to {{ ex.end_date }}
-                        </td>
-                        <td style="padding: 12px 16px; text-align: center; font-weight: 700;">
-                            {{ ex.total_papers }}
-                        </td>
-                        <td style="padding: 12px 16px; text-align: center;">
-                            <span style="font-weight: 700; color: var(--primary);">{{ ex.total_results }} Students</span>
-                        </td>
-                        <td style="padding: 12px 16px; text-align: center;">
-                            {% if ex.is_published %}
-                            <span class="role-badge" style="background: var(--success-light); color: var(--success); font-size: 11px;">Published</span>
-                            {% elif ex.is_active %}
-                            <span class="role-badge" style="background: var(--primary-light); color: var(--primary); font-size: 11px;">Active / Scheduled</span>
-                            {% else %}
-                            <span class="role-badge" style="background: #f1f5f9; color: var(--text-muted); font-size: 11px;">Completed</span>
-                            {% endif %}
-                        </td>
-                        <td style="padding: 12px 16px; text-align: center; white-space: nowrap;">
-                            <a href="{% url 'examinations:exam_detail' ex.pk %}" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 12px;">
-                                📅 Date Sheet & Marks
+<!-- Examination Roster Table -->
+<div class="exam-data-card">
+    <div style="padding: 14px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card);">
+        <div style="font-weight: 700; font-size: 14.5px; color: var(--text-main);">
+            📋 Examination & Test Roster
+        </div>
+        <span class="badge" style="background: var(--bg-surface); color: var(--text-muted); font-size: 12px; font-weight: 600;">
+            {{ filtered_count }} Records
+        </span>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="exam-table">
+            <thead>
+                <tr>
+                    <th style="width: 28%;">Test / Exam Title</th>
+                    <th style="width: 15%;">Category</th>
+                    <th style="width: 15%;">Date Period</th>
+                    <th style="width: 10%; text-align: center;">Papers</th>
+                    <th style="width: 12%; text-align: center;">Results</th>
+                    <th style="width: 10%; text-align: center;">Status</th>
+                    <th style="width: 10%; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ex in exams %}
+                <tr>
+                    <!-- Title -->
+                    <td>
+                        <a href="{% url 'examinations:exam_detail' ex.pk %}" style="font-weight: 700; color: var(--primary); text-decoration: none; font-size: 14px;">
+                            {{ ex.title }}
+                        </a>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                            Session: {{ ex.academic_year.name }}
+                        </div>
+                    </td>
+
+                    <!-- Category Badge -->
+                    <td>
+                        {% if ex.exam_type == 'WEEKLY_TEST' %}
+                            <span class="badge" style="background: #dcfce7; color: #166534; font-weight: 700; font-size: 11.5px;">Weekly Test</span>
+                        {% elif ex.exam_type == 'MONTHLY_TEST' %}
+                            <span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 11.5px;">Monthly Test</span>
+                        {% elif ex.exam_type == 'FIRST_TERM' %}
+                            <span class="badge" style="background: #fef3c7; color: #92400e; font-weight: 700; font-size: 11.5px;">1st Term</span>
+                        {% elif ex.exam_type == 'SECOND_TERM' or ex.exam_type == 'MID_TERM' %}
+                            <span class="badge" style="background: #f3e8ff; color: #6b21a8; font-weight: 700; font-size: 11.5px;">2nd Term</span>
+                        {% elif ex.exam_type == 'FINAL_TERM' %}
+                            <span class="badge" style="background: #ffe4e6; color: #9f1239; font-weight: 700; font-size: 11.5px;">Final Annual</span>
+                        {% else %}
+                            <span class="badge" style="background: #f1f5f9; color: var(--text-muted); font-weight: 600; font-size: 11.5px;">{{ ex.get_exam_type_display }}</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Dates -->
+                    <td style="color: var(--text-main); font-size: 13px;">
+                        <div>{{ ex.start_date|date:"d M Y" }}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">to {{ ex.end_date|date:"d M Y" }}</div>
+                    </td>
+
+                    <!-- Papers Count -->
+                    <td style="text-align: center;">
+                        <span class="badge" style="background: #f1f5f9; color: var(--text-main); font-weight: 700; font-size: 12px;">
+                            {{ ex.total_papers }} Papers
+                        </span>
+                    </td>
+
+                    <!-- Results Count -->
+                    <td style="text-align: center;">
+                        {% if ex.total_results > 0 %}
+                            <span style="font-weight: 800; color: #166534; font-size: 13px;">{{ ex.total_results }} Students</span>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 12px;">Pending</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Portal Status -->
+                    <td style="text-align: center;">
+                        {% if ex.is_published %}
+                            <span class="badge" style="background: #dcfce7; color: #166534; font-size: 11px; font-weight: 700;">Live (Published)</span>
+                        {% else %}
+                            <span class="badge" style="background: #f1f5f9; color: var(--text-muted); font-size: 11px;">Draft (Hidden)</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Actions -->
+                    <td style="text-align: right; white-space: nowrap;">
+                        <div class="btn-actions">
+                            <a href="{% url 'examinations:quick_marks_entry' ex.pk %}" class="btn btn-sm btn-primary" style="padding: 5px 12px; font-size: 12px; font-weight: 700;" title="Enter subject marks for all classes directly">
+                                Marks Entry
                             </a>
-                            <a href="{% url 'examinations:exam_edit' ex.pk %}" class="btn btn-sm btn-outline" style="padding: 4px 8px; font-size: 12px; margin-left: 4px;">
+                            <a href="{% url 'examinations:exam_edit' ex.pk %}" class="btn btn-sm btn-outline" style="padding: 5px 8px; font-size: 12px;" title="Edit details">
                                 ✏️
                             </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" style="padding: 36px; text-align: center; color: var(--text-muted);">
-                            No examinations setup yet. Click "+ Setup New Examination" to create one.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            <form method="POST" action="{% url 'examinations:exam_delete' ex.pk %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete {{ ex.title }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline" style="padding: 5px 8px; font-size: 12px; color: var(--danger); border-color: #fecaca;" title="Delete">
+                                    🗑️
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="padding: 45px 20px; text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
+                        <div style="font-weight: 700; font-size: 15px; color: var(--text-main); margin-bottom: 4px;">No examinations found for this category</div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Get started by creating a new weekly test, monthly assessment, or term exam.</div>
+                        <a href="{% url 'examinations:exam_create' %}" class="btn btn-primary" style="font-size: 13px;">
+                            ➕ Create New Exam / Test
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

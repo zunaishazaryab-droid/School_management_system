@@ -1,46 +1,55 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Faculty: {{ teacher.get_full_name }} | {{ school_settings.school_name }}{% endblock %}
+{% block title %}{% if teacher.staff_type == 'NON_TEACHING' %}Staff Profile: {{ teacher.get_full_name }}{% else %}Faculty: {{ teacher.get_full_name }}{% endif %} | {{ school_settings.school_name }}{% endblock %}
 
 {% block content %}
-<!-- Faculty Header -->
+<!-- Faculty / Staff Header -->
 <div class="card" style="margin-bottom: 24px; background: linear-gradient(to right, #ffffff, #f8fafc);">
     <div class="card-body" style="padding: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
             {% if teacher.photo %}
                 <img src="{{ teacher.photo.url }}" alt="{{ teacher.get_full_name }}" style="width: 84px; height: 84px; border-radius: var(--radius-md); object-fit: cover; border: 3px solid var(--primary-border);">
             {% else %}
-                <div style="width: 84px; height: 84px; border-radius: var(--radius-md); background: #334155; color: #fff; font-size: 32px; font-weight: 700; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 84px; height: 84px; border-radius: var(--radius-md); background: {% if teacher.staff_type == 'NON_TEACHING' %}#0f766e{% else %}#1e3a8a{% endif %}; color: #fff; font-size: 32px; font-weight: 700; display: flex; align-items: center; justify-content: center;">
                     {{ teacher.user.first_name|first|upper }}
                 </div>
             {% endif %}
             <div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main);">{{ teacher.get_full_name }}</h1>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0;">{{ teacher.get_full_name }}</h1>
                     <span class="role-badge" style="background: var(--primary-light);">{{ teacher.employee_id }}</span>
+                    {% if teacher.staff_type == 'NON_TEACHING' %}
+                        <span class="role-badge" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">🏢 Non-Teaching Staff</span>
+                    {% else %}
+                        <span class="role-badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">👩‍🏫 Teaching Faculty</span>
+                    {% endif %}
                     <span class="role-badge" style="background: var(--success-light); color: var(--success);">{{ teacher.status }}</span>
                 </div>
-                <div style="font-size: 13.5px; color: var(--text-muted); margin-top: 4px;">
-                    {{ teacher.get_designation_display }} • Dept: <strong>{{ teacher.department }}</strong> • Basic Salary: <strong>{{ school_settings.currency_symbol }} {{ teacher.basic_salary }}</strong>
+                <div style="font-size: 13.5px; color: var(--text-muted); margin-top: 6px;">
+                    {{ teacher.get_designation_display }} • Department / Unit: <strong>{{ teacher.department }}</strong> • Basic Salary: <strong>{{ school_settings.currency_symbol }} {{ teacher.basic_salary }}</strong>
                 </div>
             </div>
         </div>
 
         <div>
             <a href="{% url 'teachers:teacher_edit' teacher.id %}" class="btn btn-primary">
-                ✏️ Edit Faculty Profile
+                ✏️ Edit {% if teacher.staff_type == 'NON_TEACHING' %}Staff{% else %}Faculty{% endif %} Profile
             </a>
         </div>
     </div>
 </div>
 
 <!-- Tabs Navigation -->
-<div style="display: flex; gap: 8px; border-bottom: 2px solid var(--card-border); margin-bottom: 20px;">
+<div style="display: flex; gap: 8px; border-bottom: 2px solid var(--card-border); margin-bottom: 20px; flex-wrap: wrap;">
     <button class="tab-btn active" onclick="switchFacultyTab(event, 'tab-f-overview')">👤 Overview & Biodata</button>
-    <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-workload')">🏫 Teaching Workload & Classes</button>
+    {% if teacher.staff_type == 'TEACHING' %}
+        <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-workload')">🏫 Teaching Workload & Classes</button>
+    {% else %}
+        <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-workload')">💼 Role & Operational Scope</button>
+    {% endif %}
     <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-salary')">💰 Salary History</button>
     <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-leaves')">🏖️ Leave Requests</button>
-    <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-performance')">⭐ Performance Reviews</button>
+    <button class="tab-btn" onclick="switchFacultyTab(event, 'tab-f-performance')">⭐ Performance & Appraisals</button>
 </div>
 
 <!-- Tab 1: Overview -->
@@ -62,18 +71,22 @@
         </div>
 
         <div class="card">
-            <div class="card-header"><div class="card-title"><span>🎓 Professional Background</span></div></div>
+            <div class="card-header">
+                <div class="card-title">
+                    <span>{% if teacher.staff_type == 'NON_TEACHING' %}💼 Staff Background & Role Details{% else %}🎓 Academic & Professional Background{% endif %}</span>
+                </div>
+            </div>
             <div class="card-body">
                 <div style="margin-bottom: 16px;">
-                    <strong style="font-size: 13.5px;">Highest Qualification:</strong>
+                    <strong style="font-size: 13.5px;">{% if teacher.staff_type == 'NON_TEACHING' %}Education / Basic Qualification:{% else %}Highest Academic Qualification:{% endif %}</strong>
                     <p style="font-size: 14px; color: var(--text-main); margin-top: 4px;">{{ teacher.qualification }}</p>
                 </div>
                 <div style="margin-bottom: 16px;">
-                    <strong style="font-size: 13.5px;">Teaching Experience:</strong>
-                    <p style="font-size: 14px; color: var(--text-main); margin-top: 4px;">{{ teacher.experience_years }} Years</p>
+                    <strong style="font-size: 13.5px;">{% if teacher.staff_type == 'NON_TEACHING' %}Work Experience:{% else %}Teaching Experience:{% endif %}</strong>
+                    <p style="font-size: 14px; color: var(--text-main); margin-top: 4px;">{{ teacher.experience_years }} Year{% if teacher.experience_years != 1 %}s{% endif %}</p>
                 </div>
                 <div>
-                    <strong style="font-size: 13.5px;">Department:</strong>
+                    <strong style="font-size: 13.5px;">{% if teacher.staff_type == 'NON_TEACHING' %}Department / Division:{% else %}Academic Department:{% endif %}</strong>
                     <p style="font-size: 14px; color: var(--text-main); margin-top: 4px;">{{ teacher.department }}</p>
                 </div>
             </div>
@@ -81,8 +94,9 @@
     </div>
 </div>
 
-<!-- Tab 2: Workload & Classes -->
+<!-- Tab 2: Workload / Role Scope -->
 <div id="tab-f-workload" class="tab-content" style="display: none;">
+    {% if teacher.staff_type == 'TEACHING' %}
     <div class="dashboard-grid">
         <div class="card">
             <div class="card-header"><div class="card-title"><span>🏫 Assigned Class Incharge / Sections</span></div></div>
@@ -122,6 +136,31 @@
             </div>
         </div>
     </div>
+    {% else %}
+    <!-- Non-Teaching Duties & Operational Scope -->
+    <div class="card">
+        <div class="card-header"><div class="card-title"><span>💼 Non-Teaching Operational Scope & Job Duties</span></div></div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+                <div style="padding: 16px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--card-border);">
+                    <div style="font-weight: 700; color: #0f172a; margin-bottom: 6px;">🎯 Primary Role</div>
+                    <div style="font-size: 15px; font-weight: 600; color: #2563eb;">{{ teacher.get_designation_display }}</div>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Assigned to {{ teacher.department }} unit.</p>
+                </div>
+                <div style="padding: 16px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--card-border);">
+                    <div style="font-weight: 700; color: #0f172a; margin-bottom: 6px;">🏢 Administrative Division</div>
+                    <div style="font-size: 15px; font-weight: 600; color: #0f766e;">{{ teacher.department }}</div>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Directly supervised by School Administration & Principal.</p>
+                </div>
+                <div style="padding: 16px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--card-border);">
+                    <div style="font-weight: 700; color: #0f172a; margin-bottom: 6px;">🕒 Daily Operations</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #334155;">Full-Time On Campus</div>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Staff Member Status: <span style="color: #15803d; font-weight: 700;">{{ teacher.status }}</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Tab 3: Salary History -->

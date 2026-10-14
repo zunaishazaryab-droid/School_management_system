@@ -1,0 +1,422 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Marks Entry - {{ exam.title }} ({{ class_room.name }}) | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<form method="POST" id="quickMarksForm">
+    {% csrf_token %}
+    <input type="hidden" name="class_room" value="{{ class_room.id }}">
+    {% if selected_student %}
+    <input type="hidden" name="student_id" value="{{ selected_student.id }}">
+    {% endif %}
+
+    <!-- Top Header Bar -->
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <a href="{% url 'examinations:exam_list' %}" class="btn btn-sm btn-outline">← Back to Exams</a>
+                <h1 class="page-title" style="margin: 0; font-size: 22px; font-weight: 800; color: var(--text-main);">
+                    ✍️ Subject Marks Entry: {{ exam.title }}
+                </h1>
+                <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 12px; font-weight: 800;">
+                    {{ exam.get_exam_type_display }}
+                </span>
+            </div>
+            <p class="page-subtitle" style="margin-top: 4px; font-size: 13px; color: var(--text-muted);">
+                Class: <strong style="color: var(--text-main);">{{ class_room.name }}</strong> • 
+                Session: {{ exam.academic_year.name }} • 
+                Total Subjects: <strong>{{ selected_student_rows|length }}</strong>
+            </p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            {% if selected_student %}
+            <a href="{% url 'examinations:student_report_card' exam.pk selected_student.pk %}" target="_blank" class="btn btn-outline" style="font-size: 13px;">
+                📄 View Result Card
+            </a>
+            {% endif %}
+            <button type="submit" name="save_all" class="btn btn-primary" style="padding: 9px 26px; font-weight: 800; font-size: 14px; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">
+                💾 Save & View Result Card →
+            </button>
+        </div>
+    </div>
+
+    <!-- Class Selector Bar -->
+    <div style="background: #ffffff; border: 1px solid var(--card-border); border-radius: 10px; padding: 12px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <span style="font-size: 12.5px; font-weight: 800; color: #475569; text-transform: uppercase;">
+                🏫 Class:
+            </span>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                {% for c in classes %}
+                <a href="{% url 'examinations:quick_marks_entry' exam.pk %}?class_room={{ c.id }}" 
+                   style="padding: 5px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; text-decoration: none;
+                   {% if c.id == class_room.id %}
+                       background: var(--primary); color: #ffffff; border: 1.5px solid var(--primary);
+                   {% else %}
+                       background: #f8fafc; color: #334155; border: 1px solid #cbd5e1;
+                   {% endif %}">
+                    {{ c.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted);">
+            {{ students|length }} Students Enrolled
+        </div>
+    </div>
+
+    <!-- Student Selector Chips Bar (If multiple students in class) -->
+    {% if students|length > 1 %}
+    <div style="background: #ffffff; border: 1px solid var(--card-border); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <span style="font-size: 12.5px; font-weight: 800; color: #475569; text-transform: uppercase;">
+            👨‍🎓 Student:
+        </span>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            {% for st in students %}
+            <a href="{% url 'examinations:quick_marks_entry' exam.pk %}?class_room={{ class_room.id }}&student_id={{ st.id }}" 
+               style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none;
+               {% if selected_student and st.id == selected_student.id %}
+                   background: #eff6ff; color: #2563eb; border: 1.5px solid #2563eb; box-shadow: 0 1px 3px rgba(37,99,235,0.15);
+               {% else %}
+                   background: #f8fafc; color: #475569; border: 1px solid #cbd5e1;
+               {% endif %}">
+                <span>Roll {{ st.roll_number|default:forloop.counter }}: {{ st.get_full_name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if selected_student %}
+    <!-- Active Student Profile Card -->
+    <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background: #2563eb; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800;">
+                {{ selected_student.first_name|slice:":1" }}
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: var(--text-main);">
+                    {{ selected_student.get_full_name }}
+                </h3>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                    Roll #: <strong>{{ selected_student.roll_number|default:"1" }}</strong> • 
+                    ID: <strong>{{ selected_student.admission_number }}</strong> • 
+                    Section: <strong>{{ selected_student.current_section.name }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; background: #ffffff; padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px;">
+            <div>
+                <span style="font-size: 11px; color: #64748b; display: block;">Total Obtained:</span>
+                <strong style="color: #2563eb; font-size: 14px;" id="headerTotalObt">{{ selected_student_obtained|floatformat:1 }} / {{ class_total_max }}</strong>
+            </div>
+            <div style="border-left: 1px solid #e2e8f0; padding-left: 16px;">
+                <span style="font-size: 11px; color: #64748b; display: block;">Grade:</span>
+                <strong style="font-size: 14px; color: #16a34a;" id="headerGradeBadge">Grade {{ selected_student_grade }} ({{ selected_student_pct }}%)</strong>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Vertical All-Subjects List Card -->
+    <div class="card" style="border-radius: 10px; border: 1px solid var(--card-border); background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+        <div class="card-header" style="padding: 14px 20px; background: #fafafa; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <span style="font-weight: 800; color: var(--text-main); font-size: 14.5px;">
+                    📚 Vertical Subject-Wise Marks & Custom Total Register
+                </span>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                    Aap kisi bhi subject ke <strong>Total Marks</strong> aur <strong>Obtained Marks</strong> ko asani se yahan edit kar sakte hain.
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;" id="verticalSubjectsTable">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 2px solid var(--card-border); color: #475569; font-weight: 700;">
+                            <th style="padding: 12px 16px; text-align: left; width: 45px;">#</th>
+                            <th style="padding: 12px 16px; text-align: left; min-width: 200px;">Subject Name</th>
+                            <th style="padding: 12px 14px; text-align: center; width: 140px; background: #f1f5f9;">
+                                Total Marks (Edit)
+                            </th>
+                            <th style="padding: 12px 14px; text-align: center; width: 120px;">Pass Marks</th>
+                            <th style="padding: 12px 16px; text-align: left; width: 160px; background: #eff6ff; color: #1e40af;">
+                                Marks Obtained
+                            </th>
+                            <th style="padding: 12px 14px; text-align: center; width: 90px;">Absent?</th>
+                            <th style="padding: 12px 14px; text-align: center; width: 100px;">Score %</th>
+                            <th style="padding: 12px 14px; text-align: center; width: 90px;">Grade</th>
+                            <th style="padding: 12px 16px; text-align: left; min-width: 200px;">Teacher Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in selected_student_rows %}
+                        <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" id="vrow_{{ row.schedule.id }}" onmouseover="this.style.background='#fbfcfe'" onmouseout="this.style.background='#ffffff'">
+                            <td style="padding: 12px 16px; color: var(--text-muted); font-weight: 600;">{{ forloop.counter }}</td>
+                            
+                            <!-- Subject Name -->
+                            <td style="padding: 12px 16px;">
+                                <div style="font-weight: 800; color: var(--text-main); font-size: 14px;">
+                                    {{ row.subject.name }}
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted);">
+                                    Paper Date: {{ row.schedule.exam_date|date:"d M Y" }}
+                                </div>
+                            </td>
+
+                            <!-- Total Marks Input (Customizable per subject) -->
+                            <td style="padding: 10px 14px; text-align: center; background: #f8fafc; border-left: 1px solid #e2e8f0;">
+                                <input type="number" min="1" max="1000"
+                                       name="total_marks_{{ row.schedule.id }}"
+                                       id="total_marks_{{ row.schedule.id }}"
+                                       value="{{ row.total_marks }}"
+                                       class="form-control v-total-input"
+                                       data-schedule="{{ row.schedule.id }}"
+                                       style="width: 85px; text-align: center; font-weight: 800; font-size: 13.5px; padding: 6px 8px; border: 1.5px solid #94a3b8; border-radius: 6px; display: inline-block; background: #ffffff;"
+                                       title="Edit Max Total Marks for this subject">
+                            </td>
+
+                            <!-- Pass Marks Input -->
+                            <td style="padding: 10px 14px; text-align: center;">
+                                <input type="number" min="1" max="1000"
+                                       name="pass_marks_{{ row.schedule.id }}"
+                                       id="pass_marks_{{ row.schedule.id }}"
+                                       value="{{ row.passing_marks }}"
+                                       class="form-control"
+                                       style="width: 75px; text-align: center; font-size: 13px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; display: inline-block;"
+                                       title="Edit Passing Marks">
+                            </td>
+
+                            <!-- Marks Obtained Input -->
+                            <td style="padding: 10px 16px; background: #f0f9ff; border-left: 2px solid #bae6fd;">
+                                <input type="number" step="0.01" min="0" max="{{ row.total_marks }}"
+                                       name="marks_{{ selected_student.id }}_{{ row.schedule.id }}"
+                                       id="obt_{{ row.schedule.id }}"
+                                       value="{{ row.obtained }}"
+                                       data-schedule="{{ row.schedule.id }}"
+                                       placeholder="0 - {{ row.total_marks }}"
+                                       class="form-control v-obt-input"
+                                       style="width: 110px; font-weight: 800; font-size: 14px; padding: 7px 10px; border: 1.5px solid #2563eb; border-radius: 6px; display: inline-block;"
+                                       {% if row.is_absent %}disabled style="opacity: 0.5; width: 110px;"{% endif %}>
+                            </td>
+
+                            <!-- Absent Checkbox -->
+                            <td style="padding: 10px 14px; text-align: center;">
+                                <input type="checkbox" name="absent_{{ selected_student.id }}_{{ row.schedule.id }}" value="1"
+                                       id="abs_{{ row.schedule.id }}"
+                                       class="form-checkbox"
+                                       {% if row.is_absent %}checked{% endif %}
+                                       onchange="toggleVerticalAbsent('{{ row.schedule.id }}')"
+                                       style="width: 18px; height: 18px; cursor: pointer;">
+                            </td>
+
+                            <!-- Live Subject % -->
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: #2563eb;" id="vpct_{{ row.schedule.id }}">
+                                {{ row.percentage }}%
+                            </td>
+
+                            <!-- Live Subject Grade -->
+                            <td style="padding: 12px 14px; text-align: center;">
+                                <span class="badge" id="vgrade_{{ row.schedule.id }}" style="font-weight: 800; font-size: 12px; {% if row.grade == 'A+' or row.grade == 'A' %}background: #dcfce7; color: #166534;{% elif row.grade == 'F' %}background: #fee2e2; color: #991b1b;{% else %}background: #e0f2fe; color: #0369a1;{% endif %}">
+                                    {{ row.grade }}
+                                </span>
+                            </td>
+
+                            <!-- Remarks Input -->
+                            <td style="padding: 10px 16px;">
+                                <input type="text" name="remarks_{{ selected_student.id }}_{{ row.schedule.id }}"
+                                       id="rem_{{ row.schedule.id }}"
+                                       value="{{ row.remarks }}"
+                                       class="form-control"
+                                       placeholder="e.g. Excellent / Good"
+                                       style="font-size: 12.5px; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" style="padding: 36px; text-align: center; color: var(--text-muted);">
+                                No subjects scheduled for this class.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                    <!-- Grand Summary Row (Live updates) -->
+                    <tfoot>
+                        <tr style="background: #f8fafc; border-top: 2.5px solid #1e293b; font-weight: 800; font-size: 14px;">
+                            <td colspan="2" style="padding: 14px 16px; font-size: 15px; color: #0f172a;">
+                                📊 GRAND TOTAL & OVERALL RESULT:
+                            </td>
+                            <td style="padding: 14px; text-align: center; color: #0f172a; font-size: 16px; background: #f1f5f9;" id="liveGrandMax">
+                                {{ class_total_max }}
+                            </td>
+                            <td style="padding: 14px; text-align: center; color: #64748b;">--</td>
+                            <td style="padding: 14px 16px; color: #2563eb; font-size: 17px; background: #eff6ff;" id="liveGrandObt">
+                                {{ selected_student_obtained|floatformat:1 }}
+                            </td>
+                            <td style="padding: 14px; text-align: center;">--</td>
+                            <td style="padding: 14px; text-align: center; color: #2563eb; font-size: 15px;" id="liveGrandPct">
+                                {{ selected_student_pct }}%
+                            </td>
+                            <td style="padding: 14px; text-align: center; font-size: 16px; color: #16a34a;" id="liveGrandGrade">
+                                {{ selected_student_grade }}
+                            </td>
+                            <td style="padding: 14px 16px;" id="liveGrandStatus">
+                                <span style="color: #16a34a; font-weight: 800;">✔ PASSED / ON TRACK</span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Bottom Save Footer -->
+            <div style="padding: 18px 24px; background: #fafafa; border-top: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                <div style="font-size: 13px; color: var(--text-muted);">
+                    💡 <em>Har subject ke total marks aur obtained marks yahan edit kar ke <strong>Save</strong> dabayen.</em>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <a href="{% url 'examinations:exam_list' %}" class="btn btn-outline" style="font-weight: 600;">
+                        Cancel
+                    </a>
+                    <button type="submit" name="save_all" class="btn btn-primary" style="padding: 10px 32px; font-weight: 800; font-size: 14px; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">
+                        💾 Save All Marks & View Result Card →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+function toggleVerticalAbsent(scheduleId) {
+    const absCheckbox = document.getElementById(`abs_${scheduleId}`);
+    const obtInput = document.getElementById(`obt_${scheduleId}`);
+    const remInput = document.getElementById(`rem_${scheduleId}`);
+
+    if (absCheckbox.checked) {
+        obtInput.value = '0';
+        obtInput.disabled = true;
+        obtInput.style.opacity = '0.5';
+        if (!remInput.value) {
+            remInput.value = 'Absent';
+        }
+    } else {
+        obtInput.disabled = false;
+        obtInput.style.opacity = '1';
+        if (remInput.value === 'Absent') {
+            remInput.value = '';
+        }
+    }
+    recalculateVerticalSheetLive();
+}
+
+function recalculateVerticalSheetLive() {
+    let grandMax = 0;
+    let grandObt = 0;
+    let anyFailed = false;
+
+    const totalInputs = document.querySelectorAll('.v-total-input');
+    totalInputs.forEach(totInput => {
+        const scheduleId = totInput.dataset.schedule;
+        const maxVal = parseFloat(totInput.value) || 0;
+        grandMax += maxVal;
+
+        const obtInput = document.getElementById(`obt_${scheduleId}`);
+        const absCheckbox = document.getElementById(`abs_${scheduleId}`);
+        const isAbsent = absCheckbox ? absCheckbox.checked : false;
+
+        let obtVal = 0;
+        if (obtInput) {
+            obtInput.max = maxVal;
+            obtInput.placeholder = `0 - ${maxVal}`;
+            if (!obtInput.disabled && obtInput.value !== '' && !isAbsent) {
+                obtVal = parseFloat(obtInput.value) || 0;
+                if (obtVal > maxVal) {
+                    obtVal = maxVal;
+                    obtInput.value = maxVal;
+                }
+                if (obtVal < 0) {
+                    obtVal = 0;
+                    obtInput.value = 0;
+                }
+                grandObt += obtVal;
+            }
+        }
+
+        // Subject Percentage
+        const subPct = maxVal > 0 ? ((obtVal / maxVal) * 100) : 0;
+        const vpctEl = document.getElementById(`vpct_${scheduleId}`);
+        if (vpctEl) {
+            vpctEl.textContent = isAbsent ? '0.0%' : subPct.toFixed(1) + '%';
+        }
+
+        // Subject Grade
+        let subGrade = 'F';
+        let subColor = '#991b1b';
+        let subBg = '#fee2e2';
+        if (!isAbsent) {
+            if (subPct >= 90) { subGrade = 'A+'; subColor = '#166534'; subBg = '#dcfce7'; }
+            else if (subPct >= 80) { subGrade = 'A'; subColor = '#15803d'; subBg = '#dcfce7'; }
+            else if (subPct >= 70) { subGrade = 'B'; subColor = '#1d4ed8'; subBg = '#dbeafe'; }
+            else if (subPct >= 60) { subGrade = 'C'; subColor = '#2563eb'; subBg = '#eff6ff'; }
+            else if (subPct >= 50) { subGrade = 'D'; subColor = '#d97706'; subBg = '#fef3c7'; }
+            else if (subPct >= 40) { subGrade = 'E'; subColor = '#ca8a04'; subBg = '#fef9c3'; }
+        }
+
+        const vgradeEl = document.getElementById(`vgrade_${scheduleId}`);
+        if (vgradeEl) {
+            vgradeEl.textContent = isAbsent ? 'ABS' : subGrade;
+            vgradeEl.style.color = subColor;
+            vgradeEl.style.backgroundColor = subBg;
+        }
+    });
+
+    // Update Grand Totals
+    const liveGrandMax = document.getElementById('liveGrandMax');
+    if (liveGrandMax) liveGrandMax.textContent = grandMax.toFixed(0);
+
+    const liveGrandObt = document.getElementById('liveGrandObt');
+    if (liveGrandObt) liveGrandObt.textContent = grandObt.toFixed(1);
+
+    const grandPct = grandMax > 0 ? ((grandObt / grandMax) * 100) : 0;
+    const liveGrandPct = document.getElementById('liveGrandPct');
+    if (liveGrandPct) liveGrandPct.textContent = grandPct.toFixed(1) + '%';
+
+    let grandGrade = 'F';
+    let gColor = '#991b1b';
+    if (grandPct >= 90) { grandGrade = 'A+'; gColor = '#166534'; }
+    else if (grandPct >= 80) { grandGrade = 'A'; gColor = '#15803d'; }
+    else if (grandPct >= 70) { grandGrade = 'B'; gColor = '#1d4ed8'; }
+    else if (grandPct >= 60) { grandGrade = 'C'; gColor = '#2563eb'; }
+    else if (grandPct >= 50) { grandGrade = 'D'; gColor = '#d97706'; }
+    else if (grandPct >= 40) { grandGrade = 'E'; gColor = '#ca8a04'; }
+
+    const liveGrandGrade = document.getElementById('liveGrandGrade');
+    if (liveGrandGrade) {
+        liveGrandGrade.textContent = grandGrade;
+        liveGrandGrade.style.color = gColor;
+    }
+
+    const headerTotalObt = document.getElementById('headerTotalObt');
+    if (headerTotalObt) {
+        headerTotalObt.textContent = `${grandObt.toFixed(1)} / ${grandMax.toFixed(0)}`;
+    }
+
+    const headerGradeBadge = document.getElementById('headerGradeBadge');
+    if (headerGradeBadge) {
+        headerGradeBadge.textContent = `Grade ${grandGrade} (${grandPct.toFixed(1)}%)`;
+        headerGradeBadge.style.color = gColor;
+    }
+}
+
+document.querySelectorAll('.v-total-input, .v-obt-input').forEach(input => {
+    input.addEventListener('input', recalculateVerticalSheetLive);
+});
+
+window.addEventListener('DOMContentLoaded', recalculateVerticalSheetLive);
+</script>
+{% endblock %}

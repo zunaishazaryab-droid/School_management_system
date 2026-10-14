@@ -9,7 +9,7 @@
         <p class="page-subtitle">Enter student biodata, academic placement, guardian information, and document details.</p>
     </div>
     <div>
-        <a href="{% url 'students:student_list' %}" class="btn btn-outline">
+        <a href="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% url 'students:student_list' %}{% endif %}" class="btn btn-outline">
             ◀ Back to Students Directory
         </a>
     </div>
@@ -17,6 +17,11 @@
 
 <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
+    {% if request.GET.next %}
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+    {% elif request.POST.next %}
+    <input type="hidden" name="next" value="{{ request.POST.next }}">
+    {% endif %}
 
     <!-- 1. Academic Placement Section -->
     <div class="card">
@@ -215,9 +220,9 @@
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--card-border);">
-                <a href="{% url 'students:student_list' %}" class="btn btn-outline">Cancel</a>
-                <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
-                    💾 {% if is_edit %}Update Student Profile{% else %}Save Student Admission{% endif %}
+                <a href="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% url 'students:student_list' %}{% endif %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 800;">
+                    💾 {% if is_edit %}Save & Update Student{% else %}Save Student Admission{% endif %}
                 </button>
             </div>
         </div>

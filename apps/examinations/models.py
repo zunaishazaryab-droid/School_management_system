@@ -44,11 +44,13 @@ class GradeScale(models.Model):
 
 class Exam(models.Model):
     class ExamType(models.TextChoices):
+        WEEKLY_TEST = 'WEEKLY_TEST', 'Weekly Test'
         MONTHLY_TEST = 'MONTHLY_TEST', 'Monthly Assessment'
         FIRST_TERM = 'FIRST_TERM', 'First Term Examination'
+        SECOND_TERM = 'SECOND_TERM', 'Second Term Examination'
         MID_TERM = 'MID_TERM', 'Mid-Term Examination'
         FINAL_TERM = 'FINAL_TERM', 'Final Annual Examination'
-        QUIZ_UNIT = 'QUIZ_UNIT', 'Quiz / Unit Test'
+        QUIZ_UNIT = 'QUIZ_UNIT', 'Class / Unit Test'
 
     title = models.CharField(max_length=150, help_text="e.g. Mid-Term Examination 2026, Annual Exam 2027")
     exam_type = models.CharField(max_length=30, choices=ExamType.choices, default=ExamType.MID_TERM)

@@ -1,0 +1,248 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Master Marksheet - {{ class_room.name }} ({{ exam.title }}) | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<form method="POST" id="masterMarksheetForm">
+    {% csrf_token %}
+
+    <!-- Top Header Bar -->
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <a href="{% url 'examinations:exam_detail' exam.pk %}" class="btn btn-sm btn-outline">← Back to Date Sheet</a>
+                <h1 class="page-title" style="margin: 0; font-size: 22px; font-weight: 800; color: var(--text-main);">
+                    📊 Master Marksheet: {{ class_room.name }}
+                </h1>
+            </div>
+            <p class="page-subtitle" style="margin-top: 4px; font-size: 13px; color: var(--text-muted);">
+                Exam: <strong>{{ exam.title }}</strong> • Session: {{ exam.academic_year.name }} • 
+                Total Scheduled Subjects: <strong>{{ schedules|length }}</strong> • 
+                Class Maximum Marks: <strong>{{ class_total_max }}</strong>
+            </p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <a href="{% url 'examinations:class_result' exam.pk class_room.pk %}" class="btn btn-outline" style="font-size: 13px;">
+                📄 Result Gazette
+            </a>
+            <button type="submit" class="btn btn-primary" style="padding: 9px 24px; font-weight: 800; font-size: 13.5px; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">
+                💾 Save All Marks
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Help & Notice Banner -->
+    <div style="display: flex; justify-content: space-between; align-items: center; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div style="font-size: 13px; color: #1e40af; display: flex; align-items: center; gap: 8px;">
+            <span>💡</span>
+            <span><strong>All-In-One Sheet:</strong> Enter marks for each subject directly in the boxes. The row total, percentage, and grade update automatically in real-time.</span>
+        </div>
+        <a href="{% url 'examinations:auto_schedule_class_subjects' exam.pk class_room.pk %}" class="btn btn-sm btn-outline" style="font-size: 12px; font-weight: 700; color: #2563eb; background: #ffffff; border-color: #93c5fd;" onclick="return confirm('Auto-schedule any missing class subjects into this date sheet?');">
+            + Auto-Populate All Class Subjects
+        </a>
+    </div>
+
+    <!-- Master Marksheet Spreadsheet Card -->
+    <div class="card" style="border-radius: 10px; border: 1px solid var(--card-border); background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+        <div class="card-header" style="padding: 14px 20px; background: #fafafa; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <span style="font-weight: 800; color: var(--text-main); font-size: 14px;">
+                    📝 Class Mark Register ({{ student_matrix|length }} Students)
+                </span>
+            </div>
+            <div style="font-size: 12.5px; color: var(--text-muted);">
+                Press <kbd style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">Tab</kbd> or <kbd style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 11px;">Enter</kbd> to move across subjects
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap;" id="masterTable">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 2px solid var(--card-border); color: #475569; font-weight: 700;">
+                            <th style="padding: 12px 14px; text-align: center; width: 40px;">#</th>
+                            <th style="padding: 12px 14px; text-align: left; width: 70px;">Roll #</th>
+                            <th style="padding: 12px 16px; text-align: left; min-width: 170px;">Student Name</th>
+                            <th style="padding: 12px 12px; text-align: center; width: 60px;">Sec</th>
+
+                            <!-- Subject Columns -->
+                            {% for sch in schedules %}
+                            <th style="padding: 10px 14px; text-align: center; min-width: 135px; background: #f1f5f9; border-left: 1px solid #e2e8f0;">
+                                <div style="font-weight: 800; color: #0f172a; font-size: 13.5px;">{{ sch.subject.name }}</div>
+                                <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-top: 2px;">
+                                    Max: <strong style="color: #0f172a;">{{ sch.total_marks }}</strong> • Pass: {{ sch.passing_marks }}
+                                </div>
+                            </th>
+                            {% endfor %}
+
+                            <th style="padding: 12px 16px; text-align: right; min-width: 120px; background: #e0f2fe; color: #0369a1; border-left: 2px solid #bae6fd;">
+                                Total Obtained
+                            </th>
+                            <th style="padding: 12px 14px; text-align: center; min-width: 80px; background: #e0f2fe; color: #0369a1;">
+                                Grade
+                            </th>
+                            <th style="padding: 12px 14px; text-align: center; min-width: 100px;">Result Card</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in student_matrix %}
+                        <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" class="student-row" id="row_{{ row.student.id }}" onmouseover="this.style.background='#fbfcfe'" onmouseout="this.style.background='#ffffff'">
+                            <td style="padding: 10px 14px; text-align: center; color: var(--text-muted); font-weight: 600;">{{ forloop.counter }}</td>
+                            <td style="padding: 10px 14px; font-weight: 700; color: var(--text-main);">{{ row.student.roll_number|default:"--" }}</td>
+                            <td style="padding: 10px 16px;">
+                                <div style="font-weight: 800; color: var(--text-main); font-size: 13.5px;">{{ row.student.get_full_name }}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">ID: {{ row.student.admission_number }}</div>
+                            </td>
+                            <td style="padding: 10px 12px; text-align: center; color: #64748b; font-weight: 600;">{{ row.student.current_section.name }}</td>
+
+                            <!-- Subject Inputs -->
+                            {% for sub in row.subjects %}
+                            <td style="padding: 8px 10px; text-align: center; border-left: 1px solid #f1f5f9;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                    <input type="number" step="0.01" min="0" max="{{ sub.schedule.total_marks }}"
+                                           name="marks_{{ row.student.id }}_{{ sub.schedule.id }}"
+                                           id="marks_{{ row.student.id }}_{{ sub.schedule.id }}"
+                                           value="{{ sub.obtained }}"
+                                           placeholder="0-{{ sub.schedule.total_marks }}"
+                                           class="form-control matrix-input"
+                                           data-student="{{ row.student.id }}"
+                                           data-max="{{ sub.schedule.total_marks }}"
+                                           style="width: 80px; text-align: center; font-weight: 700; font-size: 13.5px; padding: 6px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px;"
+                                           {% if sub.is_absent %}disabled style="opacity: 0.5; width: 80px; text-align: center;"{% endif %}>
+                                    
+                                    <label title="Mark Absent" style="cursor: pointer; margin: 0; font-size: 10px; color: #64748b; text-align: center; user-select: none;">
+                                        <input type="checkbox" name="absent_{{ row.student.id }}_{{ sub.schedule.id }}" value="1"
+                                               id="abs_{{ row.student.id }}_{{ sub.schedule.id }}"
+                                               {% if sub.is_absent %}checked{% endif %}
+                                               onchange="toggleMatrixAbsent('{{ row.student.id }}', '{{ sub.schedule.id }}')"
+                                               style="cursor: pointer; width: 14px; height: 14px;">
+                                        <span style="display: block; font-size: 9.5px; font-weight: 700; color: #94a3b8;">ABS</span>
+                                    </label>
+                                </div>
+                            </td>
+                            {% endfor %}
+
+                            <!-- Total & Grade Columns (Live recalculation) -->
+                            <td style="padding: 10px 16px; text-align: right; font-weight: 800; color: #0284c7; background: #f0f9ff; border-left: 2px solid #bae6fd;">
+                                <span id="total_obt_{{ row.student.id }}" style="font-size: 14px;">{{ row.total_obtained|floatformat:1 }}</span>
+                                <span style="font-size: 11px; color: #64748b; font-weight: normal;">/{{ class_total_max }}</span>
+                                <div id="pct_{{ row.student.id }}" style="font-size: 11px; color: #0284c7; font-weight: 700;">{{ row.percentage }}%</div>
+                            </td>
+                            <td style="padding: 10px 14px; text-align: center; font-weight: 800; background: #f0f9ff;">
+                                <span class="badge" id="grade_badge_{{ row.student.id }}" style="font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; {% if row.grade == 'A+' or row.grade == 'A' %}background: #dcfce7; color: #166534;{% elif row.grade == 'F' %}background: #fee2e2; color: #991b1b;{% else %}background: #e0f2fe; color: #0369a1;{% endif %}">
+                                    {{ row.grade }}
+                                </span>
+                            </td>
+
+                            <!-- Action -->
+                            <td style="padding: 10px 14px; text-align: center;">
+                                <a href="{% url 'examinations:student_report_card' exam.pk row.student.pk %}" target="_blank" class="btn btn-sm btn-outline" style="padding: 4px 9px; font-size: 12px; font-weight: 700; color: #2563eb; border-color: #93c5fd; background: #fff;">
+                                    📄 Card
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{{ schedules|length|add:7 }}" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                                No students found in this class.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bottom Save Footer -->
+            <div style="padding: 16px 20px; background: #fafafa; border-top: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div style="font-size: 12.5px; color: var(--text-muted);">
+                    ✔ All subjects are listed on this single sheet. Changes save immediately to all student records and report cards.
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="{% url 'examinations:exam_detail' exam.pk %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 30px; font-weight: 800; font-size: 14px; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">
+                        💾 Save Master Marksheet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+const classTotalMax = parseFloat("{{ class_total_max }}") || 0;
+
+function toggleMatrixAbsent(studentId, scheduleId) {
+    const checkbox = document.getElementById(`abs_${studentId}_${scheduleId}`);
+    const input = document.getElementById(`marks_${studentId}_${scheduleId}`);
+
+    if (checkbox.checked) {
+        input.value = '0';
+        input.disabled = true;
+        input.style.opacity = '0.5';
+    } else {
+        input.disabled = false;
+        input.style.opacity = '1';
+    }
+    recalculateStudentRow(studentId);
+}
+
+function recalculateStudentRow(studentId) {
+    let studentObtained = 0;
+    const inputs = document.querySelectorAll(`input[data-student="${studentId}"]`);
+
+    inputs.forEach(input => {
+        if (!input.disabled && input.value !== '') {
+            let val = parseFloat(input.value) || 0;
+            const maxVal = parseFloat(input.dataset.max) || 0;
+            if (val > maxVal) {
+                val = maxVal;
+                input.value = maxVal;
+            }
+            if (val < 0) {
+                val = 0;
+                input.value = 0;
+            }
+            studentObtained += val;
+        }
+    });
+
+    const totalSpan = document.getElementById(`total_obt_${studentId}`);
+    if (totalSpan) {
+        totalSpan.textContent = studentObtained.toFixed(1);
+    }
+
+    const pct = classTotalMax > 0 ? ((studentObtained / classTotalMax) * 100) : 0;
+    const pctDiv = document.getElementById(`pct_${studentId}`);
+    if (pctDiv) {
+        pctDiv.textContent = pct.toFixed(1) + '%';
+    }
+
+    let grade = 'F';
+    let gradeColor = '#991b1b';
+    let gradeBg = '#fee2e2';
+
+    if (pct >= 90) { grade = 'A+'; gradeColor = '#166534'; gradeBg = '#dcfce7'; }
+    else if (pct >= 80) { grade = 'A'; gradeColor = '#15803d'; gradeBg = '#dcfce7'; }
+    else if (pct >= 70) { grade = 'B'; gradeColor = '#1d4ed8'; gradeBg = '#dbeafe'; }
+    else if (pct >= 60) { grade = 'C'; gradeColor = '#2563eb'; gradeBg = '#eff6ff'; }
+    else if (pct >= 50) { grade = 'D'; gradeColor = '#d97706'; gradeBg = '#fef3c7'; }
+    else if (pct >= 40) { grade = 'E'; gradeColor = '#ca8a04'; gradeBg = '#fef9c3'; }
+    else { grade = 'F'; gradeColor = '#991b1b'; gradeBg = '#fee2e2'; }
+
+    const badge = document.getElementById(`grade_badge_${studentId}`);
+    if (badge) {
+        badge.textContent = grade;
+        badge.style.color = gradeColor;
+        badge.style.backgroundColor = gradeBg;
+    }
+}
+
+document.querySelectorAll('.matrix-input').forEach(input => {
+    input.addEventListener('input', function() {
+        const studentId = this.dataset.student;
+        recalculateStudentRow(studentId);
+    });
+});
+</script>
+{% endblock %}

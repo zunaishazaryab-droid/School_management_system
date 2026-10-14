@@ -84,27 +84,42 @@
             </div>
         </div>
 
-        <!-- Breakdown Table -->
-        <table style="width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 16px;">
+        <!-- Simple & Professional Payment Table -->
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
             <thead>
-                <tr style="background: #e2e8f0; color: #1e293b;">
-                    <th style="padding: 8px 10px; text-align: left;">Description</th>
-                    <th style="padding: 8px 10px; text-align: right;">Gross Billed</th>
-                    <th style="padding: 8px 10px; text-align: right;">Concessions</th>
-                    <th style="padding: 8px 10px; text-align: right;">Net Payable</th>
-                    <th style="padding: 8px 10px; text-align: right;">Amount Paid</th>
-                    <th style="padding: 8px 10px; text-align: right;">Balance Due</th>
+                <tr style="background: #1e293b; color: #ffffff;">
+                    <th style="padding: 10px 14px; text-align: left; font-weight: 700; width: 60px;">Sr #</th>
+                    <th style="padding: 10px 14px; text-align: left; font-weight: 700;">Particulars / Description</th>
+                    <th style="padding: 10px 14px; text-align: center; font-weight: 700;">Billing Month</th>
+                    <th style="padding: 10px 14px; text-align: center; font-weight: 700;">Status</th>
+                    <th style="padding: 10px 14px; text-align: right; font-weight: 700; width: 200px;">Total Amount (Rs.)</th>
                 </tr>
             </thead>
             <tbody>
-                <tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 8px 10px; font-weight: 600;">{{ invoice.fee_month }} Tuition & Academic Charges</td>
-                    <td style="padding: 8px 10px; text-align: right;">Rs. {{ invoice.subtotal_amount|floatformat:0 }}</td>
-                    <td style="padding: 8px 10px; text-align: right; color: #16a34a;">- Rs. {{ invoice.discount_amount|floatformat:0 }}</td>
-                    <td style="padding: 8px 10px; text-align: right; font-weight: 700;">Rs. {{ invoice.payable_amount|floatformat:0 }}</td>
-                    <td style="padding: 8px 10px; text-align: right; font-weight: 700; color: #16a34a; font-size: 13.5px;">Rs. {{ payment.amount|floatformat:0 }}</td>
-                    <td style="padding: 8px 10px; text-align: right; font-weight: 700; {% if invoice.balance_amount > 0 %}color: #dc2626;{% else %}color: #16a34a;{% endif %}">
-                        Rs. {{ invoice.balance_amount|floatformat:0 }}
+                <tr style="border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+                    <td style="padding: 12px 14px; color: #64748b; font-weight: 600;">01</td>
+                    <td style="padding: 12px 14px; font-weight: 700; color: #0f172a;">
+                        Monthly Tuition & School Fee
+                    </td>
+                    <td style="padding: 12px 14px; text-align: center; font-weight: 600; color: #334155;">
+                        {{ invoice.fee_month }}
+                    </td>
+                    <td style="padding: 12px 14px; text-align: center;">
+                        <span style="background: #dcfce7; color: #15803d; font-weight: 800; font-size: 11.5px; padding: 4px 10px; border-radius: 4px; display: inline-block;">
+                            PAID ✅
+                        </span>
+                    </td>
+                    <td style="padding: 12px 14px; text-align: right; font-weight: 800; color: #0f172a; font-size: 15px;">
+                        Rs. {{ payment.amount|floatformat:0 }}
+                    </td>
+                </tr>
+                <!-- Total Highlight Row -->
+                <tr style="background: #f8fafc; border-top: 2px solid #0f172a;">
+                    <td colspan="4" style="padding: 12px 14px; text-align: right; font-weight: 800; font-size: 13.5px; text-transform: uppercase; color: #0f172a;">
+                        Total Fee Amount Received:
+                    </td>
+                    <td style="padding: 12px 14px; text-align: right; font-weight: 900; color: #059669; font-size: 17px;">
+                        Rs. {{ payment.amount|floatformat:0 }}
                     </td>
                 </tr>
             </tbody>

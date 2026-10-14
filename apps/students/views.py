@@ -98,7 +98,7 @@ def student_list_view(request):
 
 
 @login_required
-@coordinator_required
+@teacher_required
 def student_create_view(request):
     if request.method == 'POST':
         form = StudentForm(request.POST, request.FILES)
@@ -112,8 +112,11 @@ def student_create_view(request):
                 description=f"Admitted new student {student.get_full_name()} (ID: {student.admission_number}) in {student.current_class.name}.",
                 ip_address=request.META.get('REMOTE_ADDR')
             )
-            messages.success(request, f"Student {student.get_full_name()} admitted successfully with automated student portal account!")
-            return redirect('students:student_detail', pk=student.pk)
+            messages.success(request, f"Student {student.get_full_name()} admitted successfully!")
+            next_url = request.POST.get('next') or request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            return redirect('students:student_list')
         else:
             messages.error(request, "Please correct the errors in the admission form.")
     else:
@@ -130,7 +133,7 @@ def student_create_view(request):
 
 
 @login_required
-@coordinator_required
+@teacher_required
 def student_update_view(request, pk):
     student = get_object_or_404(Student, pk=pk)
     if request.method == 'POST':
@@ -145,7 +148,10 @@ def student_update_view(request, pk):
                 ip_address=request.META.get('REMOTE_ADDR')
             )
             messages.success(request, f"Student {student.get_full_name()} updated successfully!")
-            return redirect('students:student_detail', pk=student.pk)
+            next_url = request.POST.get('next') or request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            return redirect('students:student_list')
         else:
             messages.error(request, "Please fix the validation errors below.")
     else:
@@ -568,14 +574,44 @@ def student_dashboard_view(request, pk=None):
     today_name = timezone.now().strftime('%A')
     today_upper = today_name.upper()
 
-    # 2. Attendance Stats
-    attendance_qs = StudentAttendance.objects.filter(student=student)
+    # 2. Attendance Stats & Full Register
+    attendance_qs = StudentAttendance.objects.filter(student=student).order_by('-date')
     total_days = attendance_qs.count()
     present_days = attendance_qs.filter(status='PRESENT').count()
     late_days = attendance_qs.filter(status='LATE').count()
-    absent_days = attendance_qs.filter(status='ABSENT').count()
-    attendance_rate = round(((present_days + late_days) / total_days * 100), 1) if total_days > 0 else 95.0
-    recent_attendance = attendance_qs.order_by('-date')[:7]
+    absent_days = attendance_qs.filter(status__in=['ABSENT', 'EXCUSED']).count()
+    attendance_rate = round(((present_days + late_days) / total_days * 100), 1) if total_days > 0 else 100.0
+    all_attendance_list = list(attendance_qs)
+    recent_attendance = all_attendance_list[:7]
+
+    # Month-by-month summary breakdown
+    monthly_att_summary = []
+    seen_months = {}
+    for att in all_attendance_list:
+        m_key = att.date.strftime('%B %Y')
+        m_code = att.date.strftime('%Y-%m')
+        att.month_code = m_code
+        if m_key not in seen_months:
+            seen_months[m_key] = {
+                'month_name': m_key,
+                'month_code': m_code,
+                'total': 0,
+                'present': 0,
+                'late': 0,
+                'absent': 0,
+                'rate': 0,
+            }
+            monthly_att_summary.append(seen_months[m_key])
+        seen_months[m_key]['total'] += 1
+        if att.status == 'PRESENT':
+            seen_months[m_key]['present'] += 1
+        elif att.status == 'LATE':
+            seen_months[m_key]['late'] += 1
+        else:
+            seen_months[m_key]['absent'] += 1
+
+    for m in monthly_att_summary:
+        m['rate'] = round(((m['present'] + m['late']) / m['total'] * 100), 1) if m['total'] > 0 else 100.0
 
     # 3. Fees & Invoices
     student_invoices = FeeInvoice.objects.filter(student=student).order_by('-issue_date')
@@ -610,13 +646,31 @@ def student_dashboard_view(request, pk=None):
     ).select_related('subject', 'teacher').order_by('-date')[:6]
 
     # 7. Examination Results & CBT Assessments
-    exam_marks_list = ExamMarks.objects.filter(
+    exam_marks_list = list(ExamMarks.objects.filter(
         student=student
-    ).select_related('exam_schedule', 'exam_schedule__subject', 'exam_schedule__exam').order_by('-exam_schedule__exam_date')
+    ).select_related('exam_schedule', 'exam_schedule__subject', 'exam_schedule__exam').order_by('exam_schedule__exam_date'))
     
-    exam_results = ExamStudentResult.objects.filter(
+    exam_marks_map = {}
+    for m in exam_marks_list:
+        eid = m.exam_schedule.exam_id
+        if eid not in exam_marks_map:
+            exam_marks_map[eid] = []
+        exam_marks_map[eid].append({
+            'subject_name': m.exam_schedule.subject.name,
+            'marks_obtained': m.marks_obtained,
+            'total_marks': m.exam_schedule.total_marks,
+            'passing_marks': m.exam_schedule.passing_marks,
+            'percentage': m.percentage,
+            'is_absent': m.is_absent,
+            'remarks': m.remarks,
+        })
+
+    exam_results = list(ExamStudentResult.objects.filter(
         student=student
-    ).select_related('exam', 'class_room', 'section').order_by('-exam__start_date')
+    ).select_related('exam', 'class_room', 'section').order_by('-exam__start_date'))
+
+    for r in exam_results:
+        r.subject_breakdown = exam_marks_map.get(r.exam_id, [])
     
     latest_exam = Exam.objects.filter(is_published=True).first() or Exam.objects.first()
 
@@ -646,6 +700,8 @@ def student_dashboard_view(request, pk=None):
         'late_days': late_days,
         'absent_days': absent_days,
         'recent_attendance': recent_attendance,
+        'all_attendance_list': all_attendance_list,
+        'monthly_att_summary': monthly_att_summary,
         
         # Fees
         'student_invoices': student_invoices,

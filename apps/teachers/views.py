@@ -67,6 +67,13 @@ def teacher_create_view(request):
             first_name = form.cleaned_data['first_name']
             last_name = form.cleaned_data['last_name']
             
+            # Ensure unique user account for this profile
+            base_username = username
+            counter = 1
+            while User.objects.filter(username=username).filter(teacher_profile__isnull=False).exists():
+                username = f"{base_username}_{counter}"
+                counter += 1
+
             user, created = User.objects.get_or_create(username=username, defaults={'email': email})
             user.first_name = first_name
             user.last_name = last_name
@@ -90,10 +97,23 @@ def teacher_create_view(request):
             messages.success(request, f"{teacher.get_staff_type_display()} member {teacher.get_full_name()} added successfully!")
             return redirect('teachers:teacher_detail', pk=teacher.pk)
         else:
-            messages.error(request, "Please correct the errors in the form.")
+            err_list = []
+            for field, errs in form.errors.items():
+                field_label = field.replace('_', ' ').title()
+                err_list.append(f"{field_label}: {', '.join(errs)}")
+            messages.error(request, "Please check: " + " | ".join(err_list))
     else:
+        from django.utils import timezone
         initial_type = request.GET.get('type', Teacher.StaffType.TEACHING)
-        form = TeacherForm(initial={'staff_type': initial_type})
+        year = timezone.now().year
+        last_teacher = Teacher.objects.order_by('-id').first()
+        next_num = (last_teacher.id + 1) if last_teacher else 1
+        initial_emp_id = f"EMP-{year}-{next_num:03d}"
+        while Teacher.objects.filter(employee_id=initial_emp_id).exists():
+            next_num += 1
+            initial_emp_id = f"EMP-{year}-{next_num:03d}"
+
+        form = TeacherForm(initial={'staff_type': initial_type, 'employee_id': initial_emp_id})
 
     return render(request, 'teachers/teacher_form.html', {
         'form': form,

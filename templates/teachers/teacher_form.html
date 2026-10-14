@@ -1,57 +1,109 @@
 {% extends 'base/base.html' %}
 
-{% block title %}{% if is_edit %}Edit Faculty Profile{% else %}Add Faculty Member{% endif %} | {{ school_settings.school_name }}{% endblock %}
+{% block title %}{% if is_edit %}Edit Staff Profile{% else %}Add Staff Member{% endif %} | {{ school_settings.school_name }}{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
-        <h1 class="page-title">{% if is_edit %}Edit Faculty Profile: {{ teacher.get_full_name }}{% else %}Add New Faculty Member{% endif %}</h1>
-        <p class="page-subtitle">Configure teacher account credentials, designation, qualification, and salary structure.</p>
+        <h1 class="page-title">{% if is_edit %}Edit Staff Profile: {{ teacher.get_full_name }}{% else %}Add New Staff Member{% endif %}</h1>
+        <p class="page-subtitle">Configure employee account credentials, role classification, qualifications, and payroll details.</p>
     </div>
     <div>
         <a href="{% url 'teachers:teacher_list' %}" class="btn btn-outline">◀ Back to Directory</a>
     </div>
 </div>
 
-<form method="POST" enctype="multipart/form-data">
+<form method="POST" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
+    {% if form.errors %}
+    <div class="alert alert-danger" style="background: #fef2f2; border: 1px solid #f87171; color: #991b1b; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px;">
+        <strong style="display: block; font-size: 14px; margin-bottom: 6px;">⚠️ Please review the following details:</strong>
+        <ul style="margin: 0; padding-left: 20px; font-size: 13.5px;">
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
     <!-- Account & Designation -->
-    <div class="card">
-        <div class="card-header"><div class="card-title"><span>👤 Account & Employment Details</span></div></div>
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="card-title"><span id="section1Icon">👤</span> <span id="section1Title">Account & Employment Details</span></div>
+            <div id="staffTypeBadge" style="font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                📚 Teaching Faculty Profile
+            </div>
+        </div>
         <div class="card-body">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
                 <div class="form-group">
-                    <label class="form-label">Staff Category *</label>
+                    <label class="form-label" style="font-weight: 700; color: #0f172a;">Staff Category *</label>
                     {{ form.staff_type }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Employee ID *</label>
-                    {{ form.employee_id }}
+                    <label class="form-label" style="font-weight: 700; color: #0f172a;">Employee ID</label>
+                    <div style="display: flex; gap: 6px;">
+                        {{ form.employee_id }}
+                        <button type="button" class="btn btn-outline btn-sm" onclick="generateNewEmpId()" title="Generate Unique ID" style="white-space: nowrap; font-size: 11px; padding: 6px 10px; font-weight: 600;">
+                            ⚡ New ID
+                        </button>
+                    </div>
+                    {% if form.employee_id.errors %}
+                        <div style="color: #dc2626; font-size: 12px; font-weight: 600; margin-top: 4px;">
+                            {{ form.employee_id.errors.0 }}
+                        </div>
+                    {% endif %}
+                    <small style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">
+                        Leave blank to auto-generate a unique ID.
+                    </small>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Username (For Login) *</label>
-                    {{ form.username }}
-                </div>
-                <div class="form-group">
-                    <label class="form-label">First Name *</label>
+                    <label class="form-label" style="font-weight: 700; color: #0f172a;">First Name *</label>
                     {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div style="color: #dc2626; font-size: 12px; font-weight: 600; margin-top: 4px;">
+                            {{ form.first_name.errors.0 }}
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Last Name</label>
+                    <label class="form-label">Last Name (Optional)</label>
                     {{ form.last_name }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Official Email Address *</label>
-                    {{ form.email }}
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Designation *</label>
+                    <label class="form-label" id="lblDesignation" style="font-weight: 700; color: #0f172a;">Designation *</label>
                     {{ form.designation }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Department</label>
+                    <label class="form-label" id="lblDepartment">Academic Department</label>
                     {{ form.department }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Username (Auto-Generated)</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div style="color: #dc2626; font-size: 12px; font-weight: 600; margin-top: 4px;">
+                            {{ form.username.errors.0 }}
+                        </div>
+                    {% endif %}
+                    <small style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">
+                        Leave blank to auto-create from name & ID.
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Official Email Address</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div style="color: #dc2626; font-size: 12px; font-weight: 600; margin-top: 4px;">
+                            {{ form.email.errors.0 }}
+                        </div>
+                    {% endif %}
+                    <small style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">
+                        Leave blank to auto-create official email.
+                    </small>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Employment Status</label>
@@ -63,23 +115,27 @@
 
     <!-- Qualifications & Salary -->
     <div class="card">
-        <div class="card-header"><div class="card-title"><span>🎓 Qualifications, Salary & Contact</span></div></div>
+        <div class="card-header">
+            <div class="card-title">
+                <span id="section2Icon">🎓</span> <span id="section2Title">Academic Qualifications, Salary & Contact</span>
+            </div>
+        </div>
         <div class="card-body">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-                <div class="form-group">
-                    <label class="form-label">Highest Qualification *</label>
+                <div class="form-group" id="groupQualification">
+                    <label class="form-label" id="lblQualification">Highest Qualification</label>
                     {{ form.qualification }}
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Experience (Years)</label>
+                <div class="form-group" id="groupExperience">
+                    <label class="form-label" id="lblExperience">Teaching Experience (Years)</label>
                     {{ form.experience_years }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Joining Date *</label>
+                    <label class="form-label">Joining Date</label>
                     {{ form.joining_date }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Basic Monthly Salary ({{ school_settings.currency_symbol }}) *</label>
+                    <label class="form-label">Basic Monthly Salary ({{ school_settings.currency_symbol }})</label>
                     {{ form.basic_salary }}
                 </div>
                 <div class="form-group">
@@ -87,7 +143,7 @@
                     {{ form.cnic }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">WhatsApp / Phone *</label>
+                    <label class="form-label">WhatsApp / Phone</label>
                     {{ form.phone_number }}
                 </div>
                 <div class="form-group">
@@ -107,11 +163,180 @@
 
             <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--card-border);">
                 <a href="{% url 'teachers:teacher_list' %}" class="btn btn-outline">Cancel</a>
-                <button type="submit" class="btn btn-primary">
-                    💾 {% if is_edit %}Save Updates{% else %}Create Faculty Account{% endif %}
+                <button type="submit" class="btn btn-primary" style="font-weight: 700; padding: 10px 24px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none;">
+                    💾 {% if is_edit %}Save Updates{% else %}Save & Create Staff Account{% endif %}
                 </button>
             </div>
         </div>
     </div>
 </form>
+
+<script>
+const TEACHING_DESIGNATIONS = [
+    { value: 'SENIOR_TEACHER', text: 'Senior Teacher' },
+    { value: 'JUNIOR_TEACHER', text: 'Junior Teacher' },
+    { value: 'SUBJECT_SPECIALIST', text: 'Subject Specialist' },
+    { value: 'PRIMARY_TEACHER', text: 'Primary School Teacher' },
+    { value: 'SPORTS_INSTRUCTOR', text: 'Sports / Physical Instructor' },
+    { value: 'LAB_INSTRUCTOR', text: 'Lab Incharge / Science Instructor' }
+];
+
+const NON_TEACHING_DESIGNATIONS = [
+    { value: 'ACCOUNTANT', text: 'Accountant / Finance Officer' },
+    { value: 'ADMIN_OFFICER', text: 'Administrative Officer / Clerk' },
+    { value: 'LIBRARIAN', text: 'Librarian' },
+    { value: 'IT_SUPPORT', text: 'IT Support / Computer Operator' },
+    { value: 'RECEPTIONIST', text: 'Receptionist / Front Desk' },
+    { value: 'SECURITY_GUARD', text: 'Security Guard' },
+    { value: 'DRIVER', text: 'Transport Driver' },
+    { value: 'SUPPORT_STAFF', text: 'Aayah / Peon / Support Staff' },
+    { value: 'MAINTENANCE', text: 'Electrician / Maintenance Staff' }
+];
+
+let userManuallyEditedUsername = false;
+let userManuallyEditedEmail = false;
+
+function generateNewEmpId() {
+    const year = new Date().getFullYear();
+    const randNum = Math.floor(1000 + Math.random() * 9000);
+    const empInput = document.getElementById('id_employee_id');
+    empInput.value = `EMP-${year}-${randNum}`;
+    userManuallyEditedUsername = false;
+    userManuallyEditedEmail = false;
+    autoFillCredentials();
+}
+
+function autoFillCredentials() {
+    const firstName = document.getElementById('id_first_name').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const empId = document.getElementById('id_employee_id').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const usernameInput = document.getElementById('id_username');
+    const emailInput = document.getElementById('id_email');
+
+    if (firstName || empId) {
+        const cleanName = firstName || 'staff';
+        const cleanEmp = empId || '001';
+        const generatedUser = `${cleanName}_${cleanEmp}`;
+        
+        if (!userManuallyEditedUsername || !usernameInput.value) {
+            usernameInput.value = generatedUser;
+        }
+        if (!userManuallyEditedEmail || !emailInput.value) {
+            emailInput.value = `${generatedUser}@genxvision.edu.pk`;
+        }
+    }
+}
+
+function onStaffTypeChange() {
+    const staffTypeSelect = document.getElementById('id_staff_type');
+    const designationSelect = document.getElementById('id_designation');
+    const deptInput = document.getElementById('id_department');
+    const qualInput = document.getElementById('id_qualification');
+    const expInput = document.getElementById('id_experience_years');
+    const salaryInput = document.getElementById('id_basic_salary');
+    const dateInput = document.getElementById('id_joining_date');
+    
+    const lblDepartment = document.getElementById('lblDepartment');
+    const lblQualification = document.getElementById('lblQualification');
+    const lblExperience = document.getElementById('lblExperience');
+    
+    const badge = document.getElementById('staffTypeBadge');
+    const sec2Icon = document.getElementById('section2Icon');
+    const sec2Title = document.getElementById('section2Title');
+    
+    const isNonTeaching = (staffTypeSelect.value === 'NON_TEACHING');
+    const currentVal = designationSelect.value;
+    
+    // Clear and populate designation dropdown based on staff category
+    designationSelect.innerHTML = '';
+    const listToUse = isNonTeaching ? NON_TEACHING_DESIGNATIONS : TEACHING_DESIGNATIONS;
+    
+    listToUse.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.value;
+        opt.textContent = item.text;
+        if (opt.value === currentVal) {
+            opt.selected = true;
+        }
+        designationSelect.appendChild(opt);
+    });
+    
+    // If previous value wasn't in the new list, select the first option
+    if (!listToUse.some(item => item.value === currentVal)) {
+        designationSelect.selectedIndex = 0;
+    }
+
+    // Set today's date if date is empty
+    if (!dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+    
+    if (isNonTeaching) {
+        // Non-teaching specific UI & Labels
+        badge.innerHTML = '🛠️ Non-Teaching Staff Profile';
+        badge.style.background = '#f0fdf4';
+        badge.style.color = '#15803d';
+        badge.style.borderColor = '#bbf7d0';
+        
+        lblDepartment.textContent = 'Work Department / Division';
+        deptInput.placeholder = 'e.g. Administration / Accounts / Security / Transport / Support';
+        
+        sec2Icon.textContent = '💼';
+        sec2Title.textContent = 'Staff Role, Work Details & Salary';
+        
+        lblQualification.textContent = 'Basic Education / Qualification (Optional)';
+        qualInput.placeholder = 'e.g. Matric / Intermediate / DAE / Literate / N/A';
+        qualInput.required = false;
+        
+        lblExperience.textContent = 'Work Experience (Years)';
+        if (!expInput.value) expInput.value = '1';
+        if (!salaryInput.value) salaryInput.value = '25000';
+    } else {
+        // Teaching specific UI & Labels
+        badge.innerHTML = '📚 Teaching Faculty Profile';
+        badge.style.background = '#eff6ff';
+        badge.style.color = '#1d4ed8';
+        badge.style.borderColor = '#bfdbfe';
+        
+        lblDepartment.textContent = 'Academic Department';
+        deptInput.placeholder = 'e.g. Science / Mathematics / English / Urdu';
+        
+        sec2Icon.textContent = '🎓';
+        sec2Title.textContent = 'Academic Qualifications, Salary & Contact';
+        
+        lblQualification.textContent = 'Highest Academic Qualification';
+        qualInput.placeholder = 'e.g. M.Sc Mathematics, B.Ed, M.Phil';
+        
+        lblExperience.textContent = 'Teaching Experience (Years)';
+        if (!expInput.value) expInput.value = '2';
+        if (!salaryInput.value) salaryInput.value = '45000';
+    }
+}
+
+// Initialize on page load & bind events
+document.addEventListener('DOMContentLoaded', function() {
+    onStaffTypeChange();
+
+    const firstNameInput = document.getElementById('id_first_name');
+    const empIdInput = document.getElementById('id_employee_id');
+    const usernameInput = document.getElementById('id_username');
+    const emailInput = document.getElementById('id_email');
+
+    if (firstNameInput) firstNameInput.addEventListener('input', autoFillCredentials);
+    if (empIdInput) empIdInput.addEventListener('input', autoFillCredentials);
+    
+    if (usernameInput) {
+        usernameInput.addEventListener('input', () => { 
+            userManuallyEditedUsername = true; 
+            usernameInput.value = usernameInput.value.replace(/\s+/g, '_').toLowerCase();
+        });
+    }
+    if (emailInput) {
+        emailInput.addEventListener('input', () => { 
+            userManuallyEditedEmail = true; 
+            emailInput.value = emailInput.value.replace(/\s+/g, '');
+        });
+    }
+});
+</script>
 {% endblock %}

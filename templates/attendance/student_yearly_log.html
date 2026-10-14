@@ -1,0 +1,202 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ student.get_full_name }} — Annual Attendance Profile | {{ school_settings.school_name }}{% endblock %}
+
+{% block content %}
+<!-- Page Navigation Header -->
+<div class="page-header" style="margin-bottom: 22px;">
+    <div>
+        <div style="font-size: 12.5px; font-weight: 700; color: var(--primary); margin-bottom: 4px;">
+            <a href="{% url 'attendance:attendance_report' %}" style="text-decoration: none; color: inherit;">← Back to Annual Attendance Matrix</a>
+        </div>
+        <h1 class="page-title">{{ student.get_full_name }} — 360° Annual Attendance Profile</h1>
+        <p class="page-subtitle">Complete academic session (2026–2027) day-by-day attendance history and monthly regularity analysis.</p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button type="button" onclick="window.print()" class="btn btn-outline" style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+            🖨️ Print Attendance Transcript
+        </button>
+        <a href="{% url 'students:student_detail' student.id %}" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px;">
+            🎓 Full Student Profile
+        </a>
+    </div>
+</div>
+
+<!-- Student Overview & Annual KPIs Card -->
+<div class="card" style="margin-bottom: 24px; border-radius: 12px; border: 1px solid var(--card-border); background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.04); overflow: hidden;">
+    <div style="padding: 24px; display: flex; flex-wrap: wrap; gap: 24px; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);">
+        <!-- Student Info -->
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);">
+                {{ student.first_name|first|upper }}
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h2 style="font-size: 20px; font-weight: 800; color: var(--text-main); margin: 0;">{{ student.get_full_name }}</h2>
+                    <span style="background: #e0e7ff; color: #4338ca; font-size: 11.5px; font-weight: 800; padding: 3px 8px; border-radius: 6px;">
+                        Roll #{{ student.roll_number|default:"--" }}
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                    <strong>{{ student.current_class.name }}</strong> (Section {{ student.current_section.name }}) • Reg ID: <strong>{{ student.admission_number }}</strong>
+                    {% if student.father_name %} • Father: <strong>{{ student.father_name }}</strong>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Overall Attendance Badge -->
+        <div style="text-align: right;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Session Attendance Rate</div>
+            <div style="font-size: 32px; font-weight: 900; color: {% if overall_rate >= 85 %}#15803d{% elif overall_rate >= 70 %}#b45309{% else %}#b91c1c{% endif %}; line-height: 1.1;">
+                {{ overall_rate }}%
+            </div>
+            <div style="font-size: 11.5px; font-weight: 700; color: {% if overall_rate >= 85 %}#166534{% elif overall_rate >= 70 %}#92400e{% else %}#991b1b{% endif %}; margin-top: 2px;">
+                {% if overall_rate >= 85 %}🌟 Exemplary Regularity{% elif overall_rate >= 70 %}📘 Satisfactory Standing{% else %}🚨 Critical Shortage Alert{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Annual KPI Metric Bar -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; background: #e2e8f0;">
+        <div style="background: #ffffff; padding: 16px 20px; text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Sessions</div>
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary); margin-top: 3px;">{{ total_days }} Days</div>
+        </div>
+        <div style="background: #ffffff; padding: 16px 20px; text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase;">Days Present</div>
+            <div style="font-size: 20px; font-weight: 800; color: #16a34a; margin-top: 3px;">{{ present_days }} Days</div>
+        </div>
+        <div style="background: #ffffff; padding: 16px 20px; text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; color: #92400e; text-transform: uppercase;">Late Arrivals</div>
+            <div style="font-size: 20px; font-weight: 800; color: #d97706; margin-top: 3px;">{{ late_days }} Days</div>
+        </div>
+        <div style="background: #ffffff; padding: 16px 20px; text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; color: #991b1b; text-transform: uppercase;">Days Absent</div>
+            <div style="font-size: 20px; font-weight: 800; color: #dc2626; margin-top: 3px;">{{ absent_days }} Days</div>
+        </div>
+    </div>
+</div>
+
+<!-- Month-by-Month Analytics Grid -->
+<h3 style="font-size: 16px; font-weight: 800; color: var(--text-main); margin-bottom: 14px;">
+    📅 Academic Month-by-Month Regularity Breakdown
+</h3>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px;">
+    {% for m in monthly_stats %}
+    <a href="?month={{ m.code }}" style="text-decoration: none; color: inherit;">
+        <div class="card" style="padding: 14px 16px; border-radius: 10px; border: 1.5px solid {% if selected_month == m.code %}var(--primary){% else %}var(--card-border){% endif %}; background: {% if selected_month == m.code %}#f5f3ff{% else %}#ffffff{% endif %}; transition: all 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 800; font-size: 13.5px; color: var(--text-main);">{{ m.short }} 2026</span>
+                <span style="font-size: 12px; font-weight: 800; color: {% if m.rate >= 85 %}#16a34a{% elif m.rate >= 70 %}#d97706{% else %}#dc2626{% endif %};">
+                    {{ m.rate }}%
+                </span>
+            </div>
+            <div style="height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-bottom: 8px;">
+                <div style="width: {{ m.rate }}%; height: 100%; background: {% if m.rate >= 85 %}#10b981{% elif m.rate >= 70 %}#f59e0b{% else %}#ef4444{% endif %};"></div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+                <span>{{ m.present }} Pres</span>
+                <span style="color: #dc2626;">{{ m.absent }} Abs</span>
+                <span>{{ m.total }} Total</span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Month Filter Tabs -->
+<div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+    <a href="?month=ALL" class="btn {% if selected_month == 'ALL' %}btn-primary{% else %}btn-outline{% endif %}" style="padding: 6px 14px; font-size: 12.5px; font-weight: 700; border-radius: 20px;">
+        All Session ({{ total_days }} Days)
+    </a>
+    {% for m in academic_months %}
+    <a href="?month={{ m.code }}" class="btn {% if selected_month == m.code %}btn-primary{% else %}btn-outline{% endif %}" style="padding: 6px 14px; font-size: 12.5px; font-weight: 700; border-radius: 20px;">
+        {{ m.name }}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Day-by-Day Session Roster Table -->
+<div class="card" style="border-radius: 12px; overflow: hidden; border: 1px solid var(--card-border); box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: #fafafa; border-bottom: 1px solid var(--card-border);">
+        <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">
+            📋 Detailed Daily Attendance History
+        </div>
+        <div style="font-size: 12.5px; font-weight: 700; color: var(--text-muted);">
+            Showing {{ all_records|length }} Session Records
+        </div>
+    </div>
+
+    <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: #475569; font-weight: 700;">
+                    <th style="padding: 12px 18px; width: 140px;">Date</th>
+                    <th style="padding: 12px 18px; width: 120px;">Day</th>
+                    <th style="padding: 12px 18px; width: 140px; text-align: center;">Status</th>
+                    <th style="padding: 12px 18px; min-width: 200px;">Check-In Method / Source</th>
+                    <th style="padding: 12px 18px; min-width: 220px;">Remarks / Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in all_records %}
+                <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" onmouseover="this.style.background='#fbfcfe'" onmouseout="this.style.background='#ffffff'">
+                    <td style="padding: 12px 18px; font-weight: 700; color: var(--text-main);">
+                        {{ att.date|date:"d M Y" }}
+                    </td>
+                    <td style="padding: 12px 18px; color: var(--text-muted); font-size: 12.5px;">
+                        {{ att.date|date:"l" }}
+                    </td>
+                    <td style="padding: 12px 18px; text-align: center;">
+                        {% if att.status == 'PRESENT' %}
+                        <span style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; border: 1px solid #bbf7d0; display: inline-block;">
+                            ✔ PRESENT
+                        </span>
+                        {% elif att.status == 'LATE' %}
+                        <span style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; border: 1px solid #fde68a; display: inline-block;">
+                            ⏰ LATE
+                        </span>
+                        {% else %}
+                        <span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; border: 1px solid #fecaca; display: inline-block;">
+                            ✖ ABSENT
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 18px; font-size: 12.5px; color: var(--text-muted);">
+                        {% if 'Biometric' in att.remarks %}
+                            ⚡ Biometric Hardware Sync
+                        {% elif att.recorded_by %}
+                            👩‍🏫 Teacher Register ({{ att.recorded_by.username }})
+                        {% else %}
+                            🏫 Faculty Attendance Register
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 18px; font-size: 12.5px; color: var(--text-muted);">
+                        {{ att.remarks|default:"--" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No attendance logs found for this period.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+@media print {
+    .page-header, .btn, form, a[href^="?"] {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

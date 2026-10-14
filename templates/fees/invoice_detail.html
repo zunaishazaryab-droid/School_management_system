@@ -11,7 +11,10 @@
         </div>
         <p class="page-subtitle" style="margin-top: 4px;">Student Challan for {{ invoice.student.get_full_name }} ({{ invoice.fee_month }})</p>
     </div>
-    <div style="display: flex; gap: 10px;">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <a href="{% url 'fees:invoice_edit' invoice.pk %}" class="btn btn-outline" style="font-weight: 700;">
+            ✏️ Edit Challan
+        </a>
         <a href="{% url 'fees:fee_challan_3part' invoice.pk %}" target="_blank" class="btn btn-outline" style="border-color: #3b82f6; color: #2563eb; font-weight: 700;">
             🖨️ 3-Part Bank Challan
         </a>
@@ -19,7 +22,7 @@
             📜 View Student Ledger
         </a>
         {% if invoice.status != 'PAID' %}
-        <a href="{% url 'fees:collect_invoice_payment' invoice.pk %}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); border: none;">
+        <a href="{% url 'fees:collect_invoice_payment' invoice.pk %}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700;">
             💵 Collect Payment
         </a>
         {% endif %}

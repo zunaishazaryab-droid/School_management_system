@@ -85,24 +85,47 @@
                             </tr>
                         </thead>
                         <tbody id="lineItemsBody">
-                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 8px;">
-                                    <select name="item_category[]" class="form-control">
-                                        {% for c in categories %}
-                                        <option value="{{ c.id }}">{{ c.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                                <td style="padding: 8px;">
-                                    <input type="text" name="item_name[]" class="form-control" placeholder="Monthly Tuition Fee" value="Monthly Tuition Fee" required>
-                                </td>
-                                <td style="padding: 8px;">
-                                    <input type="number" step="0.01" name="item_amount[]" class="form-control item-amt" placeholder="3000" value="3000" oninput="calcTotals()" required>
-                                </td>
-                                <td style="padding: 8px; text-align: center;">
-                                    <button type="button" onclick="this.closest('tr').remove(); calcTotals();" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:16px;">✕</button>
-                                </td>
-                            </tr>
+                            {% if is_edit and existing_items %}
+                                {% for itm in existing_items %}
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 8px;">
+                                        <select name="item_category[]" class="form-control">
+                                            {% for c in categories %}
+                                            <option value="{{ c.id }}" {% if itm.fee_category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <input type="text" name="item_name[]" class="form-control" placeholder="Description" value="{{ itm.description }}" required>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <input type="number" step="0.01" name="item_amount[]" class="form-control item-amt" placeholder="0" value="{{ itm.amount }}" oninput="calcTotals()" required>
+                                    </td>
+                                    <td style="padding: 8px; text-align: center;">
+                                        <button type="button" onclick="this.closest('tr').remove(); calcTotals();" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:16px;">✕</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 8px;">
+                                        <select name="item_category[]" class="form-control">
+                                            {% for c in categories %}
+                                            <option value="{{ c.id }}">{{ c.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <input type="text" name="item_name[]" class="form-control" placeholder="Monthly Tuition Fee" value="Monthly Tuition Fee" required>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <input type="number" step="0.01" name="item_amount[]" class="form-control item-amt" placeholder="3000" value="3000" oninput="calcTotals()" required>
+                                    </td>
+                                    <td style="padding: 8px; text-align: center;">
+                                        <button type="button" onclick="this.closest('tr').remove(); calcTotals();" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:16px;">✕</button>
+                                    </td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -112,19 +135,19 @@
                     <div>
                         <div class="form-group" style="margin-bottom: 12px;">
                             <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Discount / Scholarship Concession (Rs.)</label>
-                            <input type="number" step="0.01" name="discount_amount" id="discountInput" class="form-control" value="0.00" oninput="calcTotals()">
+                            <input type="number" step="0.01" name="discount_amount" id="discountInput" class="form-control" value="{% if is_edit %}{{ invoice.discount_amount }}{% else %}0.00{% endif %}" oninput="calcTotals()">
                         </div>
 
                         <div class="form-group" style="margin-bottom: 0;">
                             <label style="font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block;">Late Fee / Surcharge (Rs.)</label>
-                            <input type="number" step="0.01" name="fine_amount" id="fineInput" class="form-control" value="0.00" oninput="calcTotals()">
+                            <input type="number" step="0.01" name="fine_amount" id="fineInput" class="form-control" value="{% if is_edit %}{{ invoice.fine_amount }}{% else %}0.00{% endif %}" oninput="calcTotals()">
                         </div>
                     </div>
 
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-end; padding-right: 12px;">
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Gross Subtotal: <strong id="grossTotal">Rs. 3,000</strong></div>
-                        <div style="font-size: 13px; color: var(--success); margin-bottom: 6px;">Discount: -<strong id="discountDisplay">Rs. 0</strong></div>
-                        <div style="font-size: 20px; font-weight: 800; color: var(--primary);">Net Payable: <span id="netPayableDisplay">Rs. 3,000</span></div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Gross Subtotal: <strong id="grossTotal">Rs. {% if is_edit %}{{ invoice.subtotal_amount|floatformat:0 }}{% else %}3,000{% endif %}</strong></div>
+                        <div style="font-size: 13px; color: var(--success); margin-bottom: 6px;">Discount: -<strong id="discountDisplay">Rs. {% if is_edit %}{{ invoice.discount_amount|floatformat:0 }}{% else %}0{% endif %}</strong></div>
+                        <div style="font-size: 20px; font-weight: 800; color: var(--primary);">Net Payable: <span id="netPayableDisplay">Rs. {% if is_edit %}{{ invoice.payable_amount|floatformat:0 }}{% else %}3,000{% endif %}</span></div>
                     </div>
                 </div>
 
@@ -134,9 +157,9 @@
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                    <a href="{% url 'fees:invoice_list' %}" class="btn btn-outline">Cancel</a>
-                    <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
-                        Create Challan
+                    <a href="{% if is_edit %}{% url 'fees:invoice_detail' invoice.pk %}{% else %}{% url 'fees:invoice_list' %}{% endif %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-weight: 800;">
+                        💾 {% if is_edit %}Update Fee Challan{% else %}Create Challan{% endif %}
                     </button>
                 </div>
             </form>

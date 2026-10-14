@@ -3,69 +3,135 @@
 {% block title %}Marks Entry - {{ schedule.class_room.name }} : {{ schedule.subject.name }} - School ERP{% endblock %}
 
 {% block content %}
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
     <div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <a href="{% url 'examinations:exam_detail' schedule.exam.pk %}" class="btn btn-sm btn-outline">← Back to Date Sheet</a>
-            <h1 class="page-title" style="margin: 0;">✍️ Marks Entry: {{ schedule.class_room.name }} : {{ schedule.subject.name }}</h1>
+            <h1 class="page-title" style="margin: 0; font-size: 22px; font-weight: 800;">
+                ✍️ Marks Entry: {{ schedule.class_room.name }} — {{ schedule.subject.name }}
+            </h1>
         </div>
-        <p class="page-subtitle" style="margin-top: 4px;">{{ schedule.exam.title }} • Max Marks: {{ schedule.total_marks }} • Passing Marks: {{ schedule.passing_marks }}</p>
+        <p class="page-subtitle" style="margin-top: 4px; font-size: 13px; color: var(--text-muted);">
+            Exam: <strong>{{ schedule.exam.title }}</strong> • Subject Max Marks: <strong>{{ schedule.total_marks }}</strong> • Passing Marks: <strong>{{ schedule.passing_marks }}</strong>
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'examinations:class_master_marksheet' schedule.exam.pk schedule.class_room.pk %}" class="btn btn-primary" style="font-weight: 700; font-size: 13px;">
+            📊 Open All-Subjects Master Grid
+        </a>
+        <a href="{% url 'examinations:class_result' schedule.exam.pk schedule.class_room.pk %}" class="btn btn-outline" style="font-size: 13px;">
+            📄 Result Gazette
+        </a>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <div class="card-title"><span>📋 Student Marks Register ({{ student_rows|length }} Students)</span></div>
-        <div style="font-size: 13px; color: var(--text-muted);">
-            Max Marks: <strong>{{ schedule.total_marks }}</strong>
+<!-- Class Subject Switcher Bar -->
+{% if class_schedules %}
+<div style="background: #ffffff; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+        <div style="font-size: 12.5px; font-weight: 800; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">
+            📚 All Scheduled Subjects for {{ schedule.class_room.name }} (Click to Switch):
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted);">
+            {{ class_schedules|length }} Subjects in Date Sheet
         </div>
     </div>
-    <div class="card-body">
+    
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        {% for sch in class_schedules %}
+        <a href="{% url 'examinations:marks_entry' sch.id %}" 
+           style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all 0.15s ease;
+           {% if sch.id == schedule.id %}
+               background: var(--primary); color: #ffffff; border: 1.5px solid var(--primary); box-shadow: 0 2px 5px rgba(37,99,235,0.25);
+           {% else %}
+               background: #f8fafc; color: #334155; border: 1px solid #cbd5e1;
+           {% endif %}"
+           {% if sch.id != schedule.id %}
+           onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#93c5fd'; this.style.color='#2563eb'" 
+           onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.color='#334155'"
+           {% endif %}>
+            <span>
+                {% if sch.id == schedule.id %}👉{% endif %}
+                {{ sch.subject.name }}
+            </span>
+            <span style="font-size: 11px; opacity: 0.85; font-weight: normal;">
+                ({{ sch.total_marks }} Marks)
+            </span>
+            {% if sch.marks_records.count > 0 %}
+                <span style="font-size: 11px; margin-left: 2px;">✔</span>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Single Subject Entry Card -->
+<div class="card" style="border-radius: 10px; border: 1px solid var(--card-border); background: #ffffff;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #fafafa; border-bottom: 1px solid var(--card-border);">
+        <div class="card-title">
+            <span>📋 Student Marks Register — <strong>{{ schedule.subject.name }}</strong> ({{ student_rows|length }} Students)</span>
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted);">
+            Max Marks: <strong>{{ schedule.total_marks }}</strong> | Passing: <strong>{{ schedule.passing_marks }}</strong>
+        </div>
+    </div>
+    <div class="card-body" style="padding: 20px;">
         <form method="POST">
             {% csrf_token %}
             <div class="table-container">
                 <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
                     <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
-                            <th style="padding: 12px 16px; text-align: left; width: 60px;">#</th>
-                            <th style="padding: 12px 16px; text-align: left;">Roll #</th>
-                            <th style="padding: 12px 16px; text-align: left;">Student Name</th>
-                            <th style="padding: 12px 16px; text-align: left;">Section</th>
-                            <th style="padding: 12px 16px; text-align: left; width: 140px;">Marks Obtained</th>
-                            <th style="padding: 12px 16px; text-align: center; width: 100px;">Absent?</th>
-                            <th style="padding: 12px 16px; text-align: left;">Teacher Remarks</th>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: #475569; font-weight: 700;">
+                            <th style="padding: 12px 16px; text-align: left; width: 50px;">#</th>
+                            <th style="padding: 12px 16px; text-align: left; width: 80px;">Roll #</th>
+                            <th style="padding: 12px 16px; text-align: left; min-width: 160px;">Student Name</th>
+                            <th style="padding: 12px 16px; text-align: left; width: 100px;">Section</th>
+                            <th style="padding: 12px 16px; text-align: left; width: 160px;">Marks (0 - {{ schedule.total_marks }})</th>
+                            <th style="padding: 12px 16px; text-align: center; width: 90px;">Absent?</th>
+                            <th style="padding: 12px 16px; text-align: left; min-width: 200px;">Teacher Remarks</th>
+                            <th style="padding: 12px 16px; text-align: center; width: 120px;">Student Card</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for row in student_rows %}
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 10px 16px; color: var(--text-muted);">{{ forloop.counter }}</td>
-                            <td style="padding: 10px 16px; font-weight: 600;">{{ row.student.roll_number|default:"--" }}</td>
+                        <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" onmouseover="this.style.background='#fbfcfe'" onmouseout="this.style.background='#ffffff'">
+                            <td style="padding: 10px 16px; color: var(--text-muted); font-weight: 600;">{{ forloop.counter }}</td>
+                            <td style="padding: 10px 16px; font-weight: 700;">{{ row.student.roll_number|default:"--" }}</td>
                             <td style="padding: 10px 16px;">
-                                <div style="font-weight: 700;">{{ row.student.get_full_name }}</div>
+                                <div style="font-weight: 800; color: var(--text-main);">{{ row.student.get_full_name }}</div>
                                 <div style="font-size: 11px; color: var(--text-muted);">ID: {{ row.student.admission_number }}</div>
                             </td>
-                            <td style="padding: 10px 16px;">Section {{ row.student.current_section.name }}</td>
+                            <td style="padding: 10px 16px; color: #475569;">Section {{ row.student.current_section.name }}</td>
                             <td style="padding: 10px 16px;">
                                 <input type="number" step="0.01" max="{{ schedule.total_marks }}" min="0" 
                                        name="marks_{{ row.student.id }}" value="{{ row.obtained }}" 
                                        class="form-control marks-input" id="marks_{{ row.student.id }}" 
-                                       placeholder="0 - {{ schedule.total_marks }}" style="font-weight: 700; width: 120px;">
+                                       placeholder="0 - {{ schedule.total_marks }}" 
+                                       style="font-weight: 700; width: 130px; font-size: 14px; padding: 6px 10px; border-radius: 6px; border: 1.5px solid #cbd5e1;"
+                                       {% if row.is_absent %}disabled style="opacity: 0.5; width: 130px;"{% endif %}>
                             </td>
                             <td style="padding: 10px 16px; text-align: center;">
                                 <input type="checkbox" name="absent_{{ row.student.id }}" value="1" 
                                        id="abs_{{ row.student.id }}" class="form-checkbox" 
+                                       style="width: 18px; height: 18px; cursor: pointer;"
                                        {% if row.is_absent %}checked{% endif %}
                                        onchange="toggleAbsent('{{ row.student.id }}')">
                             </td>
                             <td style="padding: 10px 16px;">
                                 <input type="text" name="remarks_{{ row.student.id }}" value="{{ row.remarks }}" 
-                                       class="form-control" placeholder="e.g. Good performance / weak in concepts" style="font-size: 12.5px;">
+                                       id="remarks_{{ row.student.id }}"
+                                       class="form-control" placeholder="e.g. Excellent / Good / Needs improvement" style="font-size: 12.5px; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            </td>
+                            <td style="padding: 10px 16px; text-align: center;">
+                                <a href="{% url 'examinations:student_marks_edit' schedule.exam.pk row.student.pk %}" class="btn btn-sm btn-outline" style="padding: 4px 8px; font-size: 11.5px; font-weight: 700; color: #2563eb; border-color: #93c5fd; background: #eff6ff;">
+                                    ✍️ All Subjects
+                                </a>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" style="padding: 32px; text-align: center; color: var(--text-muted);">
+                            <td colspan="8" style="padding: 32px; text-align: center; color: var(--text-muted);">
                                 No students enrolled in this class.
                             </td>
                         </tr>
@@ -74,11 +140,16 @@
                 </table>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--card-border);">
-                <a href="{% url 'examinations:exam_detail' schedule.exam.pk %}" class="btn btn-outline">Cancel</a>
-                <button type="submit" class="btn btn-primary" style="padding: 10px 28px; font-size: 14px;">
-                    💾 Save Subject Marks
-                </button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--card-border); flex-wrap: wrap; gap: 12px;">
+                <div style="font-size: 12.5px; color: var(--text-muted);">
+                    💾 Saving automatically recalculates total obtained marks, percentages, grades, and positions on the student result card.
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="{% url 'examinations:exam_detail' schedule.exam.pk %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 28px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+                        💾 Save {{ schedule.subject.name }} Marks
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -88,13 +159,20 @@
 function toggleAbsent(studentId) {
     const absCheckbox = document.getElementById('abs_' + studentId);
     const marksInput = document.getElementById('marks_' + studentId);
+    const remarksInput = document.getElementById('remarks_' + studentId);
     if (absCheckbox.checked) {
         marksInput.value = '0';
         marksInput.disabled = true;
         marksInput.style.opacity = '0.5';
+        if (!remarksInput.value) {
+            remarksInput.value = 'Absent';
+        }
     } else {
         marksInput.disabled = false;
         marksInput.style.opacity = '1';
+        if (remarksInput.value === 'Absent') {
+            remarksInput.value = '';
+        }
     }
 }
 </script>

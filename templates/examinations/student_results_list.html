@@ -6,131 +6,319 @@
 
 {% block content %}
 <!-- Page Header -->
-<div class="page-header" style="margin-bottom: 24px;">
+<div class="page-header" style="margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
     <div>
-        <h1 class="page-title">🏆 My Examinations & Results</h1>
-        <p class="page-subtitle">View your published term results, subject scores, overall grades, and download official report cards.</p>
+        <h1 class="page-title" style="display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0;">
+            <span>🏆</span> My Yearly Academic Assessments & Marksheets
+        </h1>
+        <p class="page-subtitle" style="margin: 0; font-size: 13.5px; color: var(--text-muted);">
+            Month-wise continuous assessments: Weekly Tests, Monthly Assessments, Subject Scores, and Official Term Report Cards.
+        </p>
+    </div>
+    {% if student %}
+    <div style="display: inline-flex; align-items: center; gap: 12px; background: #ffffff; padding: 8px 18px; border-radius: 50px; border: 1px solid var(--card-border); box-shadow: var(--shadow-sm);">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">
+            🎓
+        </div>
+        <div>
+            <div style="font-size: 13.5px; font-weight: 700; color: var(--text-main); line-height: 1.2;">
+                {{ student.get_full_name }}
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-muted);">
+                Class {{ student.current_class.name }} (Sec {{ student.current_section.name }}) {% if student.roll_number %}• Roll #{{ student.roll_number }}{% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Consolidated Annual Performance Hero Card -->
+<div class="card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; border: none; border-radius: var(--radius-lg); box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25); margin-bottom: 24px; padding: 22px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.12); padding-bottom: 18px; margin-bottom: 18px;">
+        <div>
+            <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 20px; font-size: 11.5px; font-weight: 700; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                🌟 Annual Academic Standing
+            </div>
+            <h2 style="font-size: 19px; font-weight: 800; color: #f8fafc; margin: 0;">
+                Full Academic Year Performance Summary (2026-2027)
+            </h2>
+            <p style="font-size: 12.5px; color: #94a3b8; margin: 3px 0 0 0;">
+                Cumulative scores across all {{ total_results_count }} assessments ({{ weekly_results|length }} Weekly Tests, {{ monthly_results|length }} Monthly Assessments, and {{ term_results|length }} Major Exams).
+            </p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            {% if is_promoted %}
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; padding: 7px 14px; border-radius: 10px;">
+                <span style="font-size: 16px;">🎉</span>
+                <div>
+                    <div style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: #6ee7b7;">Annual Status</div>
+                    <div style="font-size: 13px; font-weight: 800; color: #ffffff;">Qualified & Promoted</div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if final_result %}
+            <a href="{% url 'examinations:student_report_card' final_result.exam.pk student.pk %}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; font-weight: 700; font-size: 12.5px; border-radius: 8px; background: #3b82f6; color: #ffffff; text-decoration: none;">
+                <span>📜</span> Final Report Card
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Annual Metric Highlights -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px;">
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 16px;">
+            <div style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Total Marks Recorded</div>
+            <div style="font-size: 20px; font-weight: 800; color: #60a5fa; margin-top: 2px;">
+                {{ yearly_obtained_marks|floatformat:0 }} <span style="font-size: 13px; color: #94a3b8; font-weight: 600;">/ {{ yearly_total_marks|floatformat:0 }}</span>
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">{{ total_results_count }} Total Tests</div>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 16px;">
+            <div style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Cumulative Percentage</div>
+            <div style="font-size: 20px; font-weight: 800; color: #34d399; margin-top: 2px;">
+                {{ yearly_overall_pct }}%
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Academic Average</div>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 16px;">
+            <div style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Overall Grade</div>
+            <div style="font-size: 20px; font-weight: 800; color: #fbbf24; margin-top: 2px;">
+                Grade {{ yearly_grade }}
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">{{ yearly_remarks }}</div>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 16px;">
+            <div style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Annual Class Position</div>
+            <div style="font-size: 20px; font-weight: 800; color: #f472b6; margin-top: 2px;">
+                🥇 1st Position
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">Class {{ student.current_class.name }}</div>
+        </div>
     </div>
 </div>
 
-<!-- Student Results KPI Cards -->
-<div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 24px;">
-    <div class="kpi-card">
-        <div class="kpi-icon" style="background: var(--primary-light); color: var(--primary);">📝</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Examinations Attempted</span>
-            <span class="kpi-value">{{ total_results_count }}</span>
-            <span class="kpi-subtext">Recorded Term Assessments</span>
+<!-- Month-by-Month Filter Toolbar -->
+<div class="card" style="background: #ffffff; border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 14px 18px; box-shadow: var(--shadow-sm); margin-bottom: 22px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <!-- Filter Tabs -->
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="filter-tab-btn active" onclick="filterBy('ALL', this)" style="padding: 6px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 700; border: 1px solid var(--primary); background: var(--primary); color: #ffffff; cursor: pointer; transition: all 0.2s;">
+                🌟 All Assessments ({{ total_results_count }})
+            </button>
+            <button type="button" class="filter-tab-btn" onclick="filterBy('WEEKLY', this)" style="padding: 6px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--card-border); background: #ffffff; color: var(--text-muted); cursor: pointer; transition: all 0.2s;">
+                📝 Weekly Tests ({{ weekly_results|length }})
+            </button>
+            <button type="button" class="filter-tab-btn" onclick="filterBy('MONTHLY', this)" style="padding: 6px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--card-border); background: #ffffff; color: var(--text-muted); cursor: pointer; transition: all 0.2s;">
+                🎯 Monthly Assessments ({{ monthly_results|length }})
+            </button>
+            <button type="button" class="filter-tab-btn" onclick="filterBy('TERMS', this)" style="padding: 6px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--card-border); background: #ffffff; color: var(--text-muted); cursor: pointer; transition: all 0.2s;">
+                🏆 Term & Final Exams ({{ term_results|length }})
+            </button>
         </div>
-    </div>
 
-    <div class="kpi-card">
-        <div class="kpi-icon" style="background: var(--success-light); color: var(--success);">🎯</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Average Score</span>
-            <span class="kpi-value">{{ avg_pct }}%</span>
-            <span class="kpi-subtext">Cumulative Performance</span>
-        </div>
-    </div>
-
-    <div class="kpi-card">
-        <div class="kpi-icon" style="background: #e0e7ff; color: #4338ca;">🏆</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Passed Terms</span>
-            <span class="kpi-value">{{ passed_results_count }}</span>
-            <span class="kpi-subtext">Qualified Examinations</span>
+        <!-- Search Bar -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="text" id="liveSearchInput" onkeyup="applyFilters()" placeholder="🔍 Search test or subject..." style="padding: 7px 14px; border: 1px solid var(--card-border); border-radius: 20px; font-size: 12px; outline: none; background: #ffffff; width: 200px;">
         </div>
     </div>
 </div>
 
-<!-- Official Term Report Cards Table -->
-<div class="card" style="border-radius: var(--radius-md); box-shadow: var(--shadow-sm); overflow: hidden;">
-    <div class="card-header" style="background: var(--bg-surface); padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 8px;">
-            <span>📜</span> Term Results & Academic Transcripts
-        </h3>
-        <span class="role-badge" style="background: var(--primary-light); color: var(--primary);">
-            {{ student.get_full_name }} • Class {{ student.current_class.name }} (Sec {{ student.current_section.name }})
-        </span>
+<!-- Month-by-Month Structured Groups -->
+{% for grp in monthly_groups %}
+<div class="month-block-card" data-month-code="{{ grp.month_code }}" style="background: #ffffff; border: 1px solid var(--card-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 22px;">
+    <!-- Month Header -->
+    <div style="background: #f8fafc; padding: 12px 20px; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+                📅
+            </div>
+            <div>
+                <h3 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">
+                    {{ grp.month_name }}
+                </h3>
+                <span style="font-size: 11.5px; color: #64748b;">
+                    {{ grp.results|length }} Total Assessments Recorded ({{ grp.weekly_count }} Weekly, {{ grp.monthly_count }} Monthly{% if grp.term_count %}, {{ grp.term_count }} Term Exam{% endif %})
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;">
+                <span>📈</span> Month Average: {{ grp.avg_pct }}%
+            </span>
+        </div>
     </div>
-    <div class="card-body" style="padding: 0;">
-        <div class="table-container">
-            <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
-                <thead>
-                    <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;">
-                        <th style="padding: 14px 20px; text-align: left;">Examination Title</th>
-                        <th style="padding: 14px 20px; text-align: left;">Academic Session</th>
-                        <th style="padding: 14px 20px; text-align: center;">Total Marks</th>
-                        <th style="padding: 14px 20px; text-align: center;">Marks Obtained</th>
-                        <th style="padding: 14px 20px; text-align: center;">Percentage</th>
-                        <th style="padding: 14px 20px; text-align: center;">Grade</th>
-                        <th style="padding: 14px 20px; text-align: center;">Class Position</th>
-                        <th style="padding: 14px 20px; text-align: center;">Status</th>
-                        <th style="padding: 14px 20px; text-align: right;">Official Report Card</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for res in results %}
-                    <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
-                        <td style="padding: 16px 20px; font-weight: 700; color: var(--text-main);">
+
+    <!-- Month Tests Table -->
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 920px;">
+            <thead>
+                <tr style="background: #ffffff; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <th style="padding: 10px 18px; width: 26%;">Assessment & Date</th>
+                    <th style="padding: 10px 14px; width: 44%;">Subject Scores Breakdown</th>
+                    <th style="padding: 10px 12px; text-align: center; width: 11%;">Total Score</th>
+                    <th style="padding: 10px 10px; text-align: center; width: 6%;">Grade</th>
+                    <th style="padding: 10px 10px; text-align: center; width: 6%;">Status</th>
+                    <th style="padding: 10px 18px; text-align: right; width: 7%;">Report</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in grp.results %}
+                <tr class="assessment-entry-row" 
+                    data-type="{% if res.exam.exam_type == 'WEEKLY_TEST' or res.exam.exam_type == 'QUIZ_UNIT' %}WEEKLY{% elif res.exam.exam_type == 'MONTHLY_TEST' %}MONTHLY{% else %}TERMS{% endif %}"
+                    style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" 
+                    onmouseover="this.style.background='#f8fafc'" 
+                    onmouseout="this.style.background='#ffffff'">
+                    
+                    <!-- Title, Date & Badge -->
+                    <td style="padding: 12px 18px; vertical-align: middle;">
+                        <div style="font-weight: 700; color: #0f172a; font-size: 13.5px; line-height: 1.3;">
                             {{ res.exam.title }}
-                            <div style="font-size: 11.5px; font-weight: 500; color: var(--text-muted); margin-top: 2px;">
-                                {{ res.exam.get_exam_type_display }}
-                            </div>
-                        </td>
-                        <td style="padding: 16px 20px; color: var(--text-muted);">
-                            {{ res.exam.academic_year.name }}
-                        </td>
-                        <td style="padding: 16px 20px; text-align: center; font-weight: 600;">
-                            {{ res.total_marks }}
-                        </td>
-                        <td style="padding: 16px 20px; text-align: center; font-weight: 700; color: var(--primary);">
-                            {{ res.obtained_marks }}
-                        </td>
-                        <td style="padding: 16px 20px; text-align: center; font-weight: 700; color: {% if res.percentage >= 60 %}var(--success){% else %}var(--warning){% endif %};">
-                            {{ res.percentage }}%
-                        </td>
-                        <td style="padding: 16px 20px; text-align: center;">
-                            <span class="role-badge" style="background: {% if res.grade == 'A+' or res.grade == 'A' %}#dcfce7; color: #166534;{% elif res.grade == 'F' %}#fee2e2; color: #991b1b;{% else %}#fef9c3; color: #854d0e;{% endif %} font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px;">
-                                {{ res.grade|default:"N/A" }}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap;">
+                            <span style="font-size: 11px; color: #64748b; display: inline-flex; align-items: center; gap: 3px;">
+                                🗓️ {{ res.exam.start_date|date:"M d, Y" }}
                             </span>
-                        </td>
-                        <td style="padding: 16px 20px; text-align: center; font-weight: 700;">
-                            {% if res.position_in_class %}
-                                <span style="display: inline-flex; align-items: center; gap: 4px; color: #b45309;">
-                                    {% if res.position_in_class == 1 %}🥇 1st{% elif res.position_in_class == 2 %}🥈 2nd{% elif res.position_in_class == 3 %}🥉 3rd{% else %}#{{ res.position_in_class }}{% endif %}
+                            {% if res.exam.exam_type == 'WEEKLY_TEST' or res.exam.exam_type == 'QUIZ_UNIT' %}
+                                <span style="display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                                    Weekly Test
+                                </span>
+                            {% elif res.exam.exam_type == 'MONTHLY_TEST' %}
+                                <span style="display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                                    Monthly Assessment
+                                </span>
+                            {% elif res.exam.exam_type == 'FINAL_TERM' %}
+                                <span style="display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; background: #faf5ff; color: #7e22ce; border: 1px solid #f3e8ff; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                                    Final Term
                                 </span>
                             {% else %}
-                                <span style="color: var(--text-muted);">-</span>
+                                <span style="display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                                    {{ res.exam.get_exam_type_display }}
+                                </span>
                             {% endif %}
-                        </td>
-                        <td style="padding: 16px 20px; text-align: center;">
-                            {% if res.is_passed %}
-                                <span class="badge" style="background: #dcfce7; color: #15803d; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 11.5px;">✓ Passed</span>
-                            {% else %}
-                                <span class="badge" style="background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 11.5px;">✕ Needs Improvement</span>
-                            {% endif %}
-                        </td>
-                        <td style="padding: 16px 20px; text-align: right;">
-                            <a href="{% url 'examinations:student_report_card' res.exam.pk student.pk %}" target="_blank" class="btn btn-sm btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-weight: 600; font-size: 12.5px; border-radius: 8px;">
-                                <span>📄</span> View Report Card
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="9" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
-                            <div style="font-size: 40px; margin-bottom: 12px;">📊</div>
-                            <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">No Published Exam Results Yet</h4>
-                            <p style="font-size: 13px; color: var(--text-muted); max-width: 480px; margin: 0 auto;">
-                                Your examination results and grade sheets will appear here automatically once term papers are evaluated and finalized by your teachers.
-                            </p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                    </td>
+
+                    <!-- Subject Scores Breakdown (Clean Organized 3-Column Micro-Grid) -->
+                    <td style="padding: 10px 14px; vertical-align: middle;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 5px;">
+                            {% for sub in res.subject_breakdown %}
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                                <span style="color: #475569; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;" title="{{ sub.subject_name }}">{{ sub.subject_name }}</span>
+                                <span style="color: #0f172a; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap;">{{ sub.marks_obtained|floatformat:0 }}<span style="color: #94a3b8; font-weight: 500; font-size: 10px;">/{{ sub.total_marks }}</span></span>
+                            </div>
+                            {% empty %}
+                            <span style="font-size: 11.5px; color: #94a3b8; font-style: italic;">Consolidated score recorded</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+
+                    <!-- Total Score & Percentage -->
+                    <td style="padding: 12px 12px; text-align: center; vertical-align: middle; white-space: nowrap;">
+                        <div style="font-weight: 800; font-size: 13.5px; color: #0f172a; font-variant-numeric: tabular-nums;">
+                            {{ res.obtained_marks|floatformat:0 }} <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">/ {{ res.total_marks|floatformat:0 }}</span>
+                        </div>
+                        <div style="display: inline-block; font-size: 10.5px; font-weight: 700; color: {% if res.percentage >= 60 %}#059669{% else %}#d97706{% endif %}; background: {% if res.percentage >= 60 %}#ecfdf5{% else %}#fffbeb{% endif %}; padding: 1px 6px; border-radius: 4px; margin-top: 2px;">
+                            {{ res.percentage }}%
+                        </div>
+                    </td>
+
+                    <!-- Grade -->
+                    <td style="padding: 12px 10px; text-align: center; vertical-align: middle; white-space: nowrap;">
+                        <span style="display: inline-block; min-width: 26px; padding: 2px 7px; border-radius: 5px; font-weight: 800; font-size: 11px; {% if res.grade == 'A+' or res.grade == 'A' %}background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;{% elif res.grade == 'B' %}background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;{% elif res.grade == 'C' %}background: #fef9c3; color: #a16207; border: 1px solid #fef08a;{% elif res.grade == 'F' %}background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca;{% else %}background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;{% endif %}">
+                            {{ res.grade|default:"—" }}
+                        </span>
+                    </td>
+
+                    <!-- Status -->
+                    <td style="padding: 12px 10px; text-align: center; vertical-align: middle; white-space: nowrap;">
+                        {% if res.is_passed %}
+                            <span style="display: inline-flex; align-items: center; gap: 2px; background: #ecfdf5; color: #047857; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 10.5px; border: 1px solid #a7f3d0;">
+                                ✓ Pass
+                            </span>
+                        {% else %}
+                            <span style="display: inline-flex; align-items: center; gap: 2px; background: #fef2f2; color: #b91c1c; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 10.5px; border: 1px solid #fecaca;">
+                                ✕ Fail
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- View Report Action -->
+                    <td style="padding: 12px 18px; text-align: right; vertical-align: middle; white-space: nowrap;">
+                        <a href="{% url 'examinations:student_report_card' res.exam.pk student.pk %}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; font-weight: 600; font-size: 11.5px; border-radius: 6px; background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#2563eb'; this.style.color='#ffffff'; this.style.borderColor='#2563eb';" onmouseout="this.style.background='#f8fafc'; this.style.color='#334155'; this.style.borderColor='#cbd5e1';">
+                            <span>📄</span> Report
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+{% empty %}
+<div class="card" style="background: #ffffff; border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 60px 20px; text-align: center; box-shadow: var(--shadow-sm);">
+    <div style="font-size: 48px; margin-bottom: 12px;">📊</div>
+    <h4 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0 0 6px 0;">No Assessment Results Recorded Yet</h4>
+    <p style="font-size: 13.5px; color: var(--text-muted); max-width: 480px; margin: 0 auto;">
+        Your monthly assessments, weekly tests, and term scorecards will appear here as soon as teachers publish results.
+    </p>
+</div>
+{% endfor %}
+
+<script>
+var activeFilter = 'ALL';
+
+function filterBy(category, btn) {
+    activeFilter = category;
+
+    document.querySelectorAll('.filter-tab-btn').forEach(function(b) {
+        b.style.background = '#ffffff';
+        b.style.color = 'var(--text-muted)';
+        b.style.border = '1px solid var(--card-border)';
+        b.classList.remove('active');
+    });
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#ffffff';
+    btn.style.border = '1px solid var(--primary)';
+    btn.classList.add('active');
+
+    applyFilters();
+}
+
+function applyFilters() {
+    var searchVal = document.getElementById("liveSearchInput").value.toLowerCase();
+    var monthCards = document.querySelectorAll(".month-block-card");
+
+    monthCards.forEach(function(card) {
+        var rows = card.querySelectorAll(".assessment-entry-row");
+        var visibleRowsCount = 0;
+
+        rows.forEach(function(row) {
+            var rowType = row.getAttribute("data-type");
+            var text = (row.textContent || row.innerText).toLowerCase();
+
+            var matchesType = (activeFilter === 'ALL' || rowType === activeFilter);
+            var matchesSearch = (text.indexOf(searchVal) > -1);
+
+            if (matchesType && matchesSearch) {
+                row.style.display = "";
+                visibleRowsCount++;
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        // Hide whole month card if no rows inside match filter
+        if (visibleRowsCount > 0) {
+            card.style.display = "";
+        } else {
+            card.style.display = "none";
+        }
+    });
+}
+</script>
 {% endblock %}

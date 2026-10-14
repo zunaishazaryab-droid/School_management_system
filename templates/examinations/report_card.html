@@ -4,170 +4,411 @@
 {% block title %}Report Card - {{ student.get_full_name }} - {{ school_settings.school_name }}{% endblock %}
 
 {% block content %}
-<div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-    <div>
+<form method="POST" id="reportCardForm">
+    {% csrf_token %}
+
+    <!-- Top Action Toolbar (Hidden in Print) -->
+    <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
         <div style="display: flex; align-items: center; gap: 10px;">
             <a href="{% url 'examinations:exam_detail' exam.pk %}" class="btn btn-sm btn-outline">← Back to Exam</a>
-            <h1 class="page-title" style="margin: 0;">Report Card: {{ student.get_full_name }}</h1>
+            <h1 class="page-title" style="margin: 0; font-size: 22px; font-weight: 800;">
+                📄 Result Card: {{ student.get_full_name }}
+            </h1>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            {% if is_staff %}
+            <button type="submit" class="btn btn-primary" style="padding: 9px 24px; font-weight: 800; font-size: 13.5px; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">
+                💾 Save Result Card
+            </button>
+            {% endif %}
+            <a href="{% url 'students:student_detail' student.pk %}" class="btn btn-outline" style="font-size: 13px;">
+                👤 Student Profile
+            </a>
+            <button type="button" onclick="window.print()" class="btn btn-outline" style="padding: 9px 18px; font-weight: 700; background: #ffffff;">
+                🖨️ Print Card
+            </button>
         </div>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <a href="{% url 'students:student_detail' student.pk %}" class="btn btn-outline">
-            👤 Student Profile
-        </a>
-        <button onclick="window.print()" class="btn btn-primary" style="padding: 9px 24px;">
-            🖨️ Print Report Card
-        </button>
-    </div>
-</div>
 
-<!-- Report Card Printable Box -->
-<div class="report-card-container" style="background: #ffffff; border: 2px solid #1e293b; border-radius: var(--radius-md); padding: 32px; box-shadow: var(--shadow-sm); max-width: 900px; margin: 0 auto;">
-    
-    <!-- School Header -->
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px double #1e293b; padding-bottom: 16px; margin-bottom: 20px;">
-        <div style="display: flex; align-items: center; gap: 16px;">
-            {% if school_settings.logo %}
-            <img src="{{ school_settings.logo.url }}" alt="Logo" style="width: 56px; height: 68px; object-fit: contain;">
-            {% else %}
-            <img src="{% static 'images/logo.png' %}" alt="Logo" style="width: 56px; height: 68px; object-fit: contain;">
-            {% endif %}
+    {% if is_staff %}
+    <!-- Helpful Notice for Teachers -->
+    <div class="no-print" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 16px; margin-bottom: 18px; font-size: 13px; color: #1e40af; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div>
+            ✏️ <strong>Direct Subject Editing:</strong> Aap har subject ke marks neeche seedha edit kar sakte hain. Total marks aur grade khud-bakhud update ho jayenge.
+        </div>
+        <div>
+            <button type="submit" class="btn btn-sm btn-primary" style="padding: 4px 14px; font-weight: 700;">
+                💾 Save Changes
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Official Printable Report Card Box -->
+    <div class="report-card-container" style="background: #ffffff; border: 2px solid #1e293b; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); max-width: 950px; margin: 0 auto;">
+        
+        <!-- School Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px double #1e293b; padding-bottom: 16px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                {% if school_settings.logo %}
+                <img src="{{ school_settings.logo.url }}" alt="Logo" style="width: 56px; height: 68px; object-fit: contain;">
+                {% else %}
+                <img src="{% static 'images/logo.png' %}" alt="Logo" style="width: 56px; height: 68px; object-fit: contain;">
+                {% endif %}
+                <div>
+                    <h1 style="font-size: 22px; font-weight: 900; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                        {{ school_settings.school_name|default:"GEN'X VISION SCHOOL SYSTEM" }}
+                    </h1>
+                    <div style="font-size: 13px; color: #64748b; margin-top: 2px;">
+                        {{ school_settings.tagline|default:"Inspiring Excellence, Empowering Future" }} • Official Student Academic Transcript
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 14px; font-weight: 800; color: #1e293b; background: #f1f5f9; padding: 6px 14px; border-radius: 4px; display: inline-block;">
+                    {{ exam.title }}
+                </div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Session: {{ exam.academic_year.name }}</div>
+            </div>
+        </div>
+
+        <!-- Student Bio Grid -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; background: #f8fafc; padding: 14px 16px; border-radius: 6px; font-size: 13px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
             <div>
-                <h1 style="font-size: 22px; font-weight: 900; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
-                    {{ school_settings.school_name|default:"GEN'X VISION SCHOOL SYSTEM" }}
-                </h1>
-                <div style="font-size: 13px; color: #64748b; margin-top: 2px;">
-                    {{ school_settings.tagline|default:"Inspiring Excellence, Empowering Future" }} • Official Student Academic Transcript
+                <span style="color: #64748b; display: block; font-size: 11px;">Student Name:</span>
+                <strong style="color: #0f172a; font-size: 14px;">{{ student.get_full_name }}</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Admission ID / Roll:</span>
+                <strong style="color: #0f172a;">{{ student.admission_number }} / {{ student.roll_number|default:"--" }}</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Class & Section:</span>
+                <strong style="color: #0f172a;">{{ student.current_class.name }} (Section {{ student.current_section.name }})</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Guardian Name:</span>
+                <strong style="color: #0f172a;">{{ student.guardian_name }}</strong>
+            </div>
+
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Exam Category:</span>
+                <strong style="color: #0f172a;">{{ exam.get_exam_type_display }}</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Attendance Rate:</span>
+                <strong style="color: #0f172a;">{{ attendance_rate }}% ({{ attendance_count }} Days)</strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Section Position:</span>
+                <strong style="color: #2563eb; font-size: 14px;">
+                    {% if result.position_in_section %}#{{ result.position_in_section }}{% else %}--{% endif %}
+                </strong>
+            </div>
+            <div>
+                <span style="color: #64748b; display: block; font-size: 11px;">Class Standing Rank:</span>
+                <strong style="color: #2563eb; font-size: 14px;">
+                    {% if result.position_in_class %}#{{ result.position_in_class }}{% else %}--{% endif %}
+                </strong>
+            </div>
+        </div>
+
+        <!-- Subject-Wise Marks Sheet Table (Editable for Staff) -->
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 24px;" id="reportCardTable">
+            <thead>
+                <tr style="background: #1e293b; color: #ffffff;">
+                    <th style="padding: 10px 12px; text-align: left; width: 40px;">#</th>
+                    <th style="padding: 10px 12px; text-align: left; min-width: 170px;">Subject Name</th>
+                    <th style="padding: 10px 12px; text-align: right; width: 90px;">Total Marks</th>
+                    <th style="padding: 10px 12px; text-align: right; width: 90px;">Pass Marks</th>
+                    <th style="padding: 10px 12px; text-align: left; width: 140px;">Marks Obtained</th>
+                    <th style="padding: 10px 12px; text-align: center; width: 80px;">Absent?</th>
+                    <th style="padding: 10px 12px; text-align: right; width: 90px;">Subject %</th>
+                    <th style="padding: 10px 12px; text-align: center; width: 80px;">Grade</th>
+                    <th style="padding: 10px 12px; text-align: left; min-width: 140px;">Teacher Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in marks_rows %}
+                <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.15s ease;" class="card-subject-row" id="srow_{{ m.schedule.id }}">
+                    <td style="padding: 10px 12px; color: #64748b; font-weight: 600;">{{ forloop.counter }}</td>
+                    <td style="padding: 10px 12px; font-weight: 800; color: #0f172a; font-size: 13.5px;">
+                        {{ m.subject.name }}
+                    </td>
+                    <td style="padding: 10px 12px; text-align: right; font-weight: 700; color: #334155;">
+                        <span class="sub-max" data-max="{{ m.total_marks }}">{{ m.total_marks }}</span>
+                    </td>
+                    <td style="padding: 10px 12px; text-align: right; color: #64748b;">
+                        {{ m.passing_marks }}
+                    </td>
+
+                    <!-- Marks Obtained (Editable Input for Teacher, Plain Text in Print) -->
+                    <td style="padding: 8px 12px;">
+                        {% if is_staff %}
+                        <input type="number" step="0.01" min="0" max="{{ m.total_marks }}"
+                               name="marks_{{ m.schedule.id }}"
+                               id="marks_{{ m.schedule.id }}"
+                               value="{{ m.obtained }}"
+                               data-max="{{ m.total_marks }}"
+                               data-pass="{{ m.passing_marks }}"
+                               class="form-control card-marks-input"
+                               placeholder="0 - {{ m.total_marks }}"
+                               style="font-weight: 800; width: 110px; font-size: 14px; padding: 6px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px;"
+                               {% if m.is_absent %}disabled style="opacity: 0.5; width: 110px;"{% endif %}>
+                        <span class="print-only" style="display: none; font-weight: 800; font-size: 14px;">
+                            {% if m.is_absent %}ABSENT{% else %}{{ m.obtained|default:"0" }}{% endif %}
+                        </span>
+                        {% else %}
+                        <strong style="font-size: 14px; {% if not m.is_pass %}color: #dc2626;{% else %}color: #0f172a;{% endif %}">
+                            {% if m.is_absent %}ABSENT{% else %}{{ m.obtained|floatformat:1 }}{% endif %}
+                        </strong>
+                        {% endif %}
+                    </td>
+
+                    <!-- Absent Checkbox -->
+                    <td style="padding: 8px 12px; text-align: center;">
+                        {% if is_staff %}
+                        <input type="checkbox" name="absent_{{ m.schedule.id }}" value="1"
+                               id="abs_{{ m.schedule.id }}"
+                               class="form-checkbox no-print"
+                               {% if m.is_absent %}checked{% endif %}
+                               onchange="toggleCardAbsent('{{ m.schedule.id }}')"
+                               style="width: 17px; height: 17px; cursor: pointer;">
+                        {% endif %}
+                        <span class="print-only" style="display: none;">
+                            {% if m.is_absent %}✔{% else %}—{% endif %}
+                        </span>
+                    </td>
+
+                    <!-- Live Percentage -->
+                    <td style="padding: 10px 12px; text-align: right; font-weight: 700; color: #2563eb;" id="sub_pct_{{ m.schedule.id }}">
+                        {{ m.percentage }}%
+                    </td>
+
+                    <!-- Live Grade -->
+                    <td style="padding: 10px 12px; text-align: center;">
+                        <span class="badge" id="sub_grade_{{ m.schedule.id }}" style="font-weight: 800; font-size: 12.5px; {% if m.grade == 'A+' or m.grade == 'A' %}color: #16a34a; background: #dcfce7;{% elif m.grade == 'F' %}color: #dc2626; background: #fee2e2;{% else %}color: #2563eb; background: #e0f2fe;{% endif %}">
+                            {{ m.grade }}
+                        </span>
+                    </td>
+
+                    <!-- Remarks Input -->
+                    <td style="padding: 8px 12px;">
+                        {% if is_staff %}
+                        <input type="text" name="remarks_{{ m.schedule.id }}"
+                               id="remarks_{{ m.schedule.id }}"
+                               value="{{ m.remarks }}"
+                               class="form-control"
+                               placeholder="Teacher remarks..."
+                               style="font-size: 12.5px; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                        <span class="print-only" style="display: none; font-size: 12px; color: #475569;">
+                            {{ m.remarks|default:"Good" }}
+                        </span>
+                        {% else %}
+                        <span style="color: #475569; font-size: 12px;">{{ m.remarks|default:"Good" }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" style="padding: 24px; text-align: center; color: #64748b;">No subjects recorded for this exam.</td></tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="background: #f8fafc; border-top: 2.5px solid #1e293b; font-weight: 800; font-size: 14px;">
+                    <td colspan="2" style="padding: 12px 14px; font-size: 15px; color: #0f172a;">
+                        📊 GRAND TOTAL:
+                    </td>
+                    <td style="padding: 12px; text-align: right; color: #0f172a; font-size: 15px;" id="grandTotalMax">
+                        {{ result.total_marks|floatformat:0 }}
+                    </td>
+                    <td style="padding: 12px; text-align: right; color: #64748b;">--</td>
+                    <td style="padding: 12px; text-align: left; color: #2563eb; font-size: 16px;" id="grandTotalObt">
+                        {{ result.obtained_marks|floatformat:1 }}
+                    </td>
+                    <td style="padding: 12px; text-align: center;">--</td>
+                    <td style="padding: 12px; text-align: right; color: #2563eb; font-size: 15px;" id="grandTotalPct">
+                        {{ result.percentage }}%
+                    </td>
+                    <td style="padding: 12px; text-align: center; font-size: 16px; color: #16a34a;" id="grandTotalGrade">
+                        {{ result.grade }}
+                    </td>
+                    <td style="padding: 12px; font-size: 12.5px;" id="grandTotalStatus">
+                        {% if result.is_passed %}
+                        <span style="color: #16a34a; font-weight: 800;">✔ PROMOTED / PASSED</span>
+                        {% else %}
+                        <span style="color: #dc2626; font-weight: 800;">✖ FAILED / NEEDS IMPROVEMENT</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Grading Key & Signatures -->
+        <div style="display: grid; grid-template-columns: 2fr 3fr; gap: 20px; align-items: end; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            <!-- Grading Scale Legend -->
+            <div style="font-size: 11px; color: #64748b; background: #f8fafc; padding: 10px 14px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <strong style="color: #0f172a; display: block; margin-bottom: 4px;">Grading Scale:</strong>
+                A+ (90-100%) • A (80-89%) • B (70-79%) • C (60-69%) • D (50-59%) • E (40-49%) • F (Below 40% / Fail)
+            </div>
+
+            <!-- Signature lines -->
+            <div style="display: flex; justify-content: space-between; text-align: center; font-size: 11.5px; color: #334155;">
+                <div>
+                    <div style="border-bottom: 1px solid #94a3b8; width: 130px; height: 35px; margin-bottom: 4px;"></div>
+                    <span>Class Teacher</span>
+                </div>
+                <div>
+                    <div style="border-bottom: 1px solid #94a3b8; width: 130px; height: 35px; margin-bottom: 4px;"></div>
+                    <span>Exam Controller</span>
+                </div>
+                <div>
+                    <div style="border-bottom: 1px solid #94a3b8; width: 130px; height: 35px; margin-bottom: 4px;"></div>
+                    <span>Principal / Seal</span>
                 </div>
             </div>
         </div>
-        <div style="text-align: right;">
-            <div style="font-size: 14px; font-weight: 800; color: #1e293b; background: #f1f5f9; padding: 6px 14px; border-radius: 4px; display: inline-block;">
-                {{ exam.title }}
-            </div>
-            <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Session: {{ exam.academic_year.name }}</div>
+
+        {% if is_staff %}
+        <!-- Bottom Save Button (no-print) -->
+        <div class="no-print" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px;">
+            <a href="{% url 'examinations:exam_detail' exam.pk %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 32px; font-size: 14px; font-weight: 800; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">
+                💾 Save All Subject Marks & Update Result
+            </button>
         </div>
+        {% endif %}
     </div>
+</form>
 
-    <!-- Student Bio Grid -->
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; background: #f8fafc; padding: 16px; border-radius: 6px; font-size: 13px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
-        <div>
-            <span style="color: #64748b; display: block; font-size: 11px;">Student Name:</span>
-            <strong style="color: #0f172a; font-size: 14px;">{{ student.get_full_name }}</strong>
-        </div>
-        <div>
-            <span style="color: #64748b; display: block; font-size: 11px;">Admission ID / Roll:</span>
-            <strong style="color: #0f172a;">{{ student.admission_number }} / {{ student.roll_number|default:"--" }}</strong>
-        </div>
-        <div>
-            <span style="color: #64748b; display: block; font-size: 11px;">Class & Section:</span>
-            <strong style="color: #0f172a;">{{ student.current_class.name }} (Section {{ student.current_section.name }})</strong>
-        </div>
-        <div>
-            <span style="color: #64748b; display: block; font-size: 11px;">Guardian Name:</span>
-            <strong style="color: #0f172a;">{{ student.guardian_name }}</strong>
-        </div>
+<script>
+function toggleCardAbsent(scheduleId) {
+    const absCheckbox = document.getElementById('abs_' + scheduleId);
+    const marksInput = document.getElementById('marks_' + scheduleId);
+    const remarksInput = document.getElementById('remarks_' + scheduleId);
 
-        <div>
-            <span style="color: #64748b; display: block; font-size: 11px;">Term Exam:</span>
-            <strong style="color: #0f172a;">{{ exam.get_exam_type_display }}</strong>
-        </div>
-        <div>
-            <span style="color: #64748b; display: block; font-size: 11px;">Attendance Rate:</span>
-            <strong style="color: #0f172a;">{{ attendance_rate }}% ({{ attendance_count }} Days)</strong>
-        </div>
-        <div>
-            <span style="color: #64748b; display: block; font-size: 11px;">Position in Section:</span>
-            <strong style="color: #2563eb; font-size: 14px;">
-                {% if result.position_in_section %}{{ result.position_in_section }}{% else %}--{% endif %}
-            </strong>
-        </div>
-        <div>
-            <span style="color: #64748b; display: block; font-size: 11px;">Class Standing Rank:</span>
-            <strong style="color: #2563eb; font-size: 14px;">
-                {% if result.position_in_class %}{{ result.position_in_class }}{% else %}--{% endif %}
-            </strong>
-        </div>
-    </div>
+    if (absCheckbox.checked) {
+        marksInput.value = '0';
+        marksInput.disabled = true;
+        marksInput.style.opacity = '0.5';
+        if (!remarksInput.value) {
+            remarksInput.value = 'Absent';
+        }
+    } else {
+        marksInput.disabled = false;
+        marksInput.style.opacity = '1';
+        if (remarksInput.value === 'Absent') {
+            remarksInput.value = '';
+        }
+    }
+    recalculateCardLive();
+}
 
-    <!-- Subject Marks Table -->
-    <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 24px;">
-        <thead>
-            <tr style="background: #1e293b; color: #ffffff;">
-                <th style="padding: 10px 12px; text-align: left;">Subject</th>
-                <th style="padding: 10px 12px; text-align: right;">Total Marks</th>
-                <th style="padding: 10px 12px; text-align: right;">Passing Marks</th>
-                <th style="padding: 10px 12px; text-align: right;">Marks Obtained</th>
-                <th style="padding: 10px 12px; text-align: right;">Percentage</th>
-                <th style="padding: 10px 12px; text-align: center;">Grade</th>
-                <th style="padding: 10px 12px; text-align: left;">Teacher Remarks</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for m in marks_rows %}
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 12px; font-weight: 700; color: #0f172a;">{{ m.subject.name }}</td>
-                <td style="padding: 10px 12px; text-align: right;">{{ m.total_marks }}</td>
-                <td style="padding: 10px 12px; text-align: right; color: #64748b;">{{ m.passing_marks }}</td>
-                <td style="padding: 10px 12px; text-align: right; font-weight: 800; {% if not m.is_pass %}color: #dc2626;{% else %}color: #0f172a;{% endif %}">
-                    {% if m.is_absent %}ABSENT{% else %}{{ m.obtained|floatformat:1 }}{% endif %}
-                </td>
-                <td style="padding: 10px 12px; text-align: right; font-weight: 700;">{{ m.percentage }}%</td>
-                <td style="padding: 10px 12px; text-align: center;">
-                    <span style="font-weight: 800; font-size: 13px; {% if m.grade == 'A+' or m.grade == 'A' %}color: #16a34a;{% elif m.grade == 'F' %}color: #dc2626;{% else %}color: #2563eb;{% endif %}">
-                        {{ m.grade }}
-                    </span>
-                </td>
-                <td style="padding: 10px 12px; color: #475569; font-size: 12px;">{{ m.remarks }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="7" style="padding: 24px; text-align: center; color: #64748b;">No subjects recorded for this exam.</td></tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr style="background: #f8fafc; border-top: 2px solid #1e293b; font-weight: 800; font-size: 14px;">
-                <td style="padding: 12px;">Grand Total:</td>
-                <td style="padding: 12px; text-align: right;">{{ result.total_marks|floatformat:0 }}</td>
-                <td style="padding: 12px; text-align: right;">--</td>
-                <td style="padding: 12px; text-align: right; color: #2563eb;">{{ result.obtained_marks|floatformat:1 }}</td>
-                <td style="padding: 12px; text-align: right; color: #2563eb;">{{ result.percentage }}%</td>
-                <td style="padding: 12px; text-align: center; font-size: 16px; color: #16a34a;">{{ result.grade }}</td>
-                <td style="padding: 12px; font-size: 12px;">
-                    {% if result.is_passed %}
-                    <span style="color: #16a34a; font-weight: 800;">PROMOTED / PASSED</span>
-                    {% else %}
-                    <span style="color: #dc2626; font-weight: 800;">FAILED / NEEDS IMPROVEMENT</span>
-                    {% endif %}
-                </td>
-            </tr>
-        </tfoot>
-    </table>
+function recalculateCardLive() {
+    let grandMax = 0;
+    let grandObt = 0;
+    let anyFailed = false;
 
-    <!-- Grading Key & Signatures -->
-    <div style="display: grid; grid-template-columns: 2fr 3fr; gap: 20px; align-items: end; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-        <!-- Grading Scale Legend -->
-        <div style="font-size: 11px; color: #64748b; background: #f8fafc; padding: 10px 14px; border-radius: 6px; border: 1px solid #e2e8f0;">
-            <strong style="color: #0f172a; display: block; margin-bottom: 4px;">Grading Scale:</strong>
-            A+ (90-100%) • A (80-89%) • B (70-79%) • C (60-69%) • D (50-59%) • E (40-49%) • F (Below 40% / Fail)
-        </div>
+    const inputs = document.querySelectorAll('.card-marks-input');
+    inputs.forEach(input => {
+        const scheduleId = input.id.replace('marks_', '');
+        const maxVal = parseFloat(input.dataset.max) || 0;
+        const passVal = parseFloat(input.dataset.pass) || 0;
+        grandMax += maxVal;
 
-        <!-- Signature lines -->
-        <div style="display: flex; justify-content: space-between; text-align: center; font-size: 11.5px; color: #334155;">
-            <div>
-                <div style="border-bottom: 1px solid #94a3b8; width: 130px; height: 35px; margin-bottom: 4px;"></div>
-                <span>Class Teacher</span>
-            </div>
-            <div>
-                <div style="border-bottom: 1px solid #94a3b8; width: 130px; height: 35px; margin-bottom: 4px;"></div>
-                <span>Exam Controller</span>
-            </div>
-            <div>
-                <div style="border-bottom: 1px solid #94a3b8; width: 130px; height: 35px; margin-bottom: 4px;"></div>
-                <span>Principal / Seal</span>
-            </div>
-        </div>
-    </div>
-</div>
+        let obtVal = 0;
+        let isAbsent = false;
+        const absBox = document.getElementById('abs_' + scheduleId);
+        if (absBox && absBox.checked) {
+            isAbsent = true;
+        }
+
+        if (!input.disabled && input.value !== '' && !isAbsent) {
+            obtVal = parseFloat(input.value) || 0;
+            if (obtVal > maxVal) {
+                obtVal = maxVal;
+                input.value = maxVal;
+            }
+            if (obtVal < 0) {
+                obtVal = 0;
+                input.value = 0;
+            }
+            grandObt += obtVal;
+        }
+
+        // Sub Percentage
+        const subPct = maxVal > 0 ? ((obtVal / maxVal) * 100) : 0;
+        const subPctEl = document.getElementById('sub_pct_' + scheduleId);
+        if (subPctEl) {
+            subPctEl.textContent = isAbsent ? '0.0%' : subPct.toFixed(1) + '%';
+        }
+
+        // Sub Grade
+        let subGrade = 'F';
+        let subColor = '#dc2626';
+        let subBg = '#fee2e2';
+        if (!isAbsent) {
+            if (subPct >= 90) { subGrade = 'A+'; subColor = '#166534'; subBg = '#dcfce7'; }
+            else if (subPct >= 80) { subGrade = 'A'; subColor = '#15803d'; subBg = '#dcfce7'; }
+            else if (subPct >= 70) { subGrade = 'B'; subColor = '#1d4ed8'; subBg = '#dbeafe'; }
+            else if (subPct >= 60) { subGrade = 'C'; subColor = '#2563eb'; subBg = '#eff6ff'; }
+            else if (subPct >= 50) { subGrade = 'D'; subColor = '#d97706'; subBg = '#fef3c7'; }
+            else if (subPct >= 40) { subGrade = 'E'; subColor = '#ca8a04'; subBg = '#fef9c3'; }
+        }
+
+        if (isAbsent || obtVal < passVal) {
+            anyFailed = true;
+        }
+
+        const subGradeEl = document.getElementById('sub_grade_' + scheduleId);
+        if (subGradeEl) {
+            subGradeEl.textContent = isAbsent ? 'ABS' : subGrade;
+            subGradeEl.style.color = subColor;
+            subGradeEl.style.backgroundColor = subBg;
+        }
+    });
+
+    // Update Grand Totals
+    const grandMaxEl = document.getElementById('grandTotalMax');
+    if (grandMaxEl) grandMaxEl.textContent = grandMax.toFixed(0);
+
+    const grandObtEl = document.getElementById('grandTotalObt');
+    if (grandObtEl) grandObtEl.textContent = grandObt.toFixed(1);
+
+    const grandPct = grandMax > 0 ? ((grandObt / grandMax) * 100) : 0;
+    const grandPctEl = document.getElementById('grandTotalPct');
+    if (grandPctEl) grandPctEl.textContent = grandPct.toFixed(1) + '%';
+
+    let grandGrade = 'F';
+    let gColor = '#dc2626';
+    if (grandPct >= 90) { grandGrade = 'A+'; gColor = '#166534'; }
+    else if (grandPct >= 80) { grandGrade = 'A'; gColor = '#15803d'; }
+    else if (grandPct >= 70) { grandGrade = 'B'; gColor = '#1d4ed8'; }
+    else if (grandPct >= 60) { grandGrade = 'C'; gColor = '#2563eb'; }
+    else if (grandPct >= 50) { grandGrade = 'D'; gColor = '#d97706'; }
+    else if (grandPct >= 40) { grandGrade = 'E'; gColor = '#ca8a04'; }
+
+    const grandGradeEl = document.getElementById('grandTotalGrade');
+    if (grandGradeEl) {
+        grandGradeEl.textContent = grandGrade;
+        grandGradeEl.style.color = gColor;
+    }
+
+    const statusEl = document.getElementById('grandTotalStatus');
+    if (statusEl) {
+        if (!anyFailed && grandPct >= 33) {
+            statusEl.innerHTML = '<span style="color: #166534; font-weight: 800;">✔ PROMOTED / PASSED</span>';
+        } else {
+            statusEl.innerHTML = '<span style="color: #dc2626; font-weight: 800;">✖ FAILED / NEEDS IMPROVEMENT</span>';
+        }
+    }
+}
+
+document.querySelectorAll('.card-marks-input').forEach(input => {
+    input.addEventListener('input', recalculateCardLive);
+});
+
+window.addEventListener('DOMContentLoaded', recalculateCardLive);
+</script>
 
 <style>
 @media print {
@@ -190,6 +431,12 @@
         box-shadow: none !important;
         padding: 20px !important;
         max-width: 100% !important;
+    }
+    .card-marks-input {
+        display: none !important;
+    }
+    .print-only {
+        display: inline !important;
     }
 }
 </style>

@@ -1,96 +1,253 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}Daily Lecture Records | {{ school_settings.school_name }}{% endblock %}
+{% block title %}Class-Wise Lectures & Audio Records | {{ school_settings.school_name }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<!-- Page Header -->
+<div class="page-header" style="margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
     <div>
-        <h1 class="page-title">Daily Lecture Log & Academic Teaching Records</h1>
-        <p class="page-subtitle">Track classroom topics delivered, learning objectives, classwork exercises, and notebooks checked.</p>
+        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 20px; font-size: 11px; font-weight: 700; color: #1d4ed8; text-transform: uppercase; margin-bottom: 4px;">
+            📚 Academic Teaching Portal
+        </div>
+        <h1 class="page-title" style="font-size: 22px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0;">
+            Class-Wise Lectures & Recorded Audio Logs
+        </h1>
+        <p class="page-subtitle" style="margin: 0; font-size: 13.5px; color: var(--text-muted);">
+            {% if is_student %}
+                Listen to audio recordings, revise classroom whiteboard topics, and review assigned daily diary tasks.
+            {% else %}
+                Record daily classroom voice notes, log whiteboard exercises, and manage teaching diary logs.
+            {% endif %}
+        </p>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <a href="{% url 'lectures:homework_list' %}" class="btn btn-outline">
-            📖 Homework Diary
+    
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="{% url 'lectures:homework_list' %}" class="btn btn-outline" style="font-weight: 600; font-size: 13px;">
+            📖 Homework & Diary
         </a>
-        <a href="{% url 'lectures:lecture_add' %}" class="btn btn-primary">
-            ➕ Record Daily Lecture
+        {% if can_manage_lectures %}
+        <a href="{% url 'lectures:lecture_add' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px;">
+            <span>🎙️</span> Record New Lecture
         </a>
+        {% endif %}
     </div>
 </div>
 
-<!-- Filters -->
-<div class="card" style="margin-bottom: 20px;">
-    <div class="card-body" style="padding: 16px 20px;">
-        <form method="GET" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
-            <div style="flex: 1; min-width: 160px;">
-                <label class="form-label">Class</label>
-                <select name="class_id" class="form-control" onchange="this.form.submit()">
+<!-- Student Info Banner (Read-Only Mode Notice) -->
+{% if is_student and student %}
+<div class="card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; border: none; border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 20px; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                🎧
+            </div>
+            <div>
+                <div style="font-size: 14.5px; font-weight: 800; color: #f8fafc;">
+                    Student Listening Mode — Class {{ student.current_class.name }} (Section {{ student.current_section.name }})
+                </div>
+                <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">
+                    You have read-only access to listen to lectures delivered by your teachers.
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                {{ total_lectures_count }} Lectures Available
+            </span>
+            {% if audio_lectures_count > 0 %}
+            <span style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #93c5fd; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                🎙️ {{ audio_lectures_count }} Audio Recordings
+            </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Filters Toolbar -->
+<div class="card" style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 14px 18px; margin-bottom: 22px; box-shadow: var(--shadow-sm);">
+    <form method="GET" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between;">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; flex: 1;">
+            {% if not is_student %}
+            <div style="min-width: 170px;">
+                <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Class</label>
+                <select name="class_id" class="form-control" onchange="this.form.submit()" style="padding: 7px 12px; font-size: 12.5px; border-radius: 8px;">
                     <option value="">All Classes</option>
                     {% for c in classes %}
-                    <option value="{{ c.id }}" {% if request.GET.class_id == c.id|stringformat:"i" %}selected{% endif %}>{{ c.name }}</option>
+                    <option value="{{ c.id }}" {% if selected_class_id == c.id|stringformat:"i" %}selected{% endif %}>{{ c.name }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div style="flex: 1; min-width: 160px;">
-                <label class="form-label">Subject</label>
-                <select name="subject_id" class="form-control" onchange="this.form.submit()">
+            {% endif %}
+
+            <div style="min-width: 170px;">
+                <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Subject</label>
+                <select name="subject_id" class="form-control" onchange="this.form.submit()" style="padding: 7px 12px; font-size: 12.5px; border-radius: 8px;">
                     <option value="">All Subjects</option>
                     {% for s in subjects %}
-                    <option value="{{ s.id }}" {% if request.GET.subject_id == s.id|stringformat:"i" %}selected{% endif %}>{{ s.name }}</option>
+                    <option value="{{ s.id }}" {% if selected_subject_id == s.id|stringformat:"i" %}selected{% endif %}>{{ s.name }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div style="flex: 1; min-width: 160px;">
-                <label class="form-label">Date</label>
-                <input type="date" name="date" class="form-control" value="{{ request.GET.date }}" onchange="this.form.submit()">
+
+            <div style="min-width: 150px;">
+                <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Date</label>
+                <input type="date" name="date" class="form-control" value="{{ selected_date }}" onchange="this.form.submit()" style="padding: 6px 12px; font-size: 12.5px; border-radius: 8px;">
             </div>
-            <a href="{% url 'lectures:lecture_list' %}" class="btn btn-outline btn-sm">Reset</a>
-        </form>
-    </div>
+
+            <div style="min-width: 200px; flex: 1;">
+                <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Search Topic / Chapter</label>
+                <input type="text" name="q" class="form-control" placeholder="Search topic or keyword..." value="{{ search_query }}" style="padding: 6px 12px; font-size: 12.5px; border-radius: 8px;">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+            <button type="submit" class="btn btn-primary btn-sm" style="padding: 7px 14px; font-weight: 700; font-size: 12.5px;">Filter</button>
+            <a href="{% url 'lectures:lecture_list' %}" class="btn btn-outline btn-sm" style="padding: 7px 12px; font-size: 12.5px;">Reset</a>
+        </div>
+    </form>
 </div>
 
-<!-- Lecture Records Grid/Table -->
-<div class="card">
-    <div class="card-body" style="padding: 0; overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
-            <thead>
-                <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: var(--text-muted);">
-                    <th style="padding: 12px 18px;">Date & Teacher</th>
-                    <th style="padding: 12px 18px;">Class & Subject</th>
-                    <th style="padding: 12px 18px;">Chapter & Topic Covered</th>
-                    <th style="padding: 12px 18px;">Attendance</th>
-                    <th style="padding: 12px 18px;">Copies Checked</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for lec in lectures %}
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 12px 18px;">
-                        <strong>{{ lec.date }}</strong>
-                        <div style="font-size: 12px; color: var(--text-muted);">By: {{ lec.teacher.get_full_name|default:lec.teacher.username }}</div>
-                    </td>
-                    <td style="padding: 12px 18px;">
-                        <span class="role-badge" style="background: var(--primary-light);">{{ lec.class_room.name }} (Sec {{ lec.section.name }})</span>
-                        <div style="font-weight: 600; color: var(--text-main); margin-top: 4px;">{{ lec.subject.name }}</div>
-                    </td>
-                    <td style="padding: 12px 18px;">
-                        <strong>{{ lec.topic }}</strong>
-                        <div style="font-size: 12px; color: var(--text-muted);">{{ lec.chapter_name }}</div>
-                        <p style="font-size: 12px; color: var(--text-light); margin-top: 2px;">{{ lec.classwork_description|truncatechars:70 }}</p>
-                    </td>
-                    <td style="padding: 12px 18px;">
-                        <span style="color: var(--success); font-weight: 600;">{{ lec.present_students_count }} Present</span>
-                        <div style="color: var(--danger); font-size: 11.5px;">{{ lec.absent_students_count }} Absent</div>
-                    </td>
-                    <td style="padding: 12px 18px; font-weight: 700; color: var(--primary);">
-                        {{ lec.copies_checked_count }} Checked
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">No daily lecture records found. Click "Record Daily Lecture" to log teaching work.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<!-- Lectures Stream / Grid -->
+{% if lectures %}
+<div style="display: flex; flex-direction: column; gap: 16px;">
+    {% for lec in lectures %}
+    <div class="card" style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 18px 22px; box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)'">
+        <!-- Top Row: Badges, Date, Actions -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 6px;">
+                    {{ lec.subject.name }}
+                </span>
+                <span class="badge" style="background: #f1f5f9; color: #475569; font-weight: 700; font-size: 11.5px; padding: 4px 8px; border-radius: 6px;">
+                    Class {{ lec.class_room.name }} (Sec {{ lec.section.name }})
+                </span>
+                <span style="font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px;">
+                    🗓️ {{ lec.date|date:"d M Y" }} ({{ lec.date|date:"l" }})
+                </span>
+                <span style="font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px;">
+                    👨‍🏫 {{ lec.teacher.get_full_name|default:lec.teacher.username }}
+                </span>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <a href="{% url 'lectures:lecture_detail' lec.pk %}" class="btn btn-sm btn-outline" style="font-size: 12px; font-weight: 700; padding: 4px 10px;">
+                    👁️ Full Details
+                </a>
+                {% if can_manage_lectures %}
+                <a href="{% url 'lectures:lecture_edit' lec.pk %}" class="btn btn-sm btn-outline" style="font-size: 12px; font-weight: 600; padding: 4px 10px; color: #2563eb;">
+                    ✏️ Edit
+                </a>
+                <form method="POST" action="{% url 'lectures:lecture_delete' lec.pk %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this lecture?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm" style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">
+                        🗑️ Delete
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Topic Title & Chapter -->
+        <div style="margin-bottom: 12px;">
+            <h3 style="font-size: 16.5px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">
+                {{ lec.topic }}
+            </h3>
+            <div style="font-size: 13px; font-weight: 600; color: #0284c7;">
+                📖 {{ lec.chapter_name }}
+            </div>
+        </div>
+
+        <!-- Audio Player Box (If Recorded Audio Exists) -->
+        {% if lec.audio_recording %}
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #15803d; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                    🎙️
+                </div>
+                <div>
+                    <div style="font-size: 13px; font-weight: 800; color: #166534;">
+                        Teacher's Voice Lecture Recording
+                    </div>
+                    <div style="font-size: 11.5px; color: #15803d;">
+                        Listen to the teacher's classroom explanation & audio guidance.
+                    </div>
+                </div>
+            </div>
+
+            <div style="flex: 1; min-width: 250px; max-width: 460px;">
+                <audio controls style="width: 100%; height: 36px; outline: none;">
+                    <source src="{{ lec.audio_recording.url }}" type="audio/mpeg">
+                    <source src="{{ lec.audio_recording.url }}" type="audio/webm">
+                    <source src="{{ lec.audio_recording.url }}" type="audio/wav">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Classwork & Objectives Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;">
+            <div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Classwork / Board Exercises</div>
+                <div style="font-size: 13px; color: #1e293b; margin-top: 2px; line-height: 1.4;">
+                    {{ lec.classwork_description|truncatewords:40 }}
+                </div>
+            </div>
+
+            {% if lec.homework_assigned %}
+            <div>
+                <div style="font-size: 11px; font-weight: 700; color: #b45309; text-transform: uppercase;">Homework Assigned</div>
+                <div style="font-size: 13px; color: #92400e; margin-top: 2px; line-height: 1.4;">
+                    📝 {{ lec.homework_assigned|truncatewords:30 }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer Meta (Attachments, Copies, Attendance) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-muted); padding-top: 6px;">
+            <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+                {% if lec.attachment %}
+                <a href="{{ lec.attachment.url }}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; color: #2563eb; font-weight: 700; text-decoration: none;">
+                    <span>📎</span> Download Handout / Notes
+                </a>
+                {% endif %}
+
+                {% if lec.video_url %}
+                <a href="{{ lec.video_url }}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; color: #dc2626; font-weight: 700; text-decoration: none;">
+                    <span>📺</span> Watch Video Lecture
+                </a>
+                {% endif %}
+            </div>
+
+            {% if not is_student %}
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <span>👥 {{ lec.present_students_count }} Present / {{ lec.absent_students_count }} Absent</span>
+                <span>📒 {{ lec.copies_checked_count }} Copies Checked</span>
+            </div>
+            {% endif %}
+        </div>
     </div>
+    {% endfor %}
 </div>
+{% else %}
+<div class="card" style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 50px 20px; text-align: center; box-shadow: var(--shadow-sm);">
+    <div style="font-size: 44px; margin-bottom: 10px;">📖</div>
+    <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">No Daily Lecture Records Found</h3>
+    <p style="font-size: 13px; color: var(--text-muted); max-width: 440px; margin: 0 auto 16px auto;">
+        {% if is_student %}
+            No lectures have been logged yet for your class today. Check back later as your teachers conduct class sessions!
+        {% else %}
+            Start recording daily topics, whiteboard exercises, and audio voice notes for your class.
+        {% endif %}
+    </p>
+    {% if can_manage_lectures %}
+    <a href="{% url 'lectures:lecture_add' %}" class="btn btn-primary" style="font-weight: 700; padding: 8px 20px;">
+        🎙️ Record First Lecture
+    </a>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Confirm Delete Receipt - School ERP{% endblock %}
+
+{% block content %}
+<div style="max-width: 580px; margin: 40px auto;">
+    <div class="card" style="border: 2px solid #fee2e2; box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.1);">
+        <div class="card-header" style="background: #fef2f2; border-bottom: 1px solid #fee2e2;">
+            <div class="card-title" style="color: #991b1b; font-size: 17px;">
+                <span>⚠️ Confirm Delete Payment Receipt</span>
+            </div>
+        </div>
+        <div class="card-body" style="padding: 24px;">
+            <p style="font-size: 14.5px; color: var(--text-main); line-height: 1.6;">
+                Are you sure you want to delete payment receipt <strong style="color: var(--primary);">#{{ payment.receipt_number }}</strong>?
+            </p>
+
+            <div style="background: #f8fafc; border-radius: var(--radius-sm); padding: 16px; margin: 20px 0; font-size: 13.5px; border-left: 4px solid #ef4444;">
+                <div style="margin-bottom: 6px;"><strong>Student:</strong> {{ payment.student.get_full_name }} ({{ payment.student.admission_number }})</div>
+                <div style="margin-bottom: 6px;"><strong>Amount:</strong> <span style="font-weight: 800; color: var(--danger);">Rs. {{ payment.amount|floatformat:0 }}</span></div>
+                <div style="margin-bottom: 6px;"><strong>Payment Date:</strong> {{ payment.payment_date }}</div>
+                <div><strong>Invoice #:</strong> {{ payment.invoice.invoice_number }}</div>
+            </div>
+
+            <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 24px;">
+                ℹ️ <em>Note: Deleting this receipt will automatically increase the student's pending balance on Invoice #{{ payment.invoice.invoice_number }} by Rs. {{ payment.amount|floatformat:0 }}.</em>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <a href="{% url 'fees:fee_dashboard' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-danger" style="background: #ef4444; border: none; padding: 10px 22px; font-weight: 700; color: white;">
+                        🗑️ Yes, Delete Receipt
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

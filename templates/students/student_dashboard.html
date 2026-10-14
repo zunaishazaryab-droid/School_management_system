@@ -180,54 +180,216 @@
 
     <!-- TAB 3: ATTENDANCE REGISTER -->
     <div id="tab-attendance" class="tab-content-panel" style="padding: 20px; display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">
-                📊 Student Attendance Register & Breakdown
-            </h3>
-            <span class="badge" style="background: #dcfce7; color: #15803d; font-weight: 800; font-size: 13px; padding: 6px 12px;">
-                Overall Rate: {{ attendance_rate }}%
-            </span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+            <div>
+                <div style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 20px; font-size: 11px; font-weight: 700; color: #1d4ed8; text-transform: uppercase; margin-bottom: 4px;">
+                    📅 Full Academic Year 2026–2027
+                </div>
+                <h3 style="font-size: 17px; font-weight: 800; color: var(--text-main); margin: 0;">
+                    Complete Student Attendance Register & Yearly History
+                </h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">
+                    Complete record across all {{ total_days }} school days: Biometric logs, RFID punches, daily rolls, and leaves.
+                </p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 800; font-size: 13px; padding: 7px 16px; border-radius: 20px;">
+                    📈 Session Attendance Rate: {{ attendance_rate }}%
+                </span>
+            </div>
         </div>
 
-        {% if recent_attendance %}
-        <div class="table-responsive">
-            <table class="table" style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Day</th>
-                        <th>Status</th>
-                        <th>Remarks / Reason</th>
+        <!-- Attendance Stats KPI Strip (Full Year Consolidated) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 20px;">
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; text-align: center;">
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Year Total Days</div>
+                <div style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-top: 4px;">{{ total_days }}</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">School Days Recorded</div>
+            </div>
+
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px; text-align: center;">
+                <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase;">Present Days</div>
+                <div style="font-size: 22px; font-weight: 800; color: #15803d; margin-top: 4px;">{{ present_days }}</div>
+                <div style="font-size: 11px; color: #166534; margin-top: 2px;">On-Time Attendance</div>
+            </div>
+
+            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px; text-align: center;">
+                <div style="font-size: 11px; font-weight: 700; color: #92400e; text-transform: uppercase;">Late Arrivals</div>
+                <div style="font-size: 22px; font-weight: 800; color: #b45309; margin-top: 4px;">{{ late_days }}</div>
+                <div style="font-size: 11px; color: #92400e; margin-top: 2px;">Delayed Check-in</div>
+            </div>
+
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px; text-align: center;">
+                <div style="font-size: 11px; font-weight: 700; color: #991b1b; text-transform: uppercase;">Absent Days</div>
+                <div style="font-size: 22px; font-weight: 800; color: #b91c1c; margin-top: 4px;">{{ absent_days }}</div>
+                <div style="font-size: 11px; color: #991b1b; margin-top: 2px;">Total Absences</div>
+            </div>
+        </div>
+
+        <!-- Month-by-Month Quick Selector Strip -->
+        {% if monthly_att_summary %}
+        <div style="margin-bottom: 18px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">
+                🗓️ Filter by Month:
+            </div>
+            <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin;">
+                <button type="button" class="att-month-btn active" onclick="filterByMonth('ALL', this)" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid var(--primary); background: var(--primary); color: #ffffff; cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+                    All Year ({{ total_days }})
+                </button>
+                {% for m in monthly_att_summary %}
+                <button type="button" class="att-month-btn" onclick="filterByMonth('{{ m.month_code }}', this)" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--border-color); background: #ffffff; color: var(--text-muted); cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+                    {{ m.month_name }} ({{ m.rate }}%)
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filter and Search Toolbar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 16px; margin-bottom: 18px;">
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <button type="button" class="att-filter-btn active" onclick="filterAttendance('ALL', this)" style="padding: 5px 12px; border-radius: 16px; font-size: 12px; font-weight: 700; border: 1px solid var(--primary); background: var(--primary); color: #ffffff; cursor: pointer; transition: all 0.2s;">
+                    All Status ({{ total_days }})
+                </button>
+                <button type="button" class="att-filter-btn" onclick="filterAttendance('PRESENT', this)" style="padding: 5px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; border: 1px solid var(--border-color); background: #ffffff; color: var(--text-muted); cursor: pointer; transition: all 0.2s;">
+                    ✔ Present ({{ present_days }})
+                </button>
+                <button type="button" class="att-filter-btn" onclick="filterAttendance('LATE', this)" style="padding: 5px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; border: 1px solid var(--border-color); background: #ffffff; color: var(--text-muted); cursor: pointer; transition: all 0.2s;">
+                    ⏱ Late ({{ late_days }})
+                </button>
+                <button type="button" class="att-filter-btn" onclick="filterAttendance('ABSENT', this)" style="padding: 5px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; border: 1px solid var(--border-color); background: #ffffff; color: var(--text-muted); cursor: pointer; transition: all 0.2s;">
+                    ✖ Absent ({{ absent_days }})
+                </button>
+            </div>
+
+            <div>
+                <input type="text" id="attSearchInput" onkeyup="applyAttendanceSearch()" placeholder="🔍 Search date or remarks..." style="padding: 6px 14px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 12px; outline: none; background: #ffffff; width: 190px;">
+            </div>
+        </div>
+
+        {% if all_attendance_list %}
+        <div class="table-responsive" style="border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;">
+            <table class="table" style="width: 100%; margin: 0; border-collapse: collapse; font-size: 13px;">
+                <thead style="background: #f8fafc; border-bottom: 1px solid var(--border-color);">
+                    <tr style="color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <th style="padding: 10px 16px; width: 22%;">Date & Day</th>
+                        <th style="padding: 10px 14px; text-align: center; width: 18%;">Status</th>
+                        <th style="padding: 10px 14px; width: 25%;">Check-In / Mode</th>
+                        <th style="padding: 10px 16px; width: 35%;">Remarks / Notes</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for att in recent_attendance %}
-                    <tr>
-                        <td style="font-weight: 700; color: var(--text-main);">{{ att.date|date:"d M Y" }}</td>
-                        <td>{{ att.date|date:"l" }}</td>
-                        <td>
+                <tbody id="attendanceTableBody">
+                    {% for att in all_attendance_list %}
+                    <tr class="attendance-row" data-month="{{ att.month_code }}" data-status="{% if att.status == 'EXCUSED' %}ABSENT{% else %}{{ att.status }}{% endif %}" style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
+                        <td style="padding: 12px 16px; vertical-align: middle;">
+                            <div style="font-weight: 700; color: #0f172a; font-size: 13.5px;">
+                                {{ att.date|date:"d M Y" }}
+                            </div>
+                            <div style="font-size: 11.5px; color: #64748b; margin-top: 1px;">
+                                {{ att.date|date:"l" }}
+                            </div>
+                        </td>
+
+                        <td style="padding: 12px 14px; text-align: center; vertical-align: middle; white-space: nowrap;">
                             {% if att.status == 'PRESENT' %}
-                                <span class="badge" style="background: #dcfce7; color: #166534; font-weight: 800;">✔ PRESENT</span>
+                                <span style="display: inline-flex; align-items: center; gap: 4px; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">
+                                    ✔ PRESENT
+                                </span>
                             {% elif att.status == 'LATE' %}
-                                <span class="badge" style="background: #fef3c7; color: #92400e; font-weight: 800;">⏱ LATE</span>
-                            {% elif att.status == 'ABSENT' %}
-                                <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 800;">✖ ABSENT</span>
+                                <span style="display: inline-flex; align-items: center; gap: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">
+                                    ⏱ LATE
+                                </span>
                             {% else %}
-                                <span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 800;">{{ att.get_status_display }}</span>
+                                <span style="display: inline-flex; align-items: center; gap: 4px; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 11px;">
+                                    ✖ ABSENT
+                                </span>
                             {% endif %}
                         </td>
-                        <td style="color: var(--text-muted); font-size: 13px;">{{ att.remarks|default:"Regular School Attendance" }}</td>
+
+                        <td style="padding: 12px 14px; vertical-align: middle; font-size: 12px; color: #475569;">
+                            <div style="display: inline-flex; align-items: center; gap: 5px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 3px 8px; border-radius: 6px; font-size: 11.5px;">
+                                <span>📱</span> Biometric / Daily Roll
+                            </div>
+                        </td>
+
+                        <td style="padding: 12px 16px; vertical-align: middle; color: #64748b; font-size: 12.5px;">
+                            {{ att.remarks|default:"Regular School Attendance" }}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-        <div style="padding: 30px; text-align: center; background: var(--bg-surface); border-radius: 10px;">
-            <p style="color: var(--text-muted); margin: 0;">Attendance records will appear here as daily rolls are marked.</p>
+        <div style="padding: 40px; text-align: center; background: var(--bg-surface); border-radius: 10px; border: 1px solid var(--border-color);">
+            <div style="font-size: 36px; margin-bottom: 8px;">📅</div>
+            <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin: 0 0 4px 0;">No Attendance Records Logged Yet</h4>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0;">Attendance records will appear here as daily rolls and biometric logs are recorded.</p>
         </div>
         {% endif %}
     </div>
+
+    <script>
+    var currentAttFilter = 'ALL';
+    var currentMonthFilter = 'ALL';
+
+    function filterAttendance(status, btn) {
+        currentAttFilter = status;
+        document.querySelectorAll('.att-filter-btn').forEach(function(b) {
+            b.style.background = '#ffffff';
+            b.style.color = 'var(--text-muted)';
+            b.style.border = '1px solid var(--border-color)';
+            b.classList.remove('active');
+        });
+        btn.style.background = 'var(--primary)';
+        btn.style.color = '#ffffff';
+        btn.style.border = '1px solid var(--primary)';
+        btn.classList.add('active');
+
+        applyAttendanceFilters();
+    }
+
+    function filterByMonth(monthCode, btn) {
+        currentMonthFilter = monthCode;
+        document.querySelectorAll('.att-month-btn').forEach(function(b) {
+            b.style.background = '#ffffff';
+            b.style.color = 'var(--text-muted)';
+            b.style.border = '1px solid var(--border-color)';
+            b.classList.remove('active');
+        });
+        btn.style.background = 'var(--primary)';
+        btn.style.color = '#ffffff';
+        btn.style.border = '1px solid var(--primary)';
+        btn.classList.add('active');
+
+        applyAttendanceFilters();
+    }
+
+    function applyAttendanceSearch() {
+        applyAttendanceFilters();
+    }
+
+    function applyAttendanceFilters() {
+        var searchVal = (document.getElementById("attSearchInput") ? document.getElementById("attSearchInput").value.toLowerCase() : "");
+        var rows = document.querySelectorAll(".attendance-row");
+
+        rows.forEach(function(row) {
+            var rowStatus = row.getAttribute("data-status");
+            var rowMonth = row.getAttribute("data-month");
+            var text = (row.textContent || row.innerText).toLowerCase();
+
+            var matchesStatus = (currentAttFilter === 'ALL' || rowStatus === currentAttFilter);
+            var matchesMonth = (currentMonthFilter === 'ALL' || rowMonth === currentMonthFilter);
+            var matchesSearch = (text.indexOf(searchVal) > -1);
+
+            if (matchesStatus && matchesMonth && matchesSearch) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+    </script>
 
     <!-- TAB 4: FEES & BANK CHALLANS -->
     <div id="tab-fees" class="tab-content-panel" style="padding: 20px; display: none;">
@@ -314,52 +476,147 @@
 
     <!-- TAB 4: EXAMS & RESULTS -->
     <div id="tab-exams" class="tab-content-panel" style="padding: 20px; display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
             <div>
-                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">
-                    🏆 Examination Results & Official Report Cards
+                <h3 style="font-size: 17px; font-weight: 800; color: var(--text-main); margin: 0;">
+                    🏆 Student Examination & Assessment Results
                 </h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">
+                    Complete performance record across Weekly Tests, Monthly Assessments, 1st Term, 2nd Term, and Final Annual Exams.
+                </p>
             </div>
             {% if latest_exam %}
-            <a href="{% url 'examinations:student_report_card' latest_exam.id student.id %}" target="_blank" class="btn btn-sm btn-primary" style="font-weight: 700;">
-                🖨️ Printable Official Report Card
+            <a href="{% url 'examinations:student_report_card' latest_exam.id student.id %}" target="_blank" class="btn btn-sm btn-primary" style="font-weight: 700; padding: 6px 14px; font-size: 13px;">
+                🖨️ Print Latest Official Report Card
             </a>
             {% endif %}
         </div>
 
-        <!-- Subject Wise Exam Scores Table -->
-        <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">
-            📋 Subject-Wise Exam Scorecard
+        <!-- Overall Exam Results Cards (Terms, Finals, Monthly, Weekly) -->
+        {% if exam_results %}
+        <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 24px;">
+            {% for res in exam_results %}
+            <div class="card" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h4 style="font-size: 16px; font-weight: 800; color: var(--text-main); margin: 0;">
+                                {{ res.exam.title }}
+                            </h4>
+                            {% if res.exam.exam_type == 'WEEKLY_TEST' %}
+                                <span class="badge" style="background: #dcfce7; color: #166534; font-size: 11px;">Weekly Test</span>
+                            {% elif res.exam.exam_type == 'MONTHLY_TEST' %}
+                                <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 11px;">Monthly Test</span>
+                            {% elif res.exam.exam_type == 'FIRST_TERM' %}
+                                <span class="badge" style="background: #fef3c7; color: #92400e; font-size: 11px;">1st Term</span>
+                            {% elif res.exam.exam_type == 'SECOND_TERM' or res.exam.exam_type == 'MID_TERM' %}
+                                <span class="badge" style="background: #f3e8ff; color: #6b21a8; font-size: 11px;">2nd Term</span>
+                            {% elif res.exam.exam_type == 'FINAL_TERM' %}
+                                <span class="badge" style="background: #ffe4e6; color: #9f1239; font-size: 11px;">Final Term</span>
+                            {% else %}
+                                <span class="badge" style="background: #f1f5f9; color: var(--text-muted); font-size: 11px;">{{ res.exam.get_exam_type_display }}</span>
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                            Class: <strong>{{ res.class_room.name }}-{{ res.section.name }}</strong> • Session: {{ res.exam.academic_year.name }}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <a href="{% url 'examinations:student_report_card' res.exam.id student.id %}" target="_blank" class="btn btn-sm btn-outline" style="font-size: 12px; font-weight: 700; background: #ffffff;">
+                            📄 View / Print Marksheet
+                        </a>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">TOTAL MARKS</div>
+                        <div style="font-size: 16px; font-weight: 800; color: var(--text-main);">{{ res.total_marks|floatformat:0 }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">OBTAINED</div>
+                        <div style="font-size: 16px; font-weight: 800; color: #0284c7;">{{ res.obtained_marks|floatformat:1 }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">PERCENTAGE</div>
+                        <div style="font-size: 16px; font-weight: 800; color: {% if res.percentage >= 50 %}#166534{% else %}#dc2626{% endif %};">{{ res.percentage }}%</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">GRADE</div>
+                        <div style="font-size: 16px; font-weight: 800; color: var(--primary);">{{ res.grade }} <span style="font-size: 11px; font-weight: 600; color: var(--text-muted);">({{ res.grade_remarks }})</span></div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">SECTION POSITION</div>
+                        <div style="font-size: 16px; font-weight: 800; color: #ca8a04;">#{{ res.position_in_section|default:"—" }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">RESULT STATUS</div>
+                        <div>
+                            {% if res.is_passed %}
+                            <span class="badge" style="background: #dcfce7; color: #166534; font-weight: 800;">PASS</span>
+                            {% else %}
+                            <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 800;">NEEDS IMPROVEMENT</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Subject Wise Detailed Scores Table -->
+        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin: 20px 0 10px 0;">
+            📋 Subject-Wise Test & Examination Marks Breakdown
         </h4>
         {% if exam_marks_list %}
         <div class="table-responsive">
-            <table class="table" style="width: 100%;">
+            <table class="table" style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
                 <thead>
-                    <tr>
-                        <th>Examination</th>
-                        <th>Subject</th>
-                        <th>Max Marks</th>
-                        <th>Obtained Marks</th>
-                        <th>Percentage</th>
-                        <th>Status</th>
-                        <th>Remarks</th>
+                    <tr style="background: var(--bg-surface); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 12px; text-transform: uppercase;">
+                        <th style="padding: 10px 14px;">Test / Examination</th>
+                        <th style="padding: 10px 14px;">Category</th>
+                        <th style="padding: 10px 14px;">Subject</th>
+                        <th style="padding: 10px 14px; text-align: center;">Max Marks</th>
+                        <th style="padding: 10px 14px; text-align: center;">Obtained</th>
+                        <th style="padding: 10px 14px; text-align: center;">Percentage</th>
+                        <th style="padding: 10px 14px; text-align: center;">Status</th>
+                        <th style="padding: 10px 14px;">Remarks</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for mk in exam_marks_list %}
-                    <tr>
-                        <td><strong>{{ mk.exam_schedule.exam.title }}</strong></td>
-                        <td style="color: var(--primary); font-weight: 700;">{{ mk.exam_schedule.subject.name }}</td>
-                        <td>{{ mk.exam_schedule.total_marks }}</td>
-                        <td style="font-weight: 800; color: var(--text-main);">
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 12px 14px;">
+                            <strong>{{ mk.exam_schedule.exam.title }}</strong>
+                            <div style="font-size: 11px; color: var(--text-muted);">{{ mk.exam_schedule.exam_date|date:"d M Y" }}</div>
+                        </td>
+                        <td style="padding: 12px 14px;">
+                            {% if mk.exam_schedule.exam.exam_type == 'WEEKLY_TEST' %}
+                                <span class="badge" style="background: #dcfce7; color: #166534; font-size: 10.5px;">Weekly</span>
+                            {% elif mk.exam_schedule.exam.exam_type == 'MONTHLY_TEST' %}
+                                <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 10.5px;">Monthly</span>
+                            {% else %}
+                                <span class="badge" style="background: #fef3c7; color: #92400e; font-size: 10.5px;">Term</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px 14px; color: var(--primary); font-weight: 700;">{{ mk.exam_schedule.subject.name }}</td>
+                        <td style="padding: 12px 14px; text-align: center; font-weight: 600;">{{ mk.exam_schedule.total_marks }}</td>
+                        <td style="padding: 12px 14px; text-align: center; font-weight: 800; font-size: 14px;">
                             {% if mk.is_absent %}
                                 <span style="color: var(--danger);">ABSENT</span>
                             {% else %}
                                 {{ mk.marks_obtained }}
                             {% endif %}
                         </td>
-                        <td style="font-weight: 700;">{{ mk.percentage }}%</td>
-                        <td>
+                        <td style="padding: 12px 14px; text-align: center; font-weight: 700;">
+                            {% if mk.is_absent %}
+                                0%
+                            {% else %}
+                                {{ mk.percentage|floatformat:1 }}%
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px 14px; text-align: center;">
                             {% if mk.is_absent %}
                                 <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 800;">ABSENT</span>
                             {% elif mk.percentage >= 50 %}
@@ -368,67 +625,104 @@
                                 <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 800;">FAIL</span>
                             {% endif %}
                         </td>
-                        <td style="font-size: 12.5px; color: var(--text-muted);">{{ mk.remarks|default:"Completed" }}</td>
+                        <td style="padding: 12px 14px; font-size: 12.5px; color: var(--text-muted);">{{ mk.remarks|default:"Satisfactory" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="padding: 30px; text-align: center; color: var(--text-muted);">No marks recorded for this student yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        {% elif exam_results %}
-        <div class="table-responsive">
-            <table class="table" style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Examination</th>
-                        <th>Class & Section</th>
-                        <th>Total Marks</th>
-                        <th>Obtained</th>
-                        <th>Percentage</th>
-                        <th>Grade</th>
-                        <th>Result</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for res in exam_results %}
-                    <tr>
-                        <td><strong>{{ res.exam.title }}</strong></td>
-                        <td>{{ res.class_room.name }}-{{ res.section.name }}</td>
-                        <td>{{ res.total_marks }}</td>
-                        <td style="font-weight: 800;">{{ res.obtained_marks }}</td>
-                        <td style="font-weight: 700;">{{ res.percentage }}%</td>
-                        <td><span class="badge" style="background: #dcfce7; color: #166534; font-weight: 800;">{{ res.grade }}</span></td>
-                        <td>{{ res.grade_remarks }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        {% elif not exam_results %}
+        <div style="padding: 35px; text-align: center; background: var(--bg-surface); border-radius: 10px;">
+            <p style="color: var(--text-muted); margin: 0; font-size: 13.5px;">No published examination or test records available yet. As teachers enter marks, scores will appear here automatically.</p>
         </div>
         {% endif %}
     </div>
 
-    <!-- TAB 5: DAILY CLASS LECTURES -->
+    <!-- TAB 5: DAILY CLASS LECTURES & AUDIO NOTES -->
     <div id="tab-lectures" class="tab-content-panel" style="padding: 20px; display: none;">
-        <div>
-            <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 14px;">
-                📖 Recent Class Lectures & Daily Diary Logs
-            </h3>
-            {% if recent_lectures %}
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px;">
-                {% for lec in recent_lectures %}
-                <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; background: var(--bg-surface);">
-                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">
-                        <span style="font-weight: 700; color: var(--primary);">{{ lec.subject.name }}</span>
-                        <span>{{ lec.date|date:"d M Y" }}</span>
-                    </div>
-                    <h5 style="font-size: 14.5px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-main);">{{ lec.topic }}</h5>
-                    <p style="font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.5;">{{ lec.description }}</p>
-                </div>
-                {% endfor %}
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+            <div>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main); margin: 0;">
+                    📖 Class Lectures & Recorded Audio Notes
+                </h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0 0 0;">
+                    Listen to audio recordings delivered by your subject teachers and review daily whiteboard notes.
+                </p>
             </div>
-            {% else %}
-            <p style="color: var(--text-muted); font-size: 13px;">No lecture diary logs recorded for this week.</p>
-            {% endif %}
+            <a href="{% url 'lectures:lecture_list' %}" class="btn btn-sm btn-outline" style="font-weight: 700; font-size: 12.5px;">
+                🎧 View All Class Lectures
+            </a>
         </div>
+
+        {% if recent_lectures %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+            {% for lec in recent_lectures %}
+            <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; background: var(--bg-surface); display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-sm);">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <span class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 800; font-size: 11.5px;">
+                            {{ lec.subject.name }}
+                        </span>
+                        <span style="font-size: 12px; color: var(--text-muted);">
+                            🗓️ {{ lec.date|date:"d M Y" }}
+                        </span>
+                    </div>
+
+                    <h4 style="font-size: 15px; font-weight: 800; margin: 0 0 4px 0; color: var(--text-main);">
+                        {{ lec.topic }}
+                    </h4>
+                    <div style="font-size: 12px; font-weight: 600; color: #0284c7; margin-bottom: 10px;">
+                        📖 {{ lec.chapter_name }}
+                    </div>
+
+                    <!-- Audio Player for Student Listening -->
+                    {% if lec.audio_recording %}
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;">
+                        <div style="font-size: 11px; font-weight: 700; color: #15803d; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                            <span>🎙️</span> Teacher's Recorded Voice Lecture:
+                        </div>
+                        <audio controls style="width: 100%; height: 32px; outline: none;">
+                            <source src="{{ lec.audio_recording.url }}" type="audio/mpeg">
+                            <source src="{{ lec.audio_recording.url }}" type="audio/webm">
+                            <source src="{{ lec.audio_recording.url }}" type="audio/wav">
+                            Your browser does not support audio playback.
+                        </audio>
+                    </div>
+                    {% endif %}
+
+                    <div style="font-size: 12.5px; color: #475569; line-height: 1.5; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px;">
+                        <strong style="color: #1e293b;">Classwork:</strong> {{ lec.classwork_description|truncatewords:25 }}
+                    </div>
+
+                    {% if lec.homework_assigned %}
+                    <div style="font-size: 12px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 6px 10px; margin-bottom: 10px;">
+                        <strong>Homework:</strong> {{ lec.homework_assigned|truncatewords:20 }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 6px; font-size: 12px;">
+                    <span style="color: var(--text-muted);">
+                        👨‍🏫 {{ lec.teacher.get_full_name|default:"Subject Teacher" }}
+                    </span>
+                    <a href="{% url 'lectures:lecture_detail' lec.pk %}" style="font-weight: 700; color: var(--primary); text-decoration: none;">
+                        Details & Notes →
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="padding: 40px; text-align: center; background: var(--bg-surface); border-radius: 10px; border: 1px solid var(--border-color);">
+            <div style="font-size: 36px; margin-bottom: 8px;">📖</div>
+            <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin: 0 0 4px 0;">No Recorded Lectures for This Week</h4>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0;">As your teachers record and publish daily lectures, audio recordings and whiteboard notes will appear here.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -480,5 +774,19 @@ function switchTab(tabId) {
         activeBtn.style.background = 'var(--primary-light)';
     }
 }
+
+// Auto open tab if specified in URL hash
+document.addEventListener('DOMContentLoaded', function() {
+    var hash = window.location.hash.replace('#', '');
+    if (hash && document.getElementById(hash)) {
+        switchTab(hash);
+    }
+});
+window.addEventListener('hashchange', function() {
+    var hash = window.location.hash.replace('#', '');
+    if (hash && document.getElementById(hash)) {
+        switchTab(hash);
+    }
+});
 </script>
 {% endblock %}

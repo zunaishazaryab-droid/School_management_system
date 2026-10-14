@@ -40,19 +40,24 @@
                     <span>My Dashboard</span>
                 </a>
 
-                <a href="{% url 'lectures:homework_list' %}" class="nav-item {% if 'lectures' in request.path %}active{% endif %}">
+                <a href="{% url 'lectures:lecture_list' %}" class="nav-item {% if request.resolver_match.app_name == 'lectures' and 'homework' not in request.path %}active{% endif %}">
+                    <span class="nav-icon">🎧</span>
+                    <span>Class Lectures & Audio</span>
+                </a>
+
+                <a href="{% url 'lectures:homework_list' %}" class="nav-item {% if 'homework' in request.path %}active{% endif %}">
                     <span class="nav-icon">📖</span>
                     <span>Homework & Diary</span>
                 </a>
 
-                <a href="{% url 'examinations:exam_list' %}" class="nav-item {% if request.resolver_match.app_name == 'examinations' and 'cbt' not in request.path %}active{% endif %}">
+                <a href="{% url 'examinations:exam_list' %}" class="nav-item {% if request.resolver_match.app_name == 'examinations' %}active{% endif %}">
                     <span class="nav-icon">📝</span>
                     <span>Exams & Results</span>
                 </a>
 
-                <a href="{% url 'attendance:leave_list' %}" class="nav-item {% if 'attendance/leaves' in request.path %}active{% endif %}">
-                    <span class="nav-icon">📝</span>
-                    <span>Leave Requests</span>
+                <a href="{% url 'students:student_dashboard' %}#tab-attendance" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span>Attendance Register</span>
                 </a>
 
                 <div class="sidebar-section-title">Communication & Info</div>
@@ -79,56 +84,29 @@
 
                 {% else %}
                 <!-- FULL STAFF & ADMIN NAVIGATION -->
-                <div class="sidebar-section-title">Main Navigation</div>
+                <div class="sidebar-section-title">Overview (مین اوور ویو)</div>
                 
                 <a href="{% url 'core:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <span class="nav-icon">📊</span>
                     <span>Dashboard</span>
                 </a>
 
-                <div class="sidebar-section-title">Academic & Records</div>
+                <div class="sidebar-section-title">Students & Academics (طلباء اور کلاسز)</div>
 
-                <a href="{% url 'students:student_dashboard' %}" class="nav-item {% if 'students/dashboard' in request.path %}active{% endif %}">
-                    <span class="nav-icon">🎓</span>
-                    <span>Student Dashboard</span>
-                </a>
-
-                <a href="{% url 'students:student_list' %}" class="nav-item {% if request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_add' or request.resolver_match.url_name == 'student_detail' %}active{% endif %}">
+                <a href="{% url 'students:student_list' %}" class="nav-item {% if request.resolver_match.app_name == 'students' and 'promotion' not in request.path and 'batch' not in request.path %}active{% endif %}">
                     <span class="nav-icon">👨‍🎓</span>
                     <span>Students Directory</span>
                 </a>
 
-                <a href="{% url 'students:parent_portal' %}" class="nav-item {% if 'portal' in request.path %}active{% endif %}">
-                    <span class="nav-icon">👨‍👩‍👧</span>
-                    <span>Parent Portal</span>
-                </a>
-
-                <a href="{% url 'students:batch_id_cards' %}" class="nav-item {% if 'batch-id-cards' in request.path %}active{% endif %}">
-                    <span class="nav-icon">🪪</span>
-                    <span>Batch ID Cards</span>
+                <a href="{% url 'attendance:student_attendance' %}" class="nav-item {% if request.resolver_match.app_name == 'attendance' %}active{% endif %}">
+                    <span class="nav-icon">📅</span>
+                    <span>Daily Attendance</span>
                 </a>
 
                 {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
-                <a href="{% url 'students:student_promotion' %}" class="nav-item {% if 'promotion' in request.path %}active{% endif %}">
-                    <span class="nav-icon">🚀</span>
-                    <span>Promote / Demote Students</span>
-                </a>
-                {% endif %}
-
-                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
-                <a href="{% url 'academics:class_list' %}" class="nav-item {% if 'academics/classes' in request.path %}active{% endif %}">
+                <a href="{% url 'academics:class_list' %}" class="nav-item {% if 'academics/classes' in request.path or 'academics/subjects' in request.path %}active{% endif %}">
                     <span class="nav-icon">🏫</span>
                     <span>Classes & Sections</span>
-                </a>
-
-                <a href="{% url 'academics:subject_list' %}" class="nav-item {% if 'academics/subjects' in request.path %}active{% endif %}">
-                    <span class="nav-icon">📚</span>
-                    <span>Subjects & Curriculum</span>
-                </a>
-
-                <a href="{% url 'teachers:teacher_list' %}" class="nav-item {% if 'teachers' in request.path %}active{% endif %}">
-                    <span class="nav-icon">👩‍🏫</span>
-                    <span>Teachers & Staff</span>
                 </a>
                 {% endif %}
 
@@ -137,59 +115,32 @@
                     <span>Class Timetable</span>
                 </a>
 
-                <a href="{% url 'attendance:student_attendance' %}" class="nav-item {% if 'attendance/student' in request.path %}active{% endif %}">
-                    <span class="nav-icon">📅</span>
-                    <span>Daily Attendance</span>
-                </a>
-
-                <a href="{% url 'attendance:biometric_dashboard' %}" class="nav-item {% if 'attendance/biometric' in request.path %}active{% endif %}">
-                    <span class="nav-icon">⚡</span>
-                    <span>Biometric Device Sync</span>
-                </a>
-
-                <a href="{% url 'attendance:leave_list' %}" class="nav-item {% if 'attendance/leaves' in request.path %}active{% endif %}">
-                    <span class="nav-icon">📝</span>
-                    <span>Leave Requests</span>
-                </a>
-
                 <a href="{% url 'lectures:homework_list' %}" class="nav-item {% if 'lectures' in request.path %}active{% endif %}">
                     <span class="nav-icon">📖</span>
                     <span>Homework & Diary</span>
                 </a>
 
                 {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
-                <a href="{% url 'teachers:performance_dashboard' %}" class="nav-item {% if 'performance' in request.path %}active{% endif %}">
-                    <span class="nav-icon">⭐</span>
-                    <span>Teacher Performance</span>
+                <a href="{% url 'students:student_promotion' %}" class="nav-item {% if 'promotion' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🚀</span>
+                    <span>Promote / Demote</span>
                 </a>
                 {% endif %}
 
-                <div class="sidebar-section-title">Communication & Notices</div>
+                <div class="sidebar-section-title">Exams & Results (امتحانات اور رزلٹ)</div>
 
-                <a href="{% url 'communication:announcement_list' %}" class="nav-item {% if 'communication/announcements' in request.path or request.resolver_match.url_name == 'announcement_list' %}active{% endif %}">
-                    <span class="nav-icon">📢</span>
-                    <span>Notice Board</span>
+                <a href="{% url 'examinations:exam_list' %}" class="nav-item {% if request.resolver_match.app_name == 'examinations' %}active{% endif %}">
+                    <span class="nav-icon">📝</span>
+                    <span>Exams & Marks Entry</span>
                 </a>
 
-                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
-                <a href="{% url 'communication:broadcast_center' %}" class="nav-item {% if 'broadcast' in request.path %}active{% endif %}">
-                    <span class="nav-icon">💬</span>
-                    <span>Broadcast Center</span>
+                <a href="{% url 'reports:reports_hub' %}" class="nav-item {% if request.resolver_match.app_name == 'reports' and 'executive' not in request.path %}active{% endif %}">
+                    <span class="nav-icon">📈</span>
+                    <span>Reports & Analytics</span>
                 </a>
-
-                <a href="{% url 'communication:gateway_dashboard' %}" class="nav-item {% if 'gateways' in request.path %}active{% endif %}">
-                    <span class="nav-icon">📲</span>
-                    <span>WhatsApp Automation</span>
-                </a>
-
-                <a href="{% url 'communication:queue_monitor' %}" class="nav-item {% if 'queue' in request.path %}active{% endif %}">
-                    <span class="nav-icon">📨</span>
-                    <span>Dispatch Queue</span>
-                </a>
-                {% endif %}
 
                 {% if request.user.is_admin or request.user.is_principal %}
-                <div class="sidebar-section-title">Financial & Accounts</div>
+                <div class="sidebar-section-title">Finance & Fees (فیس اور اخراجات)</div>
 
                 <a href="{% url 'fees:fee_dashboard' %}" class="nav-item {% if request.resolver_match.app_name == 'fees' %}active{% endif %}">
                     <span class="nav-icon">💳</span>
@@ -198,46 +149,33 @@
 
                 <a href="{% url 'expenses:expense_list' %}" class="nav-item {% if request.resolver_match.app_name == 'expenses' %}active{% endif %}">
                     <span class="nav-icon">🧾</span>
-                    <span>Expenses</span>
+                    <span>Daily Expenses</span>
                 </a>
                 {% endif %}
 
-                <div class="sidebar-section-title">Examination & Reports</div>
+                <div class="sidebar-section-title">Staff & Notices (اسٹاف اور نوٹس بورڈ)</div>
 
-                <a href="{% url 'examinations:exam_list' %}" class="nav-item {% if request.resolver_match.app_name == 'examinations' and 'cbt' not in request.path %}active{% endif %}">
-                    <span class="nav-icon">📝</span>
-                    <span>Exams & Results</span>
+                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+                <a href="{% url 'teachers:teacher_list' %}" class="nav-item {% if 'teachers' in request.path %}active{% endif %}">
+                    <span class="nav-icon">👩‍🏫</span>
+                    <span>Teachers & Staff</span>
+                </a>
+                {% endif %}
+
+                <a href="{% url 'communication:announcement_list' %}" class="nav-item {% if 'communication/announcements' in request.path or request.resolver_match.url_name == 'announcement_list' %}active{% endif %}">
+                    <span class="nav-icon">📢</span>
+                    <span>Notice Board</span>
                 </a>
 
-                <a href="{% url 'examinations:cbt_list' %}" class="nav-item {% if 'cbt' in request.path %}active{% endif %}">
-                    <span class="nav-icon">💻</span>
-                    <span>Online CBT Quizzes</span>
+                {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator %}
+                <a href="{% url 'communication:broadcast_center' %}" class="nav-item {% if 'broadcast' in request.path or 'gateways' in request.path %}active{% endif %}">
+                    <span class="nav-icon">💬</span>
+                    <span>WhatsApp Broadcast</span>
                 </a>
-
-                <a href="{% url 'reports:reports_hub' %}" class="nav-item {% if request.resolver_match.app_name == 'reports' and 'executive' not in request.path %}active{% endif %}">
-                    <span class="nav-icon">📈</span>
-                    <span>Reports Center</span>
-                </a>
-
-                <a href="{% url 'reports:executive_analytics' %}" class="nav-item {% if 'executive' in request.path %}active{% endif %}">
-                    <span class="nav-icon">📊</span>
-                    <span>Executive Analytics</span>
-                </a>
-
-                <div class="sidebar-section-title">Auxiliary & Logistics</div>
-
-                <a href="{% url 'transport:dashboard' %}" class="nav-item {% if request.resolver_match.app_name == 'transport' %}active{% endif %}">
-                    <span class="nav-icon">🚌</span>
-                    <span>Transport Fleet</span>
-                </a>
-
-                <a href="{% url 'library:dashboard' %}" class="nav-item {% if request.resolver_match.app_name == 'library' %}active{% endif %}">
-                    <span class="nav-icon">📚</span>
-                    <span>Library Catalog</span>
-                </a>
+                {% endif %}
 
                 {% if request.user.is_admin or request.user.is_principal or request.user.is_coordinator or request.user.is_accountant or request.user.is_staff_member %}
-                <div class="sidebar-section-title">Stock & Assets (اسٹاک)</div>
+                <div class="sidebar-section-title">Inventory & Stock (اسٹاک مینجمنٹ)</div>
 
                 <a href="{% url 'inventory:dashboard' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <span class="nav-icon">📦</span>
@@ -246,62 +184,21 @@
 
                 <a href="{% url 'inventory:item_list' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name in 'item_list,item_create,item_edit' %}active{% endif %}">
                     <span class="nav-icon">📋</span>
-                    <span>Stock Items (اسٹاک آئٹمز)</span>
-                </a>
-
-                <a href="{% url 'inventory:transaction_list' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name in 'transaction_list,transaction_create' %}active{% endif %}">
-                    <span class="nav-icon">🔄</span>
-                    <span>Stock In / Out Ledger</span>
-                </a>
-
-                <a href="{% url 'inventory:category_list' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name == 'category_list' %}active{% endif %}">
-                    <span class="nav-icon">🏷️</span>
-                    <span>Stock Categories</span>
-                </a>
-
-                <a href="{% url 'inventory:supplier_list' %}" class="nav-item {% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name in 'supplier_list,supplier_create,supplier_edit' %}active{% endif %}">
-                    <span class="nav-icon">🏭</span>
-                    <span>Suppliers & Vendors</span>
+                    <span>Stock Items</span>
                 </a>
                 {% endif %}
 
                 {% if request.user.is_admin or request.user.is_principal %}
-                <div class="sidebar-section-title">Administration & System</div>
-
-                <a href="{% url 'core:campus_list' %}" class="nav-item {% if 'campuses' in request.path %}active{% endif %}">
-                    <span class="nav-icon">🏫</span>
-                    <span>Multi-Campus Branches</span>
-                </a>
-
-                <a href="{% url 'core:badge_scanner' %}" class="nav-item {% if 'security/scanner' in request.path %}active{% endif %}">
-                    <span class="nav-icon">🪪</span>
-                    <span>QR Security Scanner</span>
-                </a>
-
-                <a href="{% url 'core:activity_logs' %}" class="nav-item {% if 'activity-logs' in request.path %}active{% endif %}">
-                    <span class="nav-icon">🛡️</span>
-                    <span>Audit Trail Log</span>
-                </a>
-
-                {% if request.user.is_admin %}
-                <a href="{% url 'core:user_management' %}" class="nav-item {% if 'settings/users' in request.path %}active{% endif %}">
-                    <span class="nav-icon">👥</span>
-                    <span>Staff Accounts</span>
-                </a>
+                <div class="sidebar-section-title">System Administration (سیٹنگز)</div>
 
                 <a href="{% url 'core:school_settings' %}" class="nav-item {% if 'settings/school' in request.path %}active{% endif %}">
                     <span class="nav-icon">⚙️</span>
                     <span>School Settings</span>
                 </a>
 
-                <a href="{% url 'core:database_backup' %}" class="nav-item {% if 'settings/backup' in request.path %}active{% endif %}">
-                    <span class="nav-icon">💾</span>
-                    <span>Database Backup</span>
-                </a>
-
-                <a href="{% url 'api:docs' %}" class="nav-item {% if 'api/v1' in request.path %}active{% endif %}">
-                    <span class="nav-icon">🚀</span>
-                    <span>REST API & Mobile Hub</span>
+                <a href="{% url 'core:activity_logs' %}" class="nav-item {% if 'activity-logs' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🛡️</span>
+                    <span>Audit Trail Log</span>
                 </a>
                 {% endif %}
                 {% endif %}
@@ -320,7 +217,6 @@
                     <span class="nav-icon">👤</span>
                     <span>My Profile</span>
                 </a>
-                {% endif %}
             </div>
 
             <div class="sidebar-footer">
@@ -355,10 +251,28 @@
                         <span>Student Portal — Welcome, {% if request.user.student_profile %}{{ request.user.student_profile.first_name }}{% else %}{{ request.user.first_name|default:request.user.username }}{% endif %}!</span>
                     </div>
                     {% else %}
-                    <form action="{% url 'core:global_search' %}" method="GET" class="global-search-form">
+                    <form action="{% url 'core:global_search' %}" method="GET" class="global-search-form" style="max-width: 280px;">
                         <span class="search-icon">🔍</span>
-                        <input type="text" name="q" class="search-input" placeholder="Search student, teacher, receipt..." value="{{ request.GET.q|default:'' }}">
+                        <input type="text" name="q" class="search-input" placeholder="Search student, teacher, fee..." value="{{ request.GET.q|default:'' }}">
                     </form>
+
+                    <!-- Fast Quick Access Bar for Teachers & Staff -->
+                    <div class="topbar-quick-links" style="display: flex; gap: 8px; align-items: center; margin-left: 12px;">
+                        <a href="{% url 'students:student_add' %}" class="btn btn-sm btn-outline" style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; background: #ffffff;">
+                            ➕ Admission
+                        </a>
+                        <a href="{% url 'examinations:exam_list' %}" class="btn btn-sm btn-outline" style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; background: #ffffff;">
+                            ✍️ Marks
+                        </a>
+                        <a href="{% url 'attendance:student_attendance' %}" class="btn btn-sm btn-outline" style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; background: #ffffff;">
+                            📅 Attendance
+                        </a>
+                        {% if request.user.is_admin or request.user.is_principal or request.user.is_accountant %}
+                        <a href="{% url 'fees:fee_dashboard' %}" class="btn btn-sm btn-outline" style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; background: #ffffff;">
+                            💵 Fees
+                        </a>
+                        {% endif %}
+                    </div>
                     {% endif %}
                 </div>
 

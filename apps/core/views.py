@@ -344,14 +344,26 @@ def user_toggle_status_view(request, pk):
 @admin_required
 def database_backup_view(request):
     """Database backup trigger & export center"""
-    db_path = settings.DATABASES['default']['NAME']
+    engine = settings.DATABASES['default']['ENGINE'].split('.')[-1]
     db_size = "N/A"
-    if os.path.exists(db_path):
-        db_size = f"{round(os.path.getsize(db_path) / 1024, 1)} KB"
+    if 'sqlite' in engine:
+        db_path = settings.DATABASES['default']['NAME']
+        if os.path.exists(str(db_path)):
+            db_size = f"{round(os.path.getsize(str(db_path)) / 1024, 1)} KB"
+    else:
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT pg_size_pretty(pg_database_size(current_database()));")
+                row = cursor.fetchone()
+                if row:
+                    db_size = str(row[0])
+        except Exception:
+            db_size = "PostgreSQL Server Managed"
 
     return render(request, 'core/database_backup.html', {
         'db_size': db_size,
-        'db_engine': settings.DATABASES['default']['ENGINE'].split('.')[-1],
+        'db_engine': engine,
         'page_title': 'Database Backup & System Recovery'
     })
 
@@ -369,14 +381,15 @@ def database_download_view(request):
     )
 
     if backup_format == 'sqlite':
-        db_path = settings.DATABASES['default']['NAME']
-        if os.path.exists(db_path):
+        db_path = settings.DATABASES['default'].get('NAME')
+        sqlite_file = db_path if (db_path and os.path.exists(str(db_path))) else (settings.BASE_DIR / 'db.sqlite3')
+        if os.path.exists(str(sqlite_file)):
             timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
-            response = FileResponse(open(db_path, 'rb'), content_type='application/x-sqlite3')
+            response = FileResponse(open(str(sqlite_file), 'rb'), content_type='application/x-sqlite3')
             response['Content-Disposition'] = f'attachment; filename="school_db_backup_{timestamp}.sqlite3"'
             return response
         else:
-            raise Http404("Database file not found.")
+            raise Http404("SQLite database file not found on server.")
     else:
         # JSON Data Dump
         timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')

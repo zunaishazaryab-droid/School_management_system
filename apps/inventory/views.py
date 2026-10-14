@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -13,23 +14,23 @@ from .forms import InventoryItemForm, StockTransactionForm, SupplierForm, ItemCa
 @login_required
 @accountant_required
 def inventory_dashboard_view(request):
-    """Inventory and asset summary dashboard"""
+    """Inventory and asset summary dashboard - clean, simple and executive"""
     items = InventoryItem.objects.select_related('category').all()
-    transactions = StockTransaction.objects.select_related('item', 'supplier').all()[:8]
+    transactions = StockTransaction.objects.select_related('item', 'supplier').all()[:10]
     
-    total_skus = items.count()
+    total_items = items.count()
     low_stock_items = [item for item in items if item.is_low_stock]
-    total_asset_value = sum(item.total_valuation for item in items)
-    recent_transactions = transactions
+    in_stock_count = total_items - len(low_stock_items)
+    total_valuation = sum((item.total_valuation for item in items), Decimal('0.00'))
 
     return render(request, 'inventory/inventory_dashboard.html', {
-        'items': items[:8],
-        'total_skus': total_skus,
+        'items': items,
+        'total_items': total_items,
         'low_stock_count': len(low_stock_items),
-        'low_stock_items': low_stock_items[:5],
-        'total_asset_value': total_asset_value,
-        'recent_transactions': recent_transactions,
-        'page_title': 'Stock & Inventory Management'
+        'in_stock_count': in_stock_count,
+        'total_valuation': total_valuation,
+        'recent_transactions': transactions,
+        'page_title': 'School Stock & Inventory'
     })
 
 

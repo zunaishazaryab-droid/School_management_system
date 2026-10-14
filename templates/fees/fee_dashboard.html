@@ -3,201 +3,1051 @@
 {% block title %}Fee Management & Financials - School ERP{% endblock %}
 
 {% block content %}
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+<style>
+.fee-nav-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08) !important;
+    border-color: #93c5fd !important;
+}
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.07) !important;
+    transition: all 0.2s ease;
+}
+</style>
+
+<!-- Page Header with Clean Hierarchy -->
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
     <div>
-        <h1 class="page-title">💳 Fee Management & Accounts</h1>
-        <p class="page-subtitle">Manage student fee challans, collections, concessions, receipts & ledgers</p>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #1d4ed8); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #ffffff; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);">
+                💳
+            </div>
+            <div>
+                <h1 class="page-title" style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px;">
+                    Fee Management & Financials
+                </h1>
+                <p class="page-subtitle" style="margin: 2px 0 0 0; color: #64748b; font-size: 13px;">
+                    Manage student fee challans, live counter collections, annual ledgers & payment receipts
+                </p>
+            </div>
+        </div>
     </div>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <a href="{% url 'fees:collect_payment' %}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); border: none;">
-            💵 Collect Payment
+    
+    <!-- Action Buttons with Clear Primary/Secondary Hierarchy -->
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <button type="button" onclick="openQuickPaymentModal()" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; padding: 10px 18px; border-radius: 10px; font-size: 13.5px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;">
+            <span style="font-size: 16px;">⚡</span>
+            <span>+ Collect Fee Payment</span>
+        </button>
+        <a href="{% url 'fees:bulk_generate' %}" class="btn" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; text-decoration: none; font-weight: 700; padding: 10px 16px; border-radius: 10px; font-size: 13.5px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25); display: flex; align-items: center; gap: 8px;">
+            <span>⚡</span>
+            <span>Generate Monthly Challans</span>
         </a>
-        <a href="{% url 'fees:bulk_generate' %}" class="btn btn-primary">
-            ⚡ Generate Monthly Challans
-        </a>
-        <a href="{% url 'fees:fee_structures' %}" class="btn btn-outline">
-            ⚙️ Class Fee Plans
+        <a href="{% url 'fees:invoice_create' %}" class="btn" style="background: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; text-decoration: none; font-weight: 700; padding: 9px 14px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+            <span>➕</span>
+            <span>Single Challan</span>
         </a>
     </div>
 </div>
 
-<!-- KPI Cards Grid -->
-<div class="kpi-grid">
-    <div class="kpi-card">
-        <div class="kpi-icon" style="background: var(--primary-light); color: var(--primary);">📊</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Total Invoiced / Billed</span>
-            <span class="kpi-value">Rs. {{ total_invoiced|floatformat:0 }}</span>
+<!-- Helpful Workflow Guide Strip (100% English) -->
+<div style="background: linear-gradient(90deg, #eff6ff 0%, #f0fdf4 100%); border: 1px solid #bfdbfe; border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">💡</span>
+        <div style="font-size: 13px; color: #1e3a8a;">
+            <strong>Standard Workflow:</strong>
+            <span style="color: #334155; margin-left: 6px;">
+                1️⃣ Generate Monthly Challans ➔ 2️⃣ Print 3-Part Bank Challan ➔ 3️⃣ Collect Counter Payment & Receipt ➔ 4️⃣ Review Overdue Defaulters
+            </span>
+        </div>
+    </div>
+    <div style="font-size: 12px; font-weight: 700; color: #2563eb; background: #ffffff; padding: 4px 10px; border-radius: 20px; border: 1px solid #bfdbfe;">
+        Session {{ current_year }} • {{ today|date:"F Y" }}
+    </div>
+</div>
+
+<!-- 4 Crystal-Clear Financial Summary Cards (100% English) -->
+<div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 22px;">
+    
+    <!-- 1. Total Invoiced Card -->
+    <div class="kpi-card" style="background: #ffffff; border-radius: 14px; padding: 18px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); position: relative; overflow: hidden; border-top: 4px solid #2563eb;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <span style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Total Invoiced
+                </span>
+                <div style="font-size: 11px; color: #2563eb; font-weight: 600; margin-top: 2px;">Issued Bills & Challans</div>
+            </div>
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                📊
+            </div>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">
+                Rs. {{ total_invoiced|floatformat:0 }}
+            </div>
+            <div style="margin-top: 4px; font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2563eb;"></span>
+                <span>Total billed amount across active challans</span>
+            </div>
         </div>
     </div>
 
-    <div class="kpi-card">
-        <div class="kpi-icon" style="background: var(--success-light); color: var(--success);">💰</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Total Collected</span>
-            <span class="kpi-value">Rs. {{ total_collected|floatformat:0 }}</span>
+    <!-- 2. Total Collected Card -->
+    <div class="kpi-card" style="background: #ffffff; border-radius: 14px; padding: 18px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); position: relative; overflow: hidden; border-top: 4px solid #10b981;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <span style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Total Collected
+                </span>
+                <div style="font-size: 11px; color: #059669; font-weight: 600; margin-top: 2px;">Deposited & Verified</div>
+            </div>
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                💰
+            </div>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 800; color: #059669; letter-spacing: -0.5px;">
+                Rs. {{ total_collected|floatformat:0 }}
+            </div>
+            <div style="margin-top: 4px; font-size: 12px; color: #059669; display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                <span>Total payments received in school accounts</span>
+            </div>
         </div>
     </div>
 
-    <div class="kpi-card">
-        <div class="kpi-icon" style="background: var(--danger-light); color: var(--danger);">⚠️</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Total Outstanding Dues</span>
-            <span class="kpi-value">Rs. {{ total_pending|floatformat:0 }}</span>
+    <!-- 3. Outstanding Dues Card -->
+    <div class="kpi-card" style="background: #ffffff; border-radius: 14px; padding: 18px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); position: relative; overflow: hidden; border-top: 4px solid #ef4444;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <span style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Outstanding Dues
+                </span>
+                <div style="font-size: 11px; color: #dc2626; font-weight: 600; margin-top: 2px;">Uncollected Balances</div>
+            </div>
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                ⚠️
+            </div>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 800; color: #dc2626; letter-spacing: -0.5px;">
+                Rs. {{ total_pending|floatformat:0 }}
+            </div>
+            <div style="margin-top: 4px; font-size: 12px; color: #dc2626; display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span>
+                <span>{{ defaulters_count }} student{{ defaulters_count|pluralize }} with unpaid dues</span>
+            </div>
         </div>
     </div>
 
-    <div class="kpi-card">
-        <div class="kpi-icon" style="background: #e0e7ff; color: #4338ca;">📅</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Today's Collection</span>
-            <span class="kpi-value">Rs. {{ today_collected|floatformat:0 }}</span>
+    <!-- 4. Today's Collection Card -->
+    <div class="kpi-card" style="background: #ffffff; border-radius: 14px; padding: 18px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); position: relative; overflow: hidden; border-top: 4px solid #6366f1;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <span style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Today's Collection
+                </span>
+                <div style="font-size: 11px; color: #4f46e5; font-weight: 600; margin-top: 2px;">Counter Live Receipts</div>
+            </div>
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                📅
+            </div>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 800; color: #4338ca; letter-spacing: -0.5px;">
+                Rs. {{ today_collected|floatformat:0 }}
+            </div>
+            <div style="margin-top: 4px; font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #6366f1;"></span>
+                <span>Live receipts recorded on {{ today|date:"d M Y" }}</span>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Quick Navigation Bar -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px;">
-    <a href="{% url 'fees:invoice_list' %}" class="card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px; transition: var(--transition);">
-        <span style="font-size: 24px;">📑</span>
-        <div>
-            <div style="font-weight: 700; font-size: 14px;">All Invoices</div>
-            <div style="font-size: 12px; color: var(--text-muted);">View, filter & track challans</div>
-        </div>
-    </a>
-    <a href="{% url 'fees:defaulters_list' %}" class="card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px; transition: var(--transition);">
-        <span style="font-size: 24px;">🚨</span>
-        <div>
-            <div style="font-weight: 700; font-size: 14px;">Defaulters ({{ defaulters_count }})</div>
-            <div style="font-size: 12px; color: var(--text-muted);">Overdue dues & reminders</div>
-        </div>
-    </a>
-    <a href="{% url 'fees:student_discounts' %}" class="card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px; transition: var(--transition);">
-        <span style="font-size: 24px;">🎁</span>
-        <div>
-            <div style="font-weight: 700; font-size: 14px;">Concessions / Aid</div>
-            <div style="font-size: 12px; color: var(--text-muted);">Scholarships & kinship discounts</div>
-        </div>
-    </a>
-    <a href="{% url 'expenses:financial_summary' %}" class="card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px; transition: var(--transition);">
-        <span style="font-size: 24px;">📈</span>
-        <div>
-            <div style="font-weight: 700; font-size: 14px;">Income vs Expenses</div>
-            <div style="font-size: 12px; color: var(--text-muted);">Cashflow & net surplus</div>
-        </div>
-    </a>
+<!-- Clear Operations & Navigation Hub (100% English) -->
+<div style="margin-bottom: 22px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 13.5px; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.6px; margin: 0; display: flex; align-items: center; gap: 6px;">
+            <span>🧭</span> Quick Operations & Navigation Hub
+        </h3>
+        <span style="font-size: 12px; color: #64748b;">Direct links to all core financial registers</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;">
+        <!-- Card 1: All Invoices -->
+        <a href="{% url 'fees:invoice_list' %}" class="card fee-nav-card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 14px; transition: all 0.2s ease; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                📑
+            </div>
+            <div style="flex-grow: 1;">
+                <div style="font-weight: 800; font-size: 14px; color: #0f172a;">All Invoices / Challans</div>
+                <div style="font-size: 11.5px; color: #64748b; margin-top: 1px;">Search, filter & print 3-part bank challans</div>
+            </div>
+            <span style="color: #94a3b8; font-size: 16px; font-weight: 700;">→</span>
+        </a>
+
+        <!-- Card 2: Defaulters -->
+        <a href="{% url 'fees:defaulters_list' %}" class="card fee-nav-card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 14px; transition: all 0.2s ease; border: 1px solid #fecaca; background: #fff5f5; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                🚨
+            </div>
+            <div style="flex-grow: 1;">
+                <div style="font-weight: 800; font-size: 14px; color: #b91c1c; display: flex; align-items: center; gap: 6px;">
+                    <span>Defaulters List</span>
+                    <span style="background: #dc2626; color: #ffffff; font-size: 11px; font-weight: 800; padding: 1px 6px; border-radius: 10px;">{{ defaulters_count }}</span>
+                </div>
+                <div style="font-size: 11.5px; color: #7f1d1d; margin-top: 1px;">Overdue dues & parent reminder notices</div>
+            </div>
+            <span style="color: #dc2626; font-size: 16px; font-weight: 700;">→</span>
+        </a>
+
+        <!-- Card 3: Annual Fee Directory -->
+        <a href="{% url 'fees:annual_records' %}" class="card fee-nav-card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 14px; transition: all 0.2s ease; border: 1px solid #c7d2fe; background: #f5f7ff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                📅
+            </div>
+            <div style="flex-grow: 1;">
+                <div style="font-weight: 800; font-size: 14px; color: #3730a3;">Annual Fee Directory</div>
+                <div style="font-size: 11.5px; color: #4338ca; margin-top: 1px;">12-Month continuous ledger & student cards</div>
+            </div>
+            <span style="color: #4338ca; font-size: 16px; font-weight: 700;">→</span>
+        </a>
+
+        <!-- Card 4: Fee Concessions & Aid -->
+        <a href="{% url 'fees:student_discounts' %}" class="card fee-nav-card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 14px; transition: all 0.2s ease; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                🎁
+            </div>
+            <div style="flex-grow: 1;">
+                <div style="font-weight: 800; font-size: 14px; color: #0f172a;">Fee Concessions & Aid</div>
+                <div style="font-size: 11.5px; color: #64748b; margin-top: 1px;">Scholarships, sibling & staff discount rules</div>
+            </div>
+            <span style="color: #94a3b8; font-size: 16px; font-weight: 700;">→</span>
+        </a>
+
+        <!-- Card 5: Fee Structures -->
+        <a href="{% url 'fees:fee_structures' %}" class="card fee-nav-card" style="padding: 16px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 14px; transition: all 0.2s ease; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                🏛️
+            </div>
+            <div style="flex-grow: 1;">
+                <div style="font-weight: 800; font-size: 14px; color: #0f172a;">Class Fee Plans</div>
+                <div style="font-size: 11.5px; color: #64748b; margin-top: 1px;">Tuition structures, monthly dues & class matrix</div>
+            </div>
+            <span style="color: #94a3b8; font-size: 16px; font-weight: 700;">→</span>
+        </a>
+    </div>
 </div>
 
-<!-- Two Columns: Recent Receipts & Recent Challans -->
-<div class="dashboard-grid">
-    <!-- Left: Recent Payments Collected -->
-    <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <div class="card-title"><span>💵 Latest Collected Payments</span></div>
-            <a href="{% url 'fees:collect_payment' %}" class="btn btn-sm btn-outline">+ Record Payment</a>
+<!-- =========================================================================
+     MASTER UNIFIED REGISTER (100% Professional English & Crystal Clear)
+     ========================================================================= -->
+<div class="card" style="box-shadow: 0 4px 12px rgba(0,0,0,0.06); border-radius: var(--radius-md); overflow: hidden;">
+    
+    <!-- Unified Top Switcher Header -->
+    <div style="background: #ffffff; border-bottom: 2px solid #f1f5f9; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        
+        <!-- 3 Segmented Tab Pills -->
+        <div style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 10px; flex-wrap: wrap;">
+            <button type="button" id="tabBtnAnnual" onclick="switchFeeTab('annual')" style="border: none; padding: 8px 18px; border-radius: 8px; font-weight: 700; font-size: 13.5px; cursor: pointer; transition: all 0.2s ease; background: #ffffff; color: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 8px;">
+                <span>👥</span> Students Fee Register (Annual & Monthly)
+            </button>
+            <button type="button" id="tabBtnPayments" onclick="switchFeeTab('payments')" style="border: none; padding: 8px 18px; border-radius: 8px; font-weight: 700; font-size: 13.5px; cursor: pointer; transition: all 0.2s ease; background: transparent; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+                <span>💵</span> Payment Receipts ({{ recent_payments|length }})
+            </button>
+            <button type="button" id="tabBtnInvoices" onclick="switchFeeTab('invoices')" style="border: none; padding: 8px 18px; border-radius: 8px; font-weight: 700; font-size: 13.5px; cursor: pointer; transition: all 0.2s ease; background: transparent; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+                <span>📑</span> Fee Invoices ({{ recent_invoices|length }})
+            </button>
         </div>
-        <div class="card-body" style="padding: 0;">
-            <div class="table-container">
-                <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
-                    <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
-                            <th style="padding: 12px 16px; text-align: left;">Receipt #</th>
-                            <th style="padding: 12px 16px; text-align: left;">Student</th>
-                            <th style="padding: 12px 16px; text-align: left;">Amount</th>
-                            <th style="padding: 12px 16px; text-align: left;">Method</th>
-                            <th style="padding: 12px 16px; text-align: left;">Date</th>
-                            <th style="padding: 12px 16px; text-align: center;">Slip</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pay in recent_payments %}
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 12px 16px; font-weight: 700; color: var(--primary);">{{ pay.receipt_number }}</td>
-                            <td style="padding: 12px 16px;">
-                                <div style="font-weight: 600;">{{ pay.student.get_full_name }}</div>
-                                <div style="font-size: 11px; color: var(--text-muted);">{{ pay.student.admission_number }} ({{ pay.student.current_class.name }})</div>
-                            </td>
-                            <td style="padding: 12px 16px; font-weight: 700; color: var(--success);">Rs. {{ pay.amount|floatformat:0 }}</td>
-                            <td style="padding: 12px 16px;">
-                                <span class="role-badge" style="font-size: 11px; background: #e0f2fe; color: #0369a1;">
-                                    {{ pay.get_payment_method_display }}
+
+        <!-- Search & Action Buttons -->
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <input type="text" id="unifiedSearchInput" onkeyup="filterUnifiedTable()" placeholder="🔍 Search student name, roll #, class, receipt #..." style="min-width: 280px; padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px;">
+            
+            <button type="button" onclick="openQuickPaymentModal()" class="btn btn-sm btn-primary" style="background: #10b981; border: none; font-weight: 700; padding: 8px 16px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                <span>⚡</span> + Collect Fee
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         TAB 1: 👥 STUDENTS FEE REGISTER (Clean, Professional & English)
+         ========================================================= -->
+    <div id="tabContentAnnual" class="card-body" style="padding: 0;">
+        <div class="table-container" style="overflow-x: auto;">
+            <table id="annualFullTable" style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #475569;">
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 800; width: 26%;">Student Details</th>
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 800; width: 23%;">Annual Summary</th>
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 800; width: 32%;">Monthly Fee Status</th>
+                        <th style="padding: 13px 18px; text-align: center; font-weight: 800; width: 19%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in annual_student_records %}
+                    <!-- Main Student Summary Row -->
+                    <tr class="unified-row annual-data-row" style="border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+                        <td style="padding: 14px 18px; vertical-align: top;">
+                            <div style="font-weight: 800; font-size: 15px; color: var(--text-main);">
+                                <a href="{% url 'fees:student_annual_card' rec.student.pk %}" style="text-decoration: none; color: #1e40af;">
+                                    {{ rec.student.get_full_name }}
+                                </a>
+                            </div>
+                            <div style="font-size: 12.5px; color: #475569; margin-top: 3px;">
+                                <strong>Class:</strong> {{ rec.student.current_class.name }} {% if rec.student.current_section %}({{ rec.student.current_section.name }}){% endif %}
+                            </div>
+                            <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                                <strong>Roll / ID:</strong> {{ rec.student.admission_number }}
+                            </div>
+                        </td>
+
+                        <!-- Annual Summary Badges -->
+                        <td style="padding: 14px 18px; vertical-align: top;">
+                            <div style="font-size: 13px; margin-bottom: 4px;">
+                                <span style="color: var(--text-muted);">Total Billed:</span> 
+                                <strong style="color: #334155;">Rs. {{ rec.total_billed|floatformat:0 }}</strong>
+                            </div>
+                            <div style="font-size: 13px; margin-bottom: 4px;">
+                                <span style="color: var(--text-muted);">Total Paid:</span> 
+                                <strong style="color: #059669;">Rs. {{ rec.total_paid|floatformat:0 }}</strong>
+                            </div>
+                            <div style="font-size: 13px;">
+                                <span style="color: var(--text-muted);">Balance Due:</span> 
+                                {% if rec.total_dues > 0 %}
+                                <span style="color: #dc2626; font-weight: 800; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">
+                                    Rs. {{ rec.total_dues|floatformat:0 }} ⚠️
                                 </span>
-                            </td>
-                            <td style="padding: 12px 16px; font-size: 12px; color: var(--text-muted);">{{ pay.payment_date }}</td>
-                            <td style="padding: 12px 16px; text-align: center;">
-                                <a href="{% url 'fees:payment_receipt' pay.pk %}" class="btn btn-sm btn-outline" style="padding: 3px 8px; font-size: 12px;" title="Print Receipt">
+                                {% else %}
+                                <span style="color: #059669; font-weight: 700; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">
+                                    Rs. 0 (All Fees Cleared ✅)
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- Monthly Status Badges -->
+                        <td style="padding: 14px 18px; vertical-align: top;">
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                
+                                <!-- Paid Months -->
+                                {% if rec.paid_months %}
+                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                    <span style="font-size: 11.5px; font-weight: 700; color: #047857;">Paid:</span>
+                                    {% for pm in rec.paid_months %}
+                                    <span style="font-size: 11.5px; font-weight: 700; background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 6px; border: 1px solid #86efac;">
+                                        🟢 {{ pm }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Unpaid / Pending Months -->
+                                {% if rec.unpaid_months or rec.partial_months %}
+                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                    <span style="font-size: 11.5px; font-weight: 700; color: #b91c1c;">Pending:</span>
+                                    {% for um in rec.unpaid_months %}
+                                    <span style="font-size: 11.5px; font-weight: 700; background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 6px; border: 1px solid #fca5a5;">
+                                        🔴 {{ um }}
+                                    </span>
+                                    {% endfor %}
+                                    {% for pm in rec.partial_months %}
+                                    <span style="font-size: 11.5px; font-weight: 700; background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 6px; border: 1px solid #fde047;">
+                                        🟡 {{ pm }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                {% if not rec.paid_months and not rec.unpaid_months and not rec.partial_months %}
+                                <span style="font-size: 12px; color: var(--text-muted); font-style: italic;">No fee invoices generated yet for {{ current_year }}</span>
+                                {% endif %}
+
+                                <!-- Toggle 12-Month Table Button -->
+                                <div style="margin-top: 4px;">
+                                    <button type="button" onclick="toggleStudentMonths('months-row-{{ rec.student.pk }}', this)" class="btn btn-sm btn-outline" style="font-size: 11.5px; padding: 3px 8px; border-radius: 6px; color: #2563eb; border-color: #bfdbfe; font-weight: 600;">
+                                        📅 View 12-Month Jan – Dec History ▼
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Actions Column -->
+                        <td style="padding: 14px 18px; text-align: center; vertical-align: top; white-space: nowrap;">
+                            <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
+                                <a href="{% url 'fees:student_annual_card' rec.student.pk %}" class="btn btn-sm btn-primary" style="width: 100%; max-width: 160px; padding: 6px 12px; font-size: 12.5px; background: #2563eb; border: none; font-weight: 700;">
+                                    📊 Annual Fee Card
+                                </a>
+                                
+                                <button type="button" onclick="openQuickPaymentForStudent('{{ rec.student.pk }}')" class="btn btn-sm btn-primary" style="width: 100%; max-width: 160px; padding: 5px 12px; font-size: 12px; background: #10b981; border: none; font-weight: 700;">
+                                    💵 Collect Fee
+                                </button>
+                                
+                                <a href="{% url 'fees:student_ledger' rec.student.pk %}" class="btn btn-sm btn-outline" style="width: 100%; max-width: 160px; padding: 4px 10px; font-size: 11.5px;">
+                                    📑 Detailed Ledger
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Expandable 12-Month Details Sub-Table for this student -->
+                    <tr id="months-row-{{ rec.student.pk }}" style="display: none; background: #f8fafc; border-bottom: 2px solid #cbd5e1;">
+                        <td colspan="4" style="padding: 18px 24px;">
+                            <div style="background: #ffffff; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; padding: 14px 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                                <div style="font-weight: 800; font-size: 14px; margin-bottom: 12px; color: var(--primary); display: flex; justify-content: space-between; align-items: center;">
+                                    <span>📅 {{ rec.student.get_full_name }} — {{ current_year }} 12-Month Fee History:</span>
+                                    <a href="{% url 'fees:invoice_create' %}?student={{ rec.student.pk }}" class="btn btn-sm btn-outline" style="font-size: 11.5px;">
+                                        ➕ Create New Month Challan
+                                    </a>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                                    {% for m in rec.months %}
+                                    <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; 
+                                        {% if m.status == 'PAID' %}background: #f0fdf4; border-color: #bbf7d0;
+                                        {% elif m.status == 'PARTIAL' %}background: #fffbeb; border-color: #fde68a;
+                                        {% elif m.status == 'OVERDUE' or m.status == 'UNPAID' %}background: #fef2f2; border-color: #fecaca;
+                                        {% else %}background: #ffffff;{% endif %}">
+                                        
+                                        <div style="font-weight: 800; font-size: 13px; color: #1e293b; margin-bottom: 4px;">{{ m.full }}</div>
+                                        
+                                        {% if m.status == 'PAID' %}
+                                        <div style="font-size: 12px; font-weight: 800; color: #059669;">Rs. {{ m.paid|floatformat:0 }}</div>
+                                        <span class="role-badge" style="background: #dcfce7; color: #166534; font-size: 10.5px; font-weight: 700; margin-top: 4px;">Paid ✅</span>
+                                        {% elif m.status == 'PARTIAL' %}
+                                        <div style="font-size: 12px; font-weight: 800; color: #b45309;">Due: Rs. {{ m.balance|floatformat:0 }}</div>
+                                        <span class="role-badge" style="background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 700; margin-top: 4px;">Partial 🟡</span>
+                                        <div style="margin-top: 6px;">
+                                            <button type="button" onclick="openQuickPaymentForStudentMonth('{{ rec.student.pk }}', '{{ m.full }} {{ current_year }}', '{{ m.balance|floatformat:0 }}', '{{ m.invoice.pk }}')" class="btn btn-sm btn-primary" style="padding: 2px 8px; font-size: 11px; background: #10b981; border: none; font-weight: 700;">
+                                                💵 Pay
+                                            </button>
+                                        </div>
+                                        {% elif m.status == 'OVERDUE' or m.status == 'UNPAID' %}
+                                        <div style="font-size: 12px; font-weight: 800; color: #dc2626;">Due: Rs. {{ m.balance|floatformat:0 }}</div>
+                                        <span class="role-badge" style="background: #fee2e2; color: #991b1b; font-size: 10.5px; font-weight: 700; margin-top: 4px;">Unpaid 🔴</span>
+                                        <div style="margin-top: 6px;">
+                                            <button type="button" onclick="openQuickPaymentForStudentMonth('{{ rec.student.pk }}', '{{ m.full }} {{ current_year }}', '{{ m.balance|floatformat:0 }}', '{{ m.invoice.pk }}')" class="btn btn-sm btn-primary" style="padding: 2px 8px; font-size: 11px; background: #10b981; border: none; font-weight: 700;">
+                                                💵 Pay
+                                            </button>
+                                        </div>
+                                        {% else %}
+                                        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Not Billed</div>
+                                        <div style="margin-top: 6px;">
+                                            <button type="button" onclick="openQuickPaymentForStudentMonth('{{ rec.student.pk }}', '{{ m.full }} {{ current_year }}', '', '')" class="btn btn-sm btn-outline" style="padding: 2px 8px; font-size: 11px; font-weight: 700; color: #2563eb; border-color: #bfdbfe;">
+                                                ➕ Add Fee
+                                            </button>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                            No active students found in system.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         TAB 2: 💵 COLLECTED PAYMENTS & RECEIPTS (Full-Width)
+         ========================================================= -->
+    <div id="tabContentPayments" class="card-body" style="padding: 0; display: none;">
+        <div class="table-container" style="overflow-x: auto;">
+            <table id="paymentsFullTable" style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #475569;">
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 700;">Receipt #</th>
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 700;">Student Details</th>
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 700;">Challan / Month</th>
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 700;">Amount Paid</th>
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 700;">Payment Method</th>
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 700;">Payment Date</th>
+                        <th style="padding: 13px 18px; text-align: center; font-weight: 700;">Actions & Slip</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pay in recent_payments %}
+                    <tr class="unified-row payment-data-row" style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 13px 18px; font-weight: 700;">
+                            <a href="{% url 'fees:payment_receipt' pay.pk %}" style="text-decoration: none; color: #2563eb; font-weight: 800;" title="View Official Receipt Voucher">
+                                {{ pay.receipt_number }}
+                            </a>
+                        </td>
+                        <td style="padding: 13px 18px;">
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 14px;">{{ pay.student.get_full_name }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 1px;">
+                                <strong>Roll:</strong> {{ pay.student.admission_number }} &nbsp;|&nbsp; <strong>Class:</strong> {{ pay.student.current_class.name }} {% if pay.student.current_section %}(Sec {{ pay.student.current_section.name }}){% endif %}
+                            </div>
+                        </td>
+                        <td style="padding: 13px 18px;">
+                            {% if pay.invoice %}
+                            <a href="{% url 'fees:invoice_detail' pay.invoice.pk %}" style="font-weight: 600; color: #475569; text-decoration: none;">
+                                {{ pay.invoice.invoice_number }}
+                            </a>
+                            <div style="font-size: 11.5px; color: var(--text-muted);">{{ pay.invoice.fee_month }}</div>
+                            {% else %}
+                            <span style="color: var(--text-muted);">--</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 13px 18px;">
+                            <span style="font-weight: 800; color: #059669; font-size: 15px; background: #ecfdf5; padding: 4px 10px; border-radius: 6px; display: inline-block;">
+                                Rs. {{ pay.amount|floatformat:0 }}
+                            </span>
+                        </td>
+                        <td style="padding: 13px 18px;">
+                            <span class="role-badge" style="font-size: 12px; font-weight: 600; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px;">
+                                {{ pay.get_payment_method_display }}
+                            </span>
+                            {% if pay.transaction_reference %}
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Ref: {{ pay.transaction_reference }}</div>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 13px 18px; font-size: 13px; color: #475569; white-space: nowrap;">
+                            📅 {{ pay.payment_date }}
+                        </td>
+                        <td style="padding: 13px 18px; text-align: center; white-space: nowrap;">
+                            <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                                <a href="{% url 'fees:payment_receipt' pay.pk %}" class="btn btn-sm btn-outline" style="padding: 5px 10px; font-size: 12px; border-radius: 6px; font-weight: 600;" title="Print Official Receipt Slip" target="_blank">
                                     🖨️ Receipt
                                 </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" style="padding: 28px; text-align: center; color: var(--text-muted);">No payment receipts recorded yet.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                
+                                <button type="button" 
+                                        onclick="openQuickEditModal('{{ pay.pk }}', '{{ pay.receipt_number }}', '{{ pay.amount|floatformat:2 }}', '{{ pay.payment_date|date:'Y-m-d' }}', '{{ pay.payment_method }}', '{{ pay.transaction_reference|default_if_none:''|escapejs }}', '{{ pay.remarks|default_if_none:''|escapejs }}', '{{ pay.student.get_full_name|escapejs }}')" 
+                                        class="btn btn-sm btn-primary" 
+                                        style="padding: 5px 12px; font-size: 12px; border-radius: 6px; background: #2563eb; border: none; font-weight: 700;" 
+                                        title="Edit Payment Details Directly">
+                                    ✏️ Edit
+                                </button>
+
+                                <a href="{% url 'fees:payment_delete' pay.pk %}" class="btn btn-sm btn-outline" style="padding: 5px 10px; font-size: 12px; border-radius: 6px; color: #dc2626; border-color: #fecaca;" title="Delete this receipt and restore balance">
+                                    🗑️
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                            <div style="font-size: 32px; margin-bottom: 8px;">💳</div>
+                            <div style="font-weight: 700; font-size: 15px;">No payment receipts recorded yet.</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Right: Recent Invoices / Challans -->
-    <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <div class="card-title"><span>📑 Recent Fee Invoices</span></div>
-            <a href="{% url 'fees:invoice_list' %}" class="btn btn-sm btn-outline">View All</a>
-        </div>
-        <div class="card-body" style="padding: 0;">
-            <div class="table-container">
-                <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
-                    <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid var(--card-border); color: var(--text-muted);">
-                            <th style="padding: 12px 16px; text-align: left;">Invoice #</th>
-                            <th style="padding: 12px 16px; text-align: left;">Student</th>
-                            <th style="padding: 12px 16px; text-align: left;">Month</th>
-                            <th style="padding: 12px 16px; text-align: left;">Payable</th>
-                            <th style="padding: 12px 16px; text-align: left;">Status</th>
-                            <th style="padding: 12px 16px; text-align: center;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for inv in recent_invoices %}
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 12px 16px; font-weight: 600;">
-                                <a href="{% url 'fees:invoice_detail' inv.pk %}">{{ inv.invoice_number }}</a>
-                            </td>
-                            <td style="padding: 12px 16px;">
-                                <div style="font-weight: 600;">{{ inv.student.get_full_name }}</div>
-                                <div style="font-size: 11px; color: var(--text-muted);">{{ inv.class_room.name }}</div>
-                            </td>
-                            <td style="padding: 12px 16px; font-size: 12px;">{{ inv.fee_month }}</td>
-                            <td style="padding: 12px 16px; font-weight: 700;">Rs. {{ inv.payable_amount|floatformat:0 }}</td>
-                            <td style="padding: 12px 16px;">
-                                {% if inv.status == 'PAID' %}
-                                <span class="role-badge" style="background: var(--success-light); color: var(--success);">Paid</span>
-                                {% elif inv.status == 'PARTIAL' %}
-                                <span class="role-badge" style="background: var(--warning-light); color: var(--warning);">Partial (Due: {{ inv.balance_amount|floatformat:0 }})</span>
-                                {% elif inv.status == 'OVERDUE' %}
-                                <span class="role-badge" style="background: var(--danger-light); color: var(--danger);">Overdue</span>
-                                {% else %}
-                                <span class="role-badge" style="background: #f1f5f9; color: var(--text-muted);">Unpaid</span>
-                                {% endif %}
-                            </td>
-                            <td style="padding: 12px 16px; text-align: center;">
-                                <a href="{% url 'fees:invoice_detail' inv.pk %}" class="btn btn-sm btn-outline" style="padding: 3px 8px; font-size: 12px;">
-                                    View
+    <!-- =========================================================
+         TAB 3: 📑 RECENT FEE INVOICES (Full-Width)
+         ========================================================= -->
+    <div id="tabContentInvoices" class="card-body" style="padding: 0; display: none;">
+        <div class="table-container" style="overflow-x: auto;">
+            <table id="invoicesFullTable" style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #475569;">
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 700;">Invoice #</th>
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 700;">Student Details</th>
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 700;">Fee Month</th>
+                        <th style="padding: 13px 18px; text-align: left; font-weight: 700;">Due Date</th>
+                        <th style="padding: 13px 18px; text-align: right; font-weight: 700;">Payable</th>
+                        <th style="padding: 13px 18px; text-align: right; font-weight: 700;">Paid</th>
+                        <th style="padding: 13px 18px; text-align: right; font-weight: 700;">Balance Due</th>
+                        <th style="padding: 13px 18px; text-align: center; font-weight: 700;">Status</th>
+                        <th style="padding: 13px 18px; text-align: center; font-weight: 700;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in recent_invoices %}
+                    <tr class="unified-row invoice-data-row" style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 13px 18px; font-weight: 800;">
+                            <a href="{% url 'fees:invoice_detail' inv.pk %}" style="color: #2563eb; text-decoration: none;">
+                                {{ inv.invoice_number }}
+                            </a>
+                        </td>
+                        <td style="padding: 13px 18px;">
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 14px;">{{ inv.student.get_full_name }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 1px;">
+                                <strong>Roll:</strong> {{ inv.student.admission_number }} &nbsp;|&nbsp; <strong>Class:</strong> {{ inv.class_room.name }}
+                            </div>
+                        </td>
+                        <td style="padding: 13px 18px; font-weight: 600; color: #334155;">{{ inv.fee_month }}</td>
+                        <td style="padding: 13px 18px; font-size: 12.5px; color: var(--text-muted);">{{ inv.due_date }}</td>
+                        <td style="padding: 13px 18px; text-align: right; font-weight: 700;">Rs. {{ inv.payable_amount|floatformat:0 }}</td>
+                        <td style="padding: 13px 18px; text-align: right; font-weight: 700; color: #059669;">Rs. {{ inv.paid_amount|floatformat:0 }}</td>
+                        <td style="padding: 13px 18px; text-align: right; font-weight: 800; {% if inv.balance_amount > 0 %}color: #dc2626;{% else %}color: #059669;{% endif %}">
+                            Rs. {{ inv.balance_amount|floatformat:0 }}
+                        </td>
+                        <td style="padding: 13px 18px; text-align: center;">
+                            {% if inv.status == 'PAID' %}
+                            <span class="role-badge" style="background: #ecfdf5; color: #047857; font-weight: 700; font-size: 11.5px; padding: 4px 10px;">Paid</span>
+                            {% elif inv.status == 'PARTIAL' %}
+                            <span class="role-badge" style="background: #fef3c7; color: #92400e; font-weight: 700; font-size: 11.5px; padding: 4px 10px;">Partial</span>
+                            {% elif inv.status == 'OVERDUE' %}
+                            <span class="role-badge" style="background: #fef2f2; color: #dc2626; font-weight: 700; font-size: 11.5px; padding: 4px 10px;">Overdue</span>
+                            {% else %}
+                            <span class="role-badge" style="background: #f1f5f9; color: #64748b; font-weight: 700; font-size: 11.5px; padding: 4px 10px;">Unpaid</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 13px 18px; text-align: center; white-space: nowrap;">
+                            <div style="display: flex; gap: 5px; justify-content: center; align-items: center;">
+                                <a href="{% url 'fees:invoice_detail' inv.pk %}" class="btn btn-sm btn-outline" style="padding: 4px 8px; font-size: 11.5px;" title="View Details">
+                                    👁️ View
                                 </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" style="padding: 28px; text-align: center; color: var(--text-muted);">No invoices generated yet.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                <a href="{% url 'fees:fee_challan_3part' inv.pk %}" class="btn btn-sm btn-outline" style="padding: 4px 8px; font-size: 11.5px;" title="Print 3-Part Bank Challan" target="_blank">
+                                    🖨️ Challan
+                                </a>
+                                {% if inv.status != 'PAID' %}
+                                <a href="{% url 'fees:collect_invoice_payment' inv.pk %}" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 11.5px; background: #10b981; border: none; font-weight: 700;" title="Collect Payment">
+                                    💵 Pay
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'fees:invoice_edit' inv.pk %}" class="btn btn-sm btn-outline" style="padding: 4px 8px; font-size: 11.5px; color: #2563eb; border-color: #bfdbfe;" title="Edit Fee Items">
+                                    ✏️ Edit
+                                </a>
+                                <a href="{% url 'fees:invoice_delete' inv.pk %}" class="btn btn-sm btn-outline" style="padding: 4px 8px; font-size: 11.5px; color: #dc2626; border-color: #fecaca;" title="Delete Challan">
+                                    🗑️
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                            No fee invoices created yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+
+<!-- ==========================================
+     MODAL 1: ⚡ QUICK RECORD PAYMENT MODAL
+     ========================================== -->
+<div id="quickPaymentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); z-index: 9999; backdrop-filter: blur(4px); align-items: center; justify-content: center;">
+    <div style="background: #ffffff; width: 95%; max-width: 600px; border-radius: var(--radius-md); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; animation: modalFadeIn 0.2s ease-out;">
+        <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 18px 22px; color: white; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <span>⚡</span> Collect / Record Student Fee
+            </div>
+            <button type="button" onclick="closeQuickPaymentModal()" style="background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+
+        <form method="POST" action="{% url 'fees:collect_payment' %}" style="padding: 22px;">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'fees:fee_dashboard' %}">
+
+            <!-- Selection Mode Toggle -->
+            <div style="display: flex; gap: 8px; margin-bottom: 18px; background: #f1f5f9; padding: 4px; border-radius: 8px;">
+                <button type="button" id="payModeStudentBtn" onclick="switchPayMode('student')" style="flex: 1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; background: #ffffff; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    👤 Direct Student & Month
+                </button>
+                <button type="button" id="payModeInvoiceBtn" onclick="switchPayMode('invoice')" style="flex: 1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; background: transparent; color: var(--text-muted);">
+                    📄 Pending Challans ({{ pending_invoices|length }})
+                </button>
+            </div>
+
+            <!-- Mode 1: Select Student & Month directly -->
+            <div id="directStudentFields" style="display: block;">
+                <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 14px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                            Select Student *
+                        </label>
+                        <select name="student_id" id="quickDirectStudentSelect" class="form-control" style="font-size: 13px; font-weight: 600;">
+                            <option value="">-- Select Student --</option>
+                            {% for st in all_active_students %}
+                            <option value="{{ st.pk }}">
+                                {{ st.get_full_name }} ({{ st.current_class.name }}{% if st.current_section %} - Sec {{ st.current_section.name }}{% endif %}) [Roll: {{ st.admission_number }}]
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                            Fee Month *
+                        </label>
+                        <select name="fee_month" id="quickDirectMonthSelect" class="form-control" style="font-size: 13px; font-weight: 600;">
+                            {% for m_name in fee_months_options %}
+                            <option value="{{ m_name }} {{ current_year }}" {% if m_name|lower == today|date:'F'|lower %}selected{% endif %}>
+                                {{ m_name }} {{ current_year }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mode 2: Select Pending Invoice -->
+            <div id="pendingInvoiceFields" style="display: none; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                        Select Pending Challan *
+                    </label>
+                    <select name="invoice_id" id="quickInvoiceSelect" onchange="onQuickInvoiceChange()" class="form-control" style="width: 100%; font-size: 13px; font-weight: 600;">
+                        <option value="">-- Choose Pending Challan --</option>
+                        {% for inv in pending_invoices %}
+                        <option value="{{ inv.pk }}" data-student-id="{{ inv.student.pk }}" data-balance="{{ inv.balance_amount }}" data-student="{{ inv.student.get_full_name }}" data-month="{{ inv.fee_month }}">
+                            {{ inv.student.get_full_name }} ({{ inv.class_room.name }}) - {{ inv.fee_month }} [Due: Rs. {{ inv.balance_amount|floatformat:0 }}]
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Amount & Date (100% Editable by User) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                        Payment Amount (Rs.) * <span style="font-weight: normal; color: var(--text-muted); font-size: 11px;">(Type any amount)</span>
+                    </label>
+                    <input type="number" step="0.01" name="amount" id="quickAmountInput" required placeholder="e.g. 3000" class="form-control" style="font-size: 16px; font-weight: 800; color: #059669; border: 2px solid #10b981;">
+                </div>
+
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                        Payment Date *
+                    </label>
+                    <input type="date" name="payment_date" value="{{ today|date:'Y-m-d' }}" required class="form-control">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                        Payment Method *
+                    </label>
+                    <select name="payment_method" class="form-control">
+                        {% for val, lbl in payment_methods %}
+                        <option value="{{ val }}" {% if val == 'CASH' %}selected{% endif %}>{{ lbl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                        Slip / TxID / Cheque #
+                    </label>
+                    <input type="text" name="transaction_reference" placeholder="Optional Bank/Online TxID" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 22px;">
+                <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                    Remarks / Cashier Notes
+                </label>
+                <input type="text" name="remarks" placeholder="e.g. Received by cashier" class="form-control">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                <button type="button" onclick="closeQuickPaymentModal()" class="btn btn-outline">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; padding: 10px 22px;">
+                    💾 Record Payment & Issue Receipt
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL 2: ✏️ QUICK EDIT PAYMENT MODAL
+     ========================================== -->
+<div id="quickEditModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); z-index: 9999; backdrop-filter: blur(4px); align-items: center; justify-content: center;">
+    <div style="background: #ffffff; width: 95%; max-width: 580px; border-radius: var(--radius-md); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; animation: modalFadeIn 0.2s ease-out;">
+        <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); padding: 18px 22px; color: white; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <span>✏️</span> Edit Payment Receipt: <span id="editModalReceiptNo"></span>
+            </div>
+            <button type="button" onclick="closeQuickEditModal()" style="background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+
+        <form id="quickEditForm" method="POST" action="" style="padding: 22px;">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'fees:fee_dashboard' %}">
+
+            <div style="background: #f8fafc; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 18px; border-left: 4px solid #2563eb; font-size: 13px;">
+                <strong>Student:</strong> <span id="editModalStudentName"></span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                        Payment Amount (Rs.) *
+                    </label>
+                    <input type="number" step="0.01" name="amount" id="editAmountInput" required class="form-control" style="font-size: 15px; font-weight: 800; color: #059669;">
+                    <small style="font-size: 11px; color: var(--text-muted);">Invoice balance adjusts automatically.</small>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                        Payment Date *
+                    </label>
+                    <input type="date" name="payment_date" id="editDateInput" required class="form-control">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                        Payment Method *
+                    </label>
+                    <select name="payment_method" id="editMethodSelect" class="form-control">
+                        {% for val, lbl in payment_methods %}
+                        <option value="{{ val }}">{{ lbl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                        Slip / TxID / Cheque #
+                    </label>
+                    <input type="text" name="transaction_reference" id="editRefInput" placeholder="Optional reference" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 22px;">
+                <label style="font-size: 13px; font-weight: 700; margin-bottom: 6px; display: block; color: var(--text-main);">
+                    Remarks / Notes
+                </label>
+                <input type="text" name="remarks" id="editRemarksInput" placeholder="Optional notes" class="form-control">
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                <a id="editFullPageLink" href="#" class="btn btn-sm btn-outline" style="color: #64748b; font-size: 12px;">
+                    🔗 Full Edit Page
+                </a>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" onclick="closeQuickEditModal()" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; font-weight: 700; padding: 10px 22px;">
+                        💾 Save Changes
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+</style>
+
+<script>
+let currentActiveTab = 'annual';
+
+function switchFeeTab(tab) {
+    currentActiveTab = tab;
+    const btnAnnual = document.getElementById('tabBtnAnnual');
+    const btnPayments = document.getElementById('tabBtnPayments');
+    const btnInvoices = document.getElementById('tabBtnInvoices');
+    
+    const contentAnnual = document.getElementById('tabContentAnnual');
+    const contentPayments = document.getElementById('tabContentPayments');
+    const contentInvoices = document.getElementById('tabContentInvoices');
+    
+    // Reset all tabs
+    [btnAnnual, btnPayments, btnInvoices].forEach(btn => {
+        btn.style.background = 'transparent';
+        btn.style.color = 'var(--text-muted)';
+        btn.style.boxShadow = 'none';
+    });
+    [contentAnnual, contentPayments, contentInvoices].forEach(c => c.style.display = 'none');
+    
+    if (tab === 'annual') {
+        btnAnnual.style.background = '#ffffff';
+        btnAnnual.style.color = 'var(--primary)';
+        btnAnnual.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+        contentAnnual.style.display = 'block';
+    } else if (tab === 'payments') {
+        btnPayments.style.background = '#ffffff';
+        btnPayments.style.color = 'var(--primary)';
+        btnPayments.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+        contentPayments.style.display = 'block';
+    } else {
+        btnInvoices.style.background = '#ffffff';
+        btnInvoices.style.color = 'var(--primary)';
+        btnInvoices.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+        contentInvoices.style.display = 'block';
+    }
+    filterUnifiedTable();
+}
+
+function filterUnifiedTable() {
+    const query = document.getElementById('unifiedSearchInput').value.toLowerCase();
+    let activeTableId = 'annualFullTable';
+    if (currentActiveTab === 'payments') activeTableId = 'paymentsFullTable';
+    if (currentActiveTab === 'invoices') activeTableId = 'invoicesFullTable';
+    
+    const rows = document.querySelectorAll('#' + activeTableId + ' .unified-row');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+    });
+}
+
+function toggleStudentMonths(rowId, btn) {
+    const row = document.getElementById(rowId);
+    if (row.style.display === 'none' || row.style.display === '') {
+        row.style.display = 'table-row';
+        btn.textContent = '▲ Hide 12-Month History';
+    } else {
+        row.style.display = 'none';
+        btn.textContent = '📅 View 12-Month Jan – Dec History ▼';
+    }
+}
+
+function switchPayMode(mode) {
+    const studentBtn = document.getElementById('payModeStudentBtn');
+    const invoiceBtn = document.getElementById('payModeInvoiceBtn');
+    const directFields = document.getElementById('directStudentFields');
+    const invoiceFields = document.getElementById('pendingInvoiceFields');
+    const studentSelect = document.getElementById('quickDirectStudentSelect');
+    const invoiceSelect = document.getElementById('quickInvoiceSelect');
+
+    if (mode === 'student') {
+        studentBtn.style.background = '#ffffff';
+        studentBtn.style.color = 'var(--primary)';
+        studentBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        invoiceBtn.style.background = 'transparent';
+        invoiceBtn.style.color = 'var(--text-muted)';
+        invoiceBtn.style.boxShadow = 'none';
+
+        directFields.style.display = 'block';
+        invoiceFields.style.display = 'none';
+        studentSelect.required = true;
+        invoiceSelect.required = false;
+        invoiceSelect.value = '';
+    } else {
+        invoiceBtn.style.background = '#ffffff';
+        invoiceBtn.style.color = 'var(--primary)';
+        invoiceBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        studentBtn.style.background = 'transparent';
+        studentBtn.style.color = 'var(--text-muted)';
+        studentBtn.style.boxShadow = 'none';
+
+        invoiceFields.style.display = 'block';
+        directFields.style.display = 'none';
+        invoiceSelect.required = true;
+        studentSelect.required = false;
+        studentSelect.value = '';
+    }
+}
+
+function openQuickPaymentModal() {
+    const modal = document.getElementById('quickPaymentModal');
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        const amtInput = document.getElementById('quickAmountInput');
+        if (amtInput) amtInput.focus();
+    }, 100);
+}
+
+function openQuickPaymentForStudent(studentId) {
+    switchPayMode('student');
+    const select = document.getElementById('quickDirectStudentSelect');
+    if (select) {
+        select.value = studentId;
+    }
+    openQuickPaymentModal();
+}
+
+function openQuickPaymentForStudentMonth(studentId, feeMonth, suggestedAmount, invoiceId) {
+    if (invoiceId && suggestedAmount) {
+        switchPayMode('invoice');
+        const invSelect = document.getElementById('quickInvoiceSelect');
+        if (invSelect) {
+            invSelect.value = invoiceId;
+            onQuickInvoiceChange();
+        }
+    } else {
+        switchPayMode('student');
+        const select = document.getElementById('quickDirectStudentSelect');
+        if (select) select.value = studentId;
+
+        const monthSelect = document.getElementById('quickDirectMonthSelect');
+        if (monthSelect && feeMonth) {
+            for (let i = 0; i < monthSelect.options.length; i++) {
+                if (monthSelect.options[i].value.toLowerCase().includes(feeMonth.toLowerCase().split(' ')[0])) {
+                    monthSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    const amtInput = document.getElementById('quickAmountInput');
+    if (amtInput) {
+        amtInput.value = suggestedAmount || '';
+    }
+
+    openQuickPaymentModal();
+}
+
+function closeQuickPaymentModal() {
+    const modal = document.getElementById('quickPaymentModal');
+    modal.style.display = 'none';
+}
+
+function onQuickInvoiceChange() {
+    const select = document.getElementById('quickInvoiceSelect');
+    const selectedOption = select.options[select.selectedIndex];
+    const amountInput = document.getElementById('quickAmountInput');
+    
+    if (selectedOption && selectedOption.dataset.balance) {
+        amountInput.value = parseFloat(selectedOption.dataset.balance).toFixed(0);
+    }
+}
+
+function openQuickEditModal(pk, receiptNo, amount, date, method, ref, remarks, studentName) {
+    document.getElementById('editModalReceiptNo').textContent = '#' + receiptNo;
+    document.getElementById('editModalStudentName').textContent = studentName;
+    document.getElementById('editAmountInput').value = amount;
+    document.getElementById('editDateInput').value = date;
+    document.getElementById('editMethodSelect').value = method;
+    document.getElementById('editRefInput').value = ref || '';
+    document.getElementById('editRemarksInput').value = remarks || '';
+    
+    const form = document.getElementById('quickEditForm');
+    form.action = `/fees/receipts/${pk}/edit/`;
+    
+    document.getElementById('editFullPageLink').href = `/fees/receipts/${pk}/edit/`;
+    
+    const modal = document.getElementById('quickEditModal');
+    modal.style.display = 'flex';
+}
+
+function closeQuickEditModal() {
+    const modal = document.getElementById('quickEditModal');
+    modal.style.display = 'none';
+}
+
+// Close modals when clicking backdrop
+window.addEventListener('click', function(e) {
+    const payModal = document.getElementById('quickPaymentModal');
+    const editModal = document.getElementById('quickEditModal');
+    if (e.target === payModal) {
+        closeQuickPaymentModal();
+    }
+    if (e.target === editModal) {
+        closeQuickEditModal();
+    }
+});
+</script>
 {% endblock %}

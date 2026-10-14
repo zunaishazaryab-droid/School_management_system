@@ -11,10 +11,10 @@ class Command(BaseCommand):
 
         # 1. School Settings
         school_setting = SchoolSetting.get_settings()
-        school_setting.school_name = "Beacon Heights Model School"
+        school_setting.school_name = "GEN'X VISION SCHOOL SYSTEM"
         school_setting.tagline = "Knowledge • Excellence • Leadership"
         school_setting.phone = "+92 300 9876543"
-        school_setting.email = "admin@beaconheights.edu.pk"
+        school_setting.email = "admin@genxvision.edu.pk"
         school_setting.address = "Plot 42, Sector H-11, Education Complex"
         school_setting.current_academic_session = "2026-2027"
         school_setting.currency_symbol = "Rs."

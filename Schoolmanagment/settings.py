@@ -96,15 +96,15 @@ WSGI_APPLICATION = 'Schoolmanagment.wsgi.application'
 
 # Database Configuration
 # Supports PostgreSQL in production / dev and SQLite fallback
-DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite').lower()
+DB_ENGINE = os.getenv('DB_ENGINE', 'postgresql').lower()
 
-if DB_ENGINE == 'postgresql' or DB_ENGINE == 'postgres':
+if DB_ENGINE in ('postgresql', 'postgres'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': os.getenv('DB_NAME', 'school_db'),
             'USER': os.getenv('DB_USER', 'postgres'),
-            'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
             'HOST': os.getenv('DB_HOST', '127.0.0.1'),
             'PORT': os.getenv('DB_PORT', '5432'),
         }

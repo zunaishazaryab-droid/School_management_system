@@ -94,59 +94,60 @@
     {% endif %}
 </div>
 
-<!-- Quick Action Shortcuts -->
-<div class="card">
-    <div class="card-header">
-        <div class="card-title">
-            <span>⚡ Quick Workflow Actions (Ready for Module Sprints)</span>
+<!-- Quick Action Command Center -->
+<div class="card" style="margin-bottom: 24px; border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+    <div class="card-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 14px 20px;">
+        <div class="card-title" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <span style="font-size: 15px; font-weight: 800; color: var(--text-main);">
+                ⚡ Quick Action Command Center
+            </span>
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                1-Click Direct Access
+            </span>
         </div>
     </div>
-    <div class="card-body">
-        <div class="quick-actions-grid">
-            <a href="{% url 'students:student_dashboard' %}" class="quick-action-card" style="border-color: var(--primary);">
-                <span class="quick-action-icon">🎓</span>
-                <span style="font-weight: 700; color: var(--primary);">Student Dashboard</span>
-                <span style="font-size: 10.5px; color: var(--primary); font-weight: 600;">Live Portal</span>
+    <div class="card-body" style="padding: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+            <!-- 1. Marks Entry & Results -->
+            <a href="{% url 'examinations:exam_list' %}" style="display: flex; flex-direction: column; padding: 16px; border-radius: 10px; background: #eff6ff; border: 1.5px solid #bfdbfe; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="font-size: 26px; margin-bottom: 8px;">✍️</div>
+                <strong style="font-size: 14.5px; color: #1e40af; margin-bottom: 2px;">Enter Exam Marks</strong>
+                <span style="font-size: 11.5px; color: #3b82f6; font-weight: 600;">Marks entry & result cards</span>
             </a>
-            <a href="{% url 'inventory:dashboard' %}" class="quick-action-card" style="border-color: #0284c7;">
-                <span class="quick-action-icon">📦</span>
-                <span style="font-weight: 700; color: #0284c7;">Stock & Inventory</span>
-                <span style="font-size: 10.5px; color: #0284c7; font-weight: 600;">اسٹاک مینجمنٹ</span>
+
+            <!-- 2. Daily Attendance -->
+            <a href="{% url 'attendance:student_attendance' %}" style="display: flex; flex-direction: column; padding: 16px; border-radius: 10px; background: #ecfdf5; border: 1.5px solid #a7f3d0; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="font-size: 26px; margin-bottom: 8px;">📋</div>
+                <strong style="font-size: 14.5px; color: #065f46; margin-bottom: 2px;">Daily Attendance</strong>
+                <span style="font-size: 11.5px; color: #10b981; font-weight: 600;">Mark daily student attendance</span>
             </a>
-            <a href="{% url 'inventory:transaction_create' %}" class="quick-action-card">
-                <span class="quick-action-icon">🔄</span>
-                <span>Stock In / Out</span>
-                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
+
+            <!-- 3. New Admission -->
+            <a href="{% url 'students:student_add' %}" style="display: flex; flex-direction: column; padding: 16px; border-radius: 10px; background: #f5f3ff; border: 1.5px solid #ddd6fe; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="font-size: 26px; margin-bottom: 8px;">➕</div>
+                <strong style="font-size: 14.5px; color: #5b21b6; margin-bottom: 2px;">New Admission</strong>
+                <span style="font-size: 11.5px; color: #8b5cf6; font-weight: 600;">Register student enrollment</span>
             </a>
-            <a href="{% url 'students:student_add' %}" class="quick-action-card">
-                <span class="quick-action-icon">➕</span>
-                <span>Add Student</span>
-                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
+
+            <!-- 4. Fee Management -->
+            <a href="{% url 'fees:fee_dashboard' %}" style="display: flex; flex-direction: column; padding: 16px; border-radius: 10px; background: #fffbeb; border: 1.5px solid #fde68a; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="font-size: 26px; margin-bottom: 8px;">💵</div>
+                <strong style="font-size: 14.5px; color: #92400e; margin-bottom: 2px;">Fee Vouchers</strong>
+                <span style="font-size: 11.5px; color: #d97706; font-weight: 600;">Invoices & payment records</span>
             </a>
-            <a href="{% url 'attendance:student_attendance' %}" class="quick-action-card">
-                <span class="quick-action-icon">📝</span>
-                <span>Mark Attendance</span>
-                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
+
+            <!-- 5. Student ID Cards -->
+            <a href="{% url 'students:batch_id_cards' %}" style="display: flex; flex-direction: column; padding: 16px; border-radius: 10px; background: #f0fdfa; border: 1.5px solid #99f6e4; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="font-size: 26px; margin-bottom: 8px;">🪪</div>
+                <strong style="font-size: 14.5px; color: #115e59; margin-bottom: 2px;">Batch ID Cards</strong>
+                <span style="font-size: 11.5px; color: #14b8a6; font-weight: 600;">Print student identity cards</span>
             </a>
-            <a href="{% url 'fees:fee_dashboard' %}" class="quick-action-card">
-                <span class="quick-action-icon">💳</span>
-                <span>Fee Challans</span>
-                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
-            </a>
-            <a href="{% url 'lectures:lecture_add' %}" class="quick-action-card">
-                <span class="quick-action-icon">📖</span>
-                <span>Add Lecture Log</span>
-                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
-            </a>
-            <a href="{% url 'lectures:homework_add' %}" class="quick-action-card">
-                <span class="quick-action-icon">📚</span>
-                <span>Assign Homework</span>
-                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
-            </a>
-            <a href="{% url 'examinations:exam_list' %}" class="quick-action-card">
-                <span class="quick-action-icon">🎯</span>
-                <span>Exams & Marks</span>
-                <span style="font-size: 10.5px; color: var(--success); font-weight: 600;">Active</span>
+
+            <!-- 6. Reports & Results Hub -->
+            <a href="{% url 'reports:reports_hub' %}" style="display: flex; flex-direction: column; padding: 16px; border-radius: 10px; background: #fdf2f8; border: 1.5px solid #fbcfe8; text-decoration: none; transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="font-size: 26px; margin-bottom: 8px;">📈</div>
+                <strong style="font-size: 14.5px; color: #9d174d; margin-bottom: 2px;">Reports Center</strong>
+                <span style="font-size: 11.5px; color: #ec4899; font-weight: 600;">Academic & administrative reports</span>
             </a>
         </div>
     </div>

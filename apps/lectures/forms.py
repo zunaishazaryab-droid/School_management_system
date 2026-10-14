@@ -8,6 +8,7 @@ class DailyLectureForm(forms.ModelForm):
         fields = [
             'date', 'class_room', 'section', 'subject', 'chapter_name', 'topic',
             'learning_objectives', 'classwork_description', 'homework_assigned',
+            'audio_recording', 'video_url', 'attachment',
             'present_students_count', 'absent_students_count', 'copies_checked_count', 'remarks'
         ]
         widgets = {
@@ -20,6 +21,9 @@ class DailyLectureForm(forms.ModelForm):
             'learning_objectives': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Key concepts taught...'}),
             'classwork_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Problems solved on whiteboard...'}),
             'homework_assigned': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Assigned textbook exercises...'}),
+            'audio_recording': forms.FileInput(attrs={'class': 'form-control', 'accept': 'audio/*', 'id': 'id_audio_recording_input'}),
+            'video_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://www.youtube.com/watch?v=...'}),
+            'attachment': forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf,.doc,.docx,.png,.jpg,.jpeg'}),
             'present_students_count': forms.NumberInput(attrs={'class': 'form-control'}),
             'absent_students_count': forms.NumberInput(attrs={'class': 'form-control'}),
             'copies_checked_count': forms.NumberInput(attrs={'class': 'form-control'}),

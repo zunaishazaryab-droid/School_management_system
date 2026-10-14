@@ -1,98 +1,276 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}Record Daily Lecture | {{ school_settings.school_name }}{% endblock %}
+{% block title %}{% if is_edit %}Edit Lecture{% else %}Record Class Lecture & Audio{% endif %} | {{ school_settings.school_name }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header" style="margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     <div>
-        <h1 class="page-title">Record Daily Lecture</h1>
-        <p class="page-subtitle">Log topic details, classwork done, homework assigned, and copies checked.</p>
+        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 20px; font-size: 11px; font-weight: 700; color: #1d4ed8; text-transform: uppercase; margin-bottom: 4px;">
+            🎙️ Teacher Audio Recording Portal
+        </div>
+        <h1 class="page-title" style="font-size: 22px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0;">
+            {% if is_edit %}Edit Class Lecture Log{% else %}Record Daily Class Lecture & Audio Note{% endif %}
+        </h1>
+        <p class="page-subtitle" style="margin: 0; font-size: 13.5px; color: var(--text-muted);">
+            Record voice explanations for students to listen, log whiteboard exercises, and assign daily homework tasks.
+        </p>
     </div>
     <div>
-        <a href="{% url 'lectures:lecture_list' %}" class="btn btn-outline">◀ Back to Lectures</a>
+        <a href="{% url 'lectures:lecture_list' %}" class="btn btn-outline" style="font-weight: 600; font-size: 13px;">
+            ◀ Back to Lecture Records
+        </a>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <form method="POST">
-            {% csrf_token %}
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-                <div class="form-group">
-                    <label class="form-label">Lecture Date *</label>
-                    {{ form.date }}
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Class *</label>
-                    {{ form.class_room }}
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Section *</label>
-                    {{ form.section }}
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Subject *</label>
-                    {{ form.subject }}
-                </div>
-            </div>
+<div class="card" style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 30px;">
+    <form method="POST" enctype="multipart/form-data" id="lectureForm">
+        {% csrf_token %}
 
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
-                <div class="form-group">
-                    <label class="form-label">Chapter / Unit Title *</label>
-                    {{ form.chapter_name }}
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Topic Covered *</label>
-                    {{ form.topic }}
-                </div>
-            </div>
-
+        <!-- Row 1: Target Class & Subject -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 18px;">
             <div class="form-group">
-                <label class="form-label">Learning Objectives</label>
-                {{ form.learning_objectives }}
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Lecture Date *</label>
+                {{ form.date }}
             </div>
-
             <div class="form-group">
-                <label class="form-label">Classwork / Whiteboard Exercises *</label>
-                {{ form.classwork_description }}
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Class *</label>
+                {{ form.class_room }}
             </div>
-
             <div class="form-group">
-                <label class="form-label">Homework Assigned</label>
-                {{ form.homework_assigned }}
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Section *</label>
+                {{ form.section }}
             </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
-                <div class="form-group">
-                    <label class="form-label">Present Students</label>
-                    {{ form.present_students_count }}
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Absent Students</label>
-                    {{ form.absent_students_count }}
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Notebooks Checked</label>
-                    {{ form.copies_checked_count }}
-                </div>
-            </div>
-
             <div class="form-group">
-                <label class="form-label">Discipline / Pacing Remarks</label>
-                {{ form.remarks }}
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Subject *</label>
+                {{ form.subject }}
+            </div>
+        </div>
+
+        <!-- Row 2: Topic & Chapter -->
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 18px;">
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Chapter / Unit Title *</label>
+                {{ form.chapter_name }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Topic Covered *</label>
+                {{ form.topic }}
+            </div>
+        </div>
+
+        <!-- AUDIO VOICE RECORDER COMPONENT -->
+        <div style="background: #f8fafc; border: 2px dashed #93c5fd; border-radius: 12px; padding: 20px; margin-bottom: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: #2563eb; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        🎙️
+                    </div>
+                    <div>
+                        <h4 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0;">
+                            Live Audio Voice Note Recording
+                        </h4>
+                        <p style="font-size: 12px; color: #64748b; margin: 2px 0 0 0;">
+                            Click below to record live audio from your microphone, or choose an existing audio file (.mp3, .wav, .m4a).
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Recording Status Timer Badge -->
+                <div id="recordingTimerBadge" style="display: none; align-items: center; gap: 8px; background: #fee2e2; border: 1px solid #fecaca; color: #b91c1c; padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 13px;">
+                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #dc2626; animation: pulse 1s infinite;"></span>
+                    <span id="recordingTimerText">00:00</span> REC
+                </div>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--card-border);">
-                <a href="{% url 'lectures:lecture_list' %}" class="btn btn-outline">Cancel</a>
-                <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
-                    💾 Save Lecture Log
+            <!-- Recorder Action Buttons Strip -->
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;">
+                <button type="button" id="btnStartRecord" onclick="startAudioRecording()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; padding: 8px 18px; border-radius: 8px;">
+                    <span>🎙️</span> Start Recording
+                </button>
+
+                <button type="button" id="btnStopRecord" onclick="stopAudioRecording()" class="btn" style="display: none; align-items: center; gap: 6px; font-weight: 700; padding: 8px 18px; border-radius: 8px; background: #dc2626; color: #ffffff; border: none;">
+                    <span>⏹️</span> Stop & Save Audio
+                </button>
+
+                <button type="button" id="btnResetRecord" onclick="resetAudioRecording()" class="btn btn-outline" style="display: none; font-size: 12.5px; font-weight: 600;">
+                    🔄 Re-Record
                 </button>
             </div>
-        </form>
-    </div>
+
+            <!-- Audio Playback Preview Player -->
+            <div id="audioPreviewContainer" style="display: none; margin-bottom: 12px;">
+                <label style="display: block; font-size: 12px; font-weight: 700; color: #166534; margin-bottom: 6px;">
+                    ✅ Recorded Audio Preview:
+                </label>
+                <audio id="audioPreviewPlayer" controls style="width: 100%; height: 38px; outline: none;"></audio>
+            </div>
+
+            <!-- File Upload Alternative Input -->
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 12px;">
+                <label class="form-label" style="font-size: 12px; font-weight: 700; color: #475569;">
+                    📁 Or Select Audio File (.mp3, .wav, .m4a, .webm):
+                </label>
+                {{ form.audio_recording }}
+                {% if is_edit and lecture.audio_recording %}
+                <div style="font-size: 12px; color: #15803d; margin-top: 4px;">
+                    Current file: <a href="{{ lecture.audio_recording.url }}" target="_blank">Listen Current Audio</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Row 3: Learning Objectives & Classwork -->
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" style="font-weight: 700; font-size: 13px;">Learning Objectives (Key Concepts Taught)</label>
+            {{ form.learning_objectives }}
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" style="font-weight: 700; font-size: 13px;">Classwork & Board Exercises *</label>
+            {{ form.classwork_description }}
+        </div>
+
+        <!-- Row 4: Homework Assigned -->
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" style="font-weight: 700; font-size: 13px;">Homework Assigned (Class Diary)</label>
+            {{ form.homework_assigned }}
+        </div>
+
+        <!-- Row 5: Attachments & Video Link -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">📎 Whiteboard Photo / PDF Handout</label>
+                {{ form.attachment }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">📺 Video Lecture Link (YouTube/Drive)</label>
+                {{ form.video_url }}
+            </div>
+        </div>
+
+        <!-- Row 6: Statistics & Copy Checking -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 18px;">
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Present Students</label>
+                {{ form.present_students_count }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Absent Students</label>
+                {{ form.absent_students_count }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Notebooks Checked</label>
+                {{ form.copies_checked_count }}
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+            <label class="form-label" style="font-weight: 700; font-size: 13px;">Pacing / Discipline Remarks</label>
+            {{ form.remarks }}
+        </div>
+
+        <!-- Form Action Buttons -->
+        <div style="display: flex; justify-content: flex-end; gap: 12px; padding-top: 18px; border-top: 1px solid var(--card-border);">
+            <a href="{% url 'lectures:lecture_list' %}" class="btn btn-outline" style="font-weight: 600;">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="font-weight: 700; padding: 10px 28px; font-size: 13.5px;">
+                💾 Save & Publish Class Lecture
+            </button>
+        </div>
+    </form>
 </div>
 
+<!-- Web Audio Voice Recorder Script -->
 <script>
+let mediaRecorder;
+let audioChunks = [];
+let recordInterval;
+let recordSeconds = 0;
+
+async function startAudioRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = event => {
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            // Preview player
+            const previewPlayer = document.getElementById('audioPreviewPlayer');
+            previewPlayer.src = audioUrl;
+            document.getElementById('audioPreviewContainer').style.display = 'block';
+
+            // Convert to File and set in File Input
+            const file = new File([audioBlob], `lecture_recording_${Date.now()}.webm`, { type: 'audio/webm' });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            const fileInput = document.getElementById('id_audio_recording_input');
+            if (fileInput) {
+                fileInput.files = dataTransfer.files;
+            }
+
+            document.getElementById('btnResetRecord').style.display = 'inline-flex';
+        };
+
+        mediaRecorder.start(100);
+
+        // UI State
+        document.getElementById('btnStartRecord').style.display = 'none';
+        document.getElementById('btnStopRecord').style.display = 'inline-flex';
+        document.getElementById('recordingTimerBadge').style.display = 'inline-flex';
+        document.getElementById('audioPreviewContainer').style.display = 'none';
+
+        // Timer
+        recordSeconds = 0;
+        updateTimerDisplay();
+        recordInterval = setInterval(() => {
+            recordSeconds++;
+            updateTimerDisplay();
+        }, 1000);
+
+    } catch (err) {
+        alert("Microphone access denied or not supported in this browser. You can still select and upload an audio file below.");
+        console.error("Microphone error:", err);
+    }
+}
+
+function stopAudioRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    }
+    clearInterval(recordInterval);
+
+    document.getElementById('btnStartRecord').style.display = 'none';
+    document.getElementById('btnStopRecord').style.display = 'none';
+    document.getElementById('recordingTimerBadge').style.display = 'none';
+}
+
+function resetAudioRecording() {
+    document.getElementById('audioPreviewContainer').style.display = 'none';
+    document.getElementById('btnResetRecord').style.display = 'none';
+    document.getElementById('btnStartRecord').style.display = 'inline-flex';
+    const fileInput = document.getElementById('id_audio_recording_input');
+    if (fileInput) {
+        fileInput.value = '';
+    }
+}
+
+function updateTimerDisplay() {
+    const mins = Math.floor(recordSeconds / 60).toString().padStart(2, '0');
+    const secs = (recordSeconds % 60).toString().padStart(2, '0');
+    document.getElementById('recordingTimerText').textContent = `${mins}:${secs}`;
+}
+
+// Dynamic section loader based on selected class
 document.addEventListener('DOMContentLoaded', () => {
     const cls = document.getElementById('id_lecture_class');
     const sec = document.getElementById('id_lecture_section');
@@ -113,4 +291,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+
+<style>
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.2); }
+    100% { opacity: 1; transform: scale(1); }
+}
+</style>
 {% endblock %}

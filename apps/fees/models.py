@@ -177,3 +177,10 @@ class FeePayment(models.Model):
         super().save(*args, **kwargs)
         # Automatically update the associated invoice balance and status
         self.invoice.recalculate_totals()
+
+    def delete(self, *args, **kwargs):
+        invoice = self.invoice
+        res = super().delete(*args, **kwargs)
+        if invoice:
+            invoice.recalculate_totals()
+        return res

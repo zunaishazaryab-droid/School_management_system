@@ -1,92 +1,172 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}{{ page_title }}{% endblock %}
+{% block title %}{{ page_title }} | {{ school_settings.school_name }}{% endblock %}
 
 {% block content %}
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+<!-- Page Header -->
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; flex-wrap: wrap; gap: 14px;">
     <div>
-        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">⚡ Biometric Device Hub & Real-Time Sync</h1>
-        <p style="font-size: 13.5px; color: var(--text-muted); margin: 0;">Connect ZKTeco & Facial Recognition terminals, stream hardware punch logs, and automate attendance rosters.</p>
+        <h1 class="page-title">⚡ Automated Biometric Attendance Hub</h1>
+        <p class="page-subtitle">Real-time ZKTeco TCP/IP & Facial Recognition sync: Students who punch are automatically marked <strong>PRESENT</strong>, and students without punch are automatically marked <strong>ABSENT</strong>.</p>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <button onclick="document.getElementById('addDeviceModal').style.display='flex'" class="btn btn-secondary" style="display: flex; align-items: center; gap: 6px;">
-            <span>➕</span> Add Terminal
-        </button>
-        <a href="{% url 'attendance:student_attendance' %}" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px;">
-            <span>📋</span> View Manual Register
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <form method="POST" style="margin: 0;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="sync_all_devices">
+            <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);">
+                <span>⚡</span> Sync All Terminals Now
+            </button>
+        </form>
+        <a href="{% url 'attendance:student_attendance' %}" class="btn btn-outline" style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+            <span>📋</span> Daily Register
         </a>
     </div>
 </div>
 
-<!-- KPI Cards -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
-    <div class="stat-card" style="background: var(--card-bg); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--card-border); display: flex; align-items: center; gap: 16px;">
-        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 130, 246, 0.12); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 22px;">📟</div>
-        <div>
-            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Active Terminals</div>
-            <div style="font-size: 24px; font-weight: 800; color: var(--text-main);">{{ devices.count }} Online</div>
+<!-- KPI Cards Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 24px;">
+    <!-- Active Terminals -->
+    <div class="card" style="padding: 18px 20px; border-radius: 12px; border: 1px solid var(--card-border); background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Active Hardware Terminals</div>
+                <div style="font-size: 24px; font-weight: 800; color: var(--primary); margin-top: 4px;">{{ devices.count }} Online</div>
+                <div style="font-size: 11px; color: #16a34a; font-weight: 700; margin-top: 2px;">● TCP/IP 4370 Connected</div>
+            </div>
+            <div style="font-size: 26px;">📟</div>
         </div>
     </div>
-    <div class="stat-card" style="background: var(--card-bg); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--card-border); display: flex; align-items: center; gap: 16px;">
-        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 22px;">👆</div>
-        <div>
-            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Today's Punches</div>
-            <div style="font-size: 24px; font-weight: 800; color: var(--text-main);">{{ total_punches_today }} Captured</div>
+
+    <!-- Today Punched Students -->
+    <div class="card" style="padding: 18px 20px; border-radius: 12px; border: 1px solid #bbf7d0; background: #f0fdf4; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <div style="font-size: 11.5px; font-weight: 700; color: #166534; text-transform: uppercase;">Punched (Auto-Present)</div>
+                <div style="font-size: 24px; font-weight: 800; color: #15803d; margin-top: 4px;">{{ punched_students_count }} Students</div>
+                <div style="font-size: 11px; color: #166534; font-weight: 600; margin-top: 2px;">✔ Biometric verified</div>
+            </div>
+            <div style="font-size: 26px;">👆</div>
         </div>
     </div>
-    <div class="stat-card" style="background: var(--card-bg); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--card-border); display: flex; align-items: center; gap: 16px;">
-        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 22px;">🔄</div>
-        <div>
-            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Sync Protocol</div>
-            <div style="font-size: 20px; font-weight: 800; color: #10b981;">TCP/IP 4370 Active</div>
+
+    <!-- Unpunched Students (Auto-Absent) -->
+    <div class="card" style="padding: 18px 20px; border-radius: 12px; border: 1px solid #fecaca; background: #fef2f2; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <div style="font-size: 11.5px; font-weight: 700; color: #991b1b; text-transform: uppercase;">No Punch (Auto-Absent)</div>
+                <div style="font-size: 24px; font-weight: 800; color: #dc2626; margin-top: 4px;">{{ unpunched_students_count }} Students</div>
+                <div style="font-size: 11px; color: #991b1b; font-weight: 600; margin-top: 2px;">✖ Marked Absent automatically</div>
+            </div>
+            <div style="font-size: 26px;">🚫</div>
+        </div>
+    </div>
+
+    <!-- Total Punch Logs Captured -->
+    <div class="card" style="padding: 18px 20px; border-radius: 12px; border: 1px solid var(--card-border); background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Today Captured Pulses</div>
+                <div style="font-size: 24px; font-weight: 800; color: var(--text-main); margin-top: 4px;">{{ total_punches_today }} Punches</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Real-time sync buffer</div>
+            </div>
+            <div style="font-size: 26px;">🔄</div>
         </div>
     </div>
 </div>
 
-<!-- Devices List Table -->
-<div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 20px; margin-bottom: 24px;">
-    <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-        <span>🌐</span> Configured Biometric & Facial Machines
-    </h3>
-    <div style="overflow-x: auto;">
-        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+<!-- Live Punch Simulator Card (Test / Manual Scan) -->
+<div class="card" style="margin-bottom: 24px; border-radius: 12px; border: 1.5px dashed var(--primary); background: #f8fafc; padding: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h3 style="font-size: 15px; font-weight: 800; color: var(--primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>👆</span> Real-Time Biometric Punch Simulator (Thumb / Facial Scan)
+            </h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin: 4px 0 0 0;">
+                Select any student to simulate their physical biometric check-in. The system will immediately record their punch and set their daily attendance to <strong>PRESENT</strong>.
+            </p>
+        </div>
+    </div>
+
+    <form method="POST" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="simulate_student_punch">
+
+        <div style="flex: 2; min-width: 240px;">
+            <label class="form-label" style="font-weight: 700; font-size: 12.5px;">👨‍🎓 Select Student to Punch In</label>
+            <select name="student_id" class="form-control" required style="border-radius: 8px; font-weight: 600;">
+                <option value="">-- Choose Student --</option>
+                {% for st in all_students %}
+                <option value="{{ st.id }}">{{ st.get_full_name }} (Roll #{{ st.roll_number|default:"--" }} — {{ st.current_class.name }} Sec {{ st.current_section.name }}) [Reg: {{ st.admission_number }}]</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="flex: 1.5; min-width: 200px;">
+            <label class="form-label" style="font-weight: 700; font-size: 12.5px;">📟 Terminal Scanner</label>
+            <select name="device_id" class="form-control" style="border-radius: 8px; font-weight: 600;">
+                {% for dev in devices %}
+                <option value="{{ dev.id }}">{{ dev.name }} ({{ dev.location }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 22px; border-radius: 8px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                <span>👆</span> Tap Biometric Fingerprint
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Terminals Hardware Roster -->
+<div class="card" style="margin-bottom: 24px; border-radius: 12px; border: 1px solid var(--card-border); overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+    <div class="card-header" style="padding: 16px 20px; background: #fafafa; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <span>🌐</span> Configured Biometric & Facial Machines
+        </h3>
+        <button onclick="document.getElementById('addDeviceModal').style.display='flex'" class="btn btn-outline btn-sm" style="font-size: 12px; font-weight: 700; border-radius: 6px;">
+            ➕ Add Terminal
+        </button>
+    </div>
+
+    <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px;">
             <thead>
-                <tr style="background: var(--bg-main); text-align: left; font-size: 12px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--card-border);">
-                    <th style="padding: 12px 14px;">Terminal Name</th>
-                    <th style="padding: 12px 14px;">Type & Tech</th>
-                    <th style="padding: 12px 14px;">IP Address : Port</th>
-                    <th style="padding: 12px 14px;">Location</th>
-                    <th style="padding: 12px 14px;">Synced Logs</th>
-                    <th style="padding: 12px 14px;">Hardware Status</th>
-                    <th style="padding: 12px 14px; text-align: right;">Action</th>
+                <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: #475569; font-weight: 700;">
+                    <th style="padding: 12px 18px;">Terminal Name</th>
+                    <th style="padding: 12px 18px;">Hardware Type</th>
+                    <th style="padding: 12px 18px;">IP Address : Port</th>
+                    <th style="padding: 12px 18px;">Location</th>
+                    <th style="padding: 12px 18px;">Total Logs</th>
+                    <th style="padding: 12px 18px;">Status</th>
+                    <th style="padding: 12px 18px; text-align: right;">Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for dev in devices %}
-                <tr style="border-bottom: 1px solid var(--card-border); font-size: 13.5px;">
-                    <td style="padding: 14px; font-weight: 700; color: var(--text-main);">
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 12px 18px; font-weight: 700; color: var(--text-main);">
                         {{ dev.name }}
-                        <div style="font-size: 11px; font-weight: normal; color: var(--text-muted);">Added {{ dev.created_at|date:"M d, Y" }}</div>
                     </td>
-                    <td style="padding: 14px;">
-                        <span class="badge" style="background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">
+                    <td style="padding: 12px 18px;">
+                        <span style="background: #e0f2fe; color: #0284c7; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 11.5px;">
                             {{ dev.get_device_type_display }}
                         </span>
                     </td>
-                    <td style="padding: 14px; font-family: monospace; font-weight: 600; color: var(--text-main);">
+                    <td style="padding: 12px 18px; font-family: monospace; font-weight: 700;">
                         {{ dev.ip_address }}:{{ dev.port }}
                     </td>
-                    <td style="padding: 14px; color: var(--text-muted);">{{ dev.location }}</td>
-                    <td style="padding: 14px; font-weight: 700; color: #10b981;">{{ dev.total_logs_synced }} logs</td>
-                    <td style="padding: 14px;">
-                        <span class="badge" style="background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; gap: 5px;">
-                            <span style="width: 7px; height: 7px; border-radius: 50%; background: #16a34a;"></span> Connected
+                    <td style="padding: 12px 18px; color: var(--text-muted);">{{ dev.location }}</td>
+                    <td style="padding: 12px 18px; font-weight: 800; color: #10b981;">{{ dev.total_logs_synced }} punches</td>
+                    <td style="padding: 12px 18px;">
+                        <span style="background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; gap: 5px;">
+                            <span style="width: 7px; height: 7px; border-radius: 50%; background: #16a34a;"></span> Online
                         </span>
                     </td>
-                    <td style="padding: 14px; text-align: right;">
-                        <a href="{% url 'attendance:biometric_sync_action' dev.id %}" class="btn btn-sm btn-primary" style="padding: 6px 12px; font-size: 12px; font-weight: 700;">
-                            ⚡ Sync Now
+                    <td style="padding: 12px 18px; text-align: right;">
+                        <a href="{% url 'attendance:biometric_sync_action' dev.id %}" class="btn btn-sm btn-primary" style="padding: 6px 14px; font-size: 12px; font-weight: 800; border-radius: 6px;">
+                            ⚡ Pull & Sync
                         </a>
                     </td>
                 </tr>
@@ -96,53 +176,58 @@
     </div>
 </div>
 
-<!-- Live Punch Stream -->
-<div class="card" style="background: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--card-border); padding: 20px;">
-    <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-        <span>📡</span> Live Hardware Punch Feed & Identity Resolution
-    </h3>
-    <div style="overflow-x: auto;">
-        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+<!-- Live Punch Stream Feed -->
+<div class="card" style="border-radius: 12px; border: 1px solid var(--card-border); overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+    <div class="card-header" style="padding: 16px 20px; background: #fafafa; border-bottom: 1px solid var(--card-border);">
+        <h3 style="font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <span>📡</span> Live Hardware Punch Feed & Identity Match Log
+        </h3>
+    </div>
+
+    <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
             <thead>
-                <tr style="background: var(--bg-main); text-align: left; font-size: 12px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--card-border);">
-                    <th style="padding: 12px 14px;">Timestamp</th>
-                    <th style="padding: 12px 14px;">Terminal</th>
-                    <th style="padding: 12px 14px;">Machine User ID</th>
-                    <th style="padding: 12px 14px;">Resolved Entity</th>
-                    <th style="padding: 12px 14px;">Punch Type</th>
-                    <th style="padding: 12px 14px;">Status</th>
+                <tr style="border-bottom: 1px solid var(--card-border); background: #f8fafc; color: #475569; font-weight: 700;">
+                    <th style="padding: 12px 18px;">Punch Timestamp</th>
+                    <th style="padding: 12px 18px;">Device Terminal</th>
+                    <th style="padding: 12px 18px;">User ID</th>
+                    <th style="padding: 12px 18px;">Resolved Student / Staff</th>
+                    <th style="padding: 12px 18px;">Punch Type</th>
+                    <th style="padding: 12px 18px;">Status</th>
                 </tr>
             </thead>
             <tbody>
                 {% for p in recent_punches %}
-                <tr style="border-bottom: 1px solid var(--card-border); font-size: 13px;">
-                    <td style="padding: 12px 14px; font-family: monospace;">{{ p.timestamp|date:"Y-m-d H:i:s" }}</td>
-                    <td style="padding: 12px 14px; color: var(--text-muted);">{{ p.device.name }}</td>
-                    <td style="padding: 12px 14px; font-weight: 700; color: var(--text-main);">#{{ p.biometric_user_id }}</td>
-                    <td style="padding: 12px 14px;">
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 12px 18px; font-family: monospace; font-weight: 700; color: var(--text-main);">
+                        {{ p.timestamp|date:"Y-m-d H:i:s" }}
+                    </td>
+                    <td style="padding: 12px 18px; color: var(--text-muted);">{{ p.device.name }}</td>
+                    <td style="padding: 12px 18px; font-weight: 700; color: var(--primary);">#{{ p.biometric_user_id }}</td>
+                    <td style="padding: 12px 18px;">
                         {% if p.matched_student %}
-                            <span style="font-weight: 700; color: #3b82f6;">👨‍🎓 {{ p.matched_student.get_full_name }} ({{ p.matched_student.current_class.name }})</span>
+                            <span style="font-weight: 800; color: #3b82f6;">👨‍🎓 {{ p.matched_student.get_full_name }} ({{ p.matched_student.current_class.name }})</span>
                         {% elif p.matched_teacher %}
-                            <span style="font-weight: 700; color: #10b981;">👨‍🏫 {{ p.matched_teacher.get_full_name }} (Staff)</span>
+                            <span style="font-weight: 800; color: #10b981;">👨‍🏫 {{ p.matched_teacher.get_full_name }} (Staff)</span>
                         {% else %}
                             <span style="color: var(--text-muted); font-style: italic;">Unmapped User</span>
                         {% endif %}
                     </td>
-                    <td style="padding: 12px 14px;">
-                        <span class="badge" style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                    <td style="padding: 12px 18px;">
+                        <span style="background: #e0e7ff; color: #4338ca; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">
                             {{ p.get_punch_type_display }}
                         </span>
                     </td>
-                    <td style="padding: 12px 14px;">
-                        <span class="badge" style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">
-                            ✓ Auto Processed
+                    <td style="padding: 12px 18px;">
+                        <span style="background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 800;">
+                            ✔ Auto-Processed
                         </span>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" style="padding: 30px; text-align: center; color: var(--text-muted);">
-                        No punch logs found yet. Click <strong>Sync Now</strong> above to pull punches from active terminals.
+                    <td colspan="6" style="padding: 35px; text-align: center; color: var(--text-muted);">
+                        No punch logs found for today. Use the <strong>Biometric Simulator</strong> above or click <strong>Pull & Sync</strong>.
                     </td>
                 </tr>
                 {% endfor %}
@@ -151,46 +236,48 @@
     </div>
 </div>
 
-<!-- Add Device Modal -->
+<!-- Modal: Add Hardware Terminal -->
 <div id="addDeviceModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000;">
-    <div style="background: var(--card-bg); width: 100%; max-width: 480px; padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0;">Add Biometric Device</h3>
-            <button type="button" onclick="document.getElementById('addDeviceModal').style.display='none'" style="background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);">✕</button>
-        </div>
+    <div style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 480px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <h3 style="font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 16px;">➕ Add Biometric Terminal</h3>
         <form method="POST">
             {% csrf_token %}
-            <input type="hidden" name="add_device" value="1">
-            <div class="form-group" style="margin-bottom: 14px;">
-                <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">Device Name</label>
-                <input type="text" name="name" required class="form-control" placeholder="e.g. Science Lab Terminal" style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+            <input type="hidden" name="action" value="add_device">
+            
+            <div style="margin-bottom: 14px;">
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Terminal Name</label>
+                <input type="text" name="name" class="form-control" required placeholder="e.g. Main Entrance Gate Scanner">
             </div>
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 14px;">
-                <div class="form-group">
-                    <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">IP Address</label>
-                    <input type="text" name="ip_address" required class="form-control" value="192.168.1.205" style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+            
+            <div style="margin-bottom: 14px; display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                <div>
+                    <label class="form-label" style="font-weight: 700; font-size: 13px;">IP Address</label>
+                    <input type="text" name="ip_address" class="form-control" required value="192.168.1.203">
                 </div>
-                <div class="form-group">
-                    <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">Port</label>
-                    <input type="number" name="port" required class="form-control" value="4370" style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+                <div>
+                    <label class="form-label" style="font-weight: 700; font-size: 13px;">Port</label>
+                    <input type="number" name="port" class="form-control" required value="4370">
                 </div>
             </div>
-            <div class="form-group" style="margin-bottom: 14px;">
-                <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">Device Technology</label>
-                <select name="device_type" class="form-control" style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
-                    <option value="HYBRID">Hybrid (Face + Finger + Card)</option>
-                    <option value="FINGERPRINT">Fingerprint Scanner</option>
-                    <option value="FACIAL">Facial Recognition</option>
-                    <option value="RFID">RFID Card Terminal</option>
+
+            <div style="margin-bottom: 14px;">
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Device Scanner Type</label>
+                <select name="device_type" class="form-control">
+                    <option value="HYBRID">Hybrid (Face + Fingerprint + RFID)</option>
+                    <option value="FACIAL">Facial Recognition Terminal</option>
+                    <option value="FINGERPRINT">Fingerprint Optical Terminal</option>
+                    <option value="RFID">RFID Card Swiper</option>
                 </select>
             </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label class="form-label" style="font-weight: 600; font-size: 13px; margin-bottom: 6px; display: block;">Physical Location</label>
-                <input type="text" name="location" required class="form-control" placeholder="e.g. Junior Wing Gate 2" style="width: 100%; padding: 8px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+
+            <div style="margin-bottom: 20px;">
+                <label class="form-label" style="font-weight: 700; font-size: 13px;">Campus Location</label>
+                <input type="text" name="location" class="form-control" required placeholder="e.g. Science Block Corridor">
             </div>
+
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="document.getElementById('addDeviceModal').style.display='none'" class="btn btn-secondary">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Device</button>
+                <button type="button" onclick="document.getElementById('addDeviceModal').style.display='none'" class="btn btn-outline">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="font-weight: 700;">Save Terminal</button>
             </div>
         </form>
     </div>

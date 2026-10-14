@@ -1,0 +1,149 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Edit Payment Receipt #{{ payment.receipt_number }} - School ERP{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'fees:fee_dashboard' %}" class="btn btn-sm btn-outline">← Back to Dashboard</a>
+            <h1 class="page-title" style="margin: 0;">✏️ Edit Payment Receipt</h1>
+        </div>
+        <p class="page-subtitle" style="margin-top: 4px;">Update payment amount, payment date, method, or transaction reference</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <a href="{% url 'fees:payment_receipt' payment.pk %}" class="btn btn-outline" target="_blank">
+            🖨️ View Receipt Slip
+        </a>
+        <a href="{% url 'fees:payment_delete' payment.pk %}" class="btn btn-danger" style="background: #ef4444; border: none; color: white;">
+            🗑️ Delete Receipt
+        </a>
+    </div>
+</div>
+
+<div class="dashboard-grid" style="grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Left Column: Edit Form -->
+    <div class="card">
+        <div class="card-header" style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-bottom: 1px solid var(--card-border);">
+            <div class="card-title" style="color: var(--primary); font-size: 16px;">
+                <span>🧾 Receipt Details: #{{ payment.receipt_number }}</span>
+            </div>
+        </div>
+        <div class="card-body" style="padding: 24px;">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label style="font-size: 13.5px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-main);">
+                            💵 Payment Amount (Rs.) *
+                        </label>
+                        {{ form.amount }}
+                        <small style="display: block; color: var(--text-muted); margin-top: 4px; font-size: 11.5px;">
+                            Original invoice balance will automatically adjust upon saving.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13.5px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-main);">
+                            📅 Payment Date *
+                        </label>
+                        {{ form.payment_date }}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label style="font-size: 13.5px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-main);">
+                            💳 Payment Method *
+                        </label>
+                        {{ form.payment_method }}
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 13.5px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-main);">
+                            🏦 Bank Slip / TxID / Cheque #
+                        </label>
+                        {{ form.transaction_reference }}
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 26px;">
+                    <label style="font-size: 13.5px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--text-main);">
+                        📝 Notes / Remarks
+                    </label>
+                    {{ form.remarks }}
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                    <a href="{% url 'fees:fee_dashboard' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; padding: 10px 24px; font-weight: 700;">
+                        💾 Save Changes & Update Invoice
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Column: Student & Invoice Summary -->
+    <div>
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-title"><span>👤 Student Information</span></div>
+            </div>
+            <div class="card-body" style="padding: 18px;">
+                <div style="font-size: 16px; font-weight: 800; color: var(--text-main);">{{ payment.student.get_full_name }}</div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                    <strong>Roll / Reg:</strong> {{ payment.student.admission_number }}
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+                    <strong>Class:</strong> {{ payment.student.current_class.name }} {% if payment.student.current_section %}(Sec {{ payment.student.current_section.name }}){% endif %}
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+                    <strong>Parent:</strong> {{ payment.student.guardian_name|default:"--" }} ({{ payment.student.guardian_phone|default:"--" }})
+                </div>
+                <div style="margin-top: 14px;">
+                    <a href="{% url 'fees:student_ledger' payment.student.pk %}" class="btn btn-sm btn-outline" style="width: 100%; text-align: center;">
+                        📊 View Full Student Ledger
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% if invoice %}
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><span>📑 Related Invoice Info</span></div>
+            </div>
+            <div class="card-body" style="padding: 18px; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Invoice #:</span>
+                    <a href="{% url 'fees:invoice_detail' invoice.pk %}" style="font-weight: 700;">{{ invoice.invoice_number }}</a>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Fee Month:</span>
+                    <span style="font-weight: 600;">{{ invoice.fee_month }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Total Billed:</span>
+                    <span style="font-weight: 700;">Rs. {{ invoice.payable_amount|floatformat:0 }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Current Paid:</span>
+                    <span style="font-weight: 700; color: var(--success);">Rs. {{ invoice.paid_amount|floatformat:0 }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Current Balance:</span>
+                    <span style="font-weight: 800; color: var(--danger);">Rs. {{ invoice.balance_amount|floatformat:0 }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Status:</span>
+                    <span class="role-badge" style="font-size: 11px;">{{ invoice.get_status_display }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

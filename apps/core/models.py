@@ -3,11 +3,11 @@ from django.conf import settings
 
 
 class SchoolSetting(models.Model):
-    school_name = models.CharField(max_length=200, default='Elite Model School')
-    tagline = models.CharField(max_length=255, default='Knowledge, Excellence & Integrity', blank=True)
+    school_name = models.CharField(max_length=200, default="GEN'X VISION SCHOOL SYSTEM")
+    tagline = models.CharField(max_length=255, default="Knowledge • Excellence • Leadership", blank=True)
     logo = models.ImageField(upload_to='school_branding/', blank=True, null=True)
     phone = models.CharField(max_length=30, default='+92 300 1234567', blank=True)
-    email = models.EmailField(default='info@eliteschool.edu.pk', blank=True)
+    email = models.EmailField(default='info@genxvision.edu.pk', blank=True)
     address = models.TextField(default='Main Campus, Education City', blank=True)
     current_academic_session = models.CharField(max_length=50, default='2026-2027', blank=True)
     currency_symbol = models.CharField(max_length=10, default='Rs.', blank=True)

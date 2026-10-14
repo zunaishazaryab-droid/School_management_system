@@ -21,6 +21,9 @@ class DailyLecture(models.Model):
     present_students_count = models.PositiveIntegerField(default=0)
     absent_students_count = models.PositiveIntegerField(default=0)
     copies_checked_count = models.PositiveIntegerField(default=0, help_text="Number of student notebooks checked")
+    audio_recording = models.FileField(upload_to='lecture_recordings/', blank=True, null=True, help_text="Recorded voice note or audio lecture (MP3, WebM, WAV)")
+    video_url = models.URLField(blank=True, help_text="Optional YouTube / Drive lecture link")
+    attachment = models.FileField(upload_to='lecture_notes/', blank=True, null=True, help_text="PDF notes, handouts, or whiteboard photo")
     remarks = models.TextField(blank=True, help_text="Student discipline, pacing, or coordinator feedback")
     created_at = models.DateTimeField(auto_now_add=True)
 

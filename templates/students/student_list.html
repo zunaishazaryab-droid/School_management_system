@@ -126,7 +126,7 @@
                             <a href="{% url 'students:student_detail' st.id %}" class="btn btn-outline btn-sm" title="View Full Profile">
                                 👁️ View
                             </a>
-                            <a href="{% url 'students:student_edit' st.id %}" class="btn btn-outline btn-sm" title="Edit Student">
+                            <a href="{% url 'students:student_edit' st.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline btn-sm" title="Edit Student">
                                 ✏️ Edit
                             </a>
                             <a href="{% url 'students:student_card' st.id %}" class="btn btn-outline btn-sm" title="Print ID Card">

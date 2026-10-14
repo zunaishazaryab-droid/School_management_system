@@ -1,0 +1,229 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Annual Student Fee Card - {{ student.get_full_name }} ({{ year }}) - School ERP{% endblock %}
+
+{% block content %}
+<div class="no-print" style="margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'fees:fee_dashboard' %}" class="btn btn-sm btn-outline">← Back to Dashboard</a>
+            <h1 class="page-title" style="margin: 0; font-size: 20px;">📅 Annual Student Fee Card (12 Months)</h1>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <!-- Year Selector -->
+            <form method="GET" style="display: flex; gap: 6px; align-items: center;">
+                <label style="font-size: 13px; font-weight: 700;">Year:</label>
+                <select name="year" onchange="this.form.submit()" class="form-control" style="padding: 6px 12px; font-size: 13px; font-weight: 700;">
+                    {% for y in available_years %}
+                    <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+                    {% empty %}
+                    <option value="2026" {% if year == 2026 %}selected{% endif %}>2026</option>
+                    <option value="2027" {% if year == 2027 %}selected{% endif %}>2027</option>
+                    <option value="2028" {% if year == 2028 %}selected{% endif %}>2028</option>
+                    <option value="2029" {% if year == 2029 %}selected{% endif %}>2029</option>
+                    <option value="2030" {% if year == 2030 %}selected{% endif %}>2030</option>
+                    {% endfor %}
+                </select>
+            </form>
+
+            <a href="{% url 'fees:invoice_create' %}?student={{ student.pk }}" class="btn btn-outline" style="font-weight: 600;">
+                ➕ Issue Month Challan
+            </a>
+
+            <button type="button" onclick="window.print()" class="btn btn-primary" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                <span>🖨️</span> Print Annual Fee Card
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     PRINTABLE ANNUAL STUDENT FEE CARD CONTAINER
+     ========================================================================= -->
+<div class="printable-fee-card" style="background: #ffffff; border-radius: var(--radius-md); border: 1px solid var(--card-border); box-shadow: 0 4px 15px rgba(0,0,0,0.06); padding: 28px; max-width: 1000px; margin: 0 auto;">
+    
+    <!-- Institution Letterhead Header -->
+    <div style="text-align: center; border-bottom: 2px double #cbd5e1; padding-bottom: 16px; margin-bottom: 20px;">
+        <div style="font-size: 22px; font-weight: 900; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;">
+            GEN'X VISION SCHOOL SYSTEM
+        </div>
+        <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+            Executive Accounts & Financial Billing Division &bull; Annual Fee Ledger Card &bull; Session {{ year }}
+        </div>
+        <div style="display: inline-block; background: #eff6ff; color: #1e40af; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; margin-top: 8px; border: 1px solid #bfdbfe;">
+            STUDENT ANNUAL FEE RECORD &bull; {{ year }}
+        </div>
+    </div>
+
+    <!-- Student Bio Card -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); padding: 16px 20px; margin-bottom: 22px; display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+        <div>
+            <div style="font-size: 18px; font-weight: 800; color: var(--text-main);">
+                {{ student.get_full_name }}
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 13px; color: #334155; margin-top: 8px;">
+                <div><strong>Admission / Roll ID:</strong> <span style="color: var(--primary); font-weight: 700;">{{ student.admission_number }}</span></div>
+                <div><strong>Class & Section:</strong> {{ student.current_class.name }} {% if student.current_section %}(Sec {{ student.current_section.name }}){% endif %}</div>
+                <div><strong>Father / Guardian:</strong> {{ student.guardian_name }}</div>
+                <div><strong>Contact Phone:</strong> {{ student.guardian_phone }}</div>
+            </div>
+        </div>
+
+        <!-- Financial Summary Pills -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center;">
+            <div style="background: #ffffff; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">TOTAL BILLED</div>
+                <div style="font-size: 15px; font-weight: 800; color: #334155; margin-top: 2px;">Rs. {{ total_billed|floatformat:0 }}</div>
+            </div>
+            <div style="background: #ffffff; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">TOTAL PAID</div>
+                <div style="font-size: 15px; font-weight: 800; color: #059669; margin-top: 2px;">Rs. {{ total_paid|floatformat:0 }}</div>
+            </div>
+            <div style="background: #ffffff; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">CONCESSIONS</div>
+                <div style="font-size: 15px; font-weight: 800; color: #6366f1; margin-top: 2px;">Rs. {{ total_concessions|floatformat:0 }}</div>
+            </div>
+            <div style="background: #ffffff; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">NET BALANCE DUE</div>
+                <div style="font-size: 15px; font-weight: 800; {% if total_dues > 0 %}color: #dc2626;{% else %}color: #059669;{% endif %} margin-top: 2px;">
+                    Rs. {{ total_dues|floatformat:0 }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 12-Month Jan to Dec Annual Fee Table -->
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 24px;">
+        <thead>
+            <tr style="background: #f1f5f9; border-top: 2px solid #cbd5e1; border-bottom: 2px solid #cbd5e1; color: #1e293b;">
+                <th style="padding: 10px 12px; text-align: left; font-weight: 800;">Month</th>
+                <th style="padding: 10px 12px; text-align: left; font-weight: 800;">Invoice #</th>
+                <th style="padding: 10px 12px; text-align: right; font-weight: 800;">Monthly Fee</th>
+                <th style="padding: 10px 12px; text-align: right; font-weight: 800;">Discount</th>
+                <th style="padding: 10px 12px; text-align: right; font-weight: 800;">Net Payable</th>
+                <th style="padding: 10px 12px; text-align: right; font-weight: 800;">Paid Amount</th>
+                <th style="padding: 10px 12px; text-align: right; font-weight: 800;">Balance Due</th>
+                <th style="padding: 10px 12px; text-align: center; font-weight: 800;">Status</th>
+                <th style="padding: 10px 12px; text-align: left; font-weight: 800;">Receipt & Date</th>
+                <th class="no-print" style="padding: 10px 12px; text-align: center; font-weight: 800;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in annual_breakdown %}
+            <tr style="border-bottom: 1px solid #e2e8f0; {% if item.status == 'PAID' %}background: #fafdfb;{% elif item.status == 'PARTIAL' %}background: #fffdf5;{% endif %}">
+                <td style="padding: 10px 12px; font-weight: 700; color: var(--text-main);">
+                    {{ item.month }} {{ year }}
+                </td>
+                <td style="padding: 10px 12px; font-weight: 600;">
+                    {% if item.invoice %}
+                    <a href="{% url 'fees:invoice_detail' item.invoice.pk %}" style="text-decoration: none; color: #2563eb;">{{ item.invoice_number }}</a>
+                    {% else %}
+                    <span style="color: #94a3b8;">--</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 10px 12px; text-align: right; font-weight: 600;">
+                    {% if item.subtotal > 0 %}Rs. {{ item.subtotal|floatformat:0 }}{% else %}--{% endif %}
+                </td>
+                <td style="padding: 10px 12px; text-align: right; color: #6366f1;">
+                    {% if item.discount > 0 %}-Rs. {{ item.discount|floatformat:0 }}{% else %}0{% endif %}
+                </td>
+                <td style="padding: 10px 12px; text-align: right; font-weight: 700;">
+                    {% if item.payable > 0 %}Rs. {{ item.payable|floatformat:0 }}{% else %}--{% endif %}
+                </td>
+                <td style="padding: 10px 12px; text-align: right; font-weight: 700; color: #059669;">
+                    {% if item.paid > 0 %}Rs. {{ item.paid|floatformat:0 }}{% else %}0{% endif %}
+                </td>
+                <td style="padding: 10px 12px; text-align: right; font-weight: 800; {% if item.balance > 0 %}color: #dc2626;{% else %}color: #059669;{% endif %}">
+                    {% if item.payable > 0 %}Rs. {{ item.balance|floatformat:0 }}{% else %}--{% endif %}
+                </td>
+                <td style="padding: 10px 12px; text-align: center;">
+                    {% if item.status == 'PAID' %}
+                    <span class="role-badge" style="background: #ecfdf5; color: #047857; font-weight: 700; font-size: 11px;">Paid</span>
+                    {% elif item.status == 'PARTIAL' %}
+                    <span class="role-badge" style="background: #fef3c7; color: #92400e; font-weight: 700; font-size: 11px;">Partial</span>
+                    {% elif item.status == 'OVERDUE' %}
+                    <span class="role-badge" style="background: #fef2f2; color: #dc2626; font-weight: 700; font-size: 11px;">Overdue</span>
+                    {% elif item.status == 'UNPAID' %}
+                    <span class="role-badge" style="background: #f1f5f9; color: #64748b; font-weight: 700; font-size: 11px;">Unpaid</span>
+                    {% else %}
+                    <span style="color: #94a3b8; font-size: 11px;">Not Issued</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 10px 12px; font-size: 11.5px; color: var(--text-muted);">
+                    {% if item.receipt_numbers != '--' %}
+                    <strong>{{ item.receipt_numbers }}</strong>
+                    {% if item.payment_date %}<div>{{ item.payment_date }}</div>{% endif %}
+                    {% else %}
+                    --
+                    {% endif %}
+                </td>
+                <td class="no-print" style="padding: 10px 12px; text-align: center; white-space: nowrap;">
+                    {% if item.invoice %}
+                        {% if item.status != 'PAID' %}
+                        <a href="{% url 'fees:collect_invoice_payment' item.invoice.pk %}" class="btn btn-sm btn-primary" style="padding: 3px 8px; font-size: 11px; background: #10b981; border: none; font-weight: 700;">
+                            💵 Pay
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'fees:invoice_edit' item.invoice.pk %}" class="btn btn-sm btn-outline" style="padding: 3px 6px; font-size: 11px;" title="Edit Challan">
+                            ✏️
+                        </a>
+                    {% else %}
+                        <a href="{% url 'fees:invoice_create' %}?student={{ student.pk }}" class="btn btn-sm btn-outline" style="padding: 3px 8px; font-size: 11px;">
+                            ➕ Issue
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="background: #f8fafc; border-top: 2px solid #cbd5e1; font-weight: 800;">
+                <td colspan="2" style="padding: 12px; text-align: right; text-transform: uppercase;">ANNUAL TOTALS:</td>
+                <td style="padding: 12px; text-align: right;">Rs. {{ total_billed|floatformat:0 }}</td>
+                <td style="padding: 12px; text-align: right; color: #6366f1;">-Rs. {{ total_concessions|floatformat:0 }}</td>
+                <td style="padding: 12px; text-align: right;">Rs. {{ total_billed|floatformat:0 }}</td>
+                <td style="padding: 12px; text-align: right; color: #059669;">Rs. {{ total_paid|floatformat:0 }}</td>
+                <td style="padding: 12px; text-align: right; {% if total_dues > 0 %}color: #dc2626;{% else %}color: #059669;{% endif %}">
+                    Rs. {{ total_dues|floatformat:0 }}
+                </td>
+                <td colspan="3"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- Signatures section for Official Record -->
+    <div style="margin-top: 36px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; text-align: center; font-size: 12.5px;">
+        <div>
+            <div style="border-bottom: 1px solid #94a3b8; height: 35px; margin-bottom: 6px;"></div>
+            <strong>Accounts Officer / Cashier</strong>
+        </div>
+        <div>
+            <div style="border-bottom: 1px solid #94a3b8; height: 35px; margin-bottom: 6px;"></div>
+            <strong>Principal Signature & Stamp</strong>
+        </div>
+        <div>
+            <div style="border-bottom: 1px solid #94a3b8; height: 35px; margin-bottom: 6px;"></div>
+            <strong>Parent / Guardian Acknowledgment</strong>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print, .sidebar, .topbar, .footer, .btn, header, nav {
+        display: none !important;
+    }
+    body, .main-content, .content-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+    }
+    .printable-fee-card {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+}
+</style>
+{% endblock %}

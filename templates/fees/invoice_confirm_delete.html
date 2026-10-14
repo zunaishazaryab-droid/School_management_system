@@ -1,0 +1,37 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Confirm Delete Invoice - School ERP{% endblock %}
+
+{% block content %}
+<div style="max-width: 580px; margin: 40px auto;">
+    <div class="card" style="border: 2px solid #fee2e2; box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.1);">
+        <div class="card-header" style="background: #fef2f2; border-bottom: 1px solid #fee2e2;">
+            <div class="card-title" style="color: #991b1b; font-size: 17px;">
+                <span>⚠️ Confirm Delete Fee Challan</span>
+            </div>
+        </div>
+        <div class="card-body" style="padding: 24px;">
+            <p style="font-size: 14.5px; color: var(--text-main); line-height: 1.6;">
+                Are you sure you want to delete Fee Challan <strong style="color: var(--primary);">#{{ invoice.invoice_number }}</strong>?
+            </p>
+
+            <div style="background: #f8fafc; border-radius: var(--radius-sm); padding: 16px; margin: 20px 0; font-size: 13.5px; border-left: 4px solid #ef4444;">
+                <div style="margin-bottom: 6px;"><strong>Student:</strong> {{ invoice.student.get_full_name }} ({{ invoice.student.admission_number }})</div>
+                <div style="margin-bottom: 6px;"><strong>Month:</strong> {{ invoice.fee_month }}</div>
+                <div style="margin-bottom: 6px;"><strong>Payable Amount:</strong> <span style="font-weight: 800; color: var(--danger);">Rs. {{ invoice.payable_amount|floatformat:0 }}</span></div>
+                <div><strong>Status:</strong> {{ invoice.get_status_display }}</div>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <a href="{% url 'fees:invoice_list' %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-danger" style="background: #ef4444; border: none; padding: 10px 22px; font-weight: 700; color: white;">
+                        🗑️ Yes, Delete Challan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
